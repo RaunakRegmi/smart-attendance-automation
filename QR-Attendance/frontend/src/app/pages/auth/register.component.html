@@ -1,0 +1,75 @@
+<div class="container">
+  <mat-card class="card">
+    <h2 class="title">Create Account</h2>
+    <p class="subtitle">Choose a role and complete the profile details.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field class="full">
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name" autocomplete="name" />
+      </mat-form-field>
+
+      <mat-form-field class="full">
+        <mat-label>Email</mat-label>
+        <input matInput formControlName="email" type="email" autocomplete="email" />
+      </mat-form-field>
+
+      <mat-form-field class="full">
+        <mat-label>Phone</mat-label>
+        <input matInput formControlName="phone" autocomplete="tel" />
+      </mat-form-field>
+
+      <mat-form-field class="full">
+        <mat-label>Password</mat-label>
+        <input matInput formControlName="password" type="password" autocomplete="new-password" />
+      </mat-form-field>
+
+      <mat-form-field class="full">
+        <mat-label>Role</mat-label>
+        <mat-select formControlName="role">
+          <mat-option value="STUDENT">Student</mat-option>
+          <mat-option value="TEACHER">Teacher</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="section" *ngIf="role === 'STUDENT'">
+        <h3 class="section-title">Student Profile</h3>
+        <mat-form-field class="full">
+          <mat-label>Batch ID</mat-label>
+          <input matInput formControlName="batchId" />
+        </mat-form-field>
+        <mat-form-field class="full">
+          <mat-label>Parent Name</mat-label>
+          <input matInput formControlName="parentName" />
+        </mat-form-field>
+        <mat-form-field class="full">
+          <mat-label>Parent Phone</mat-label>
+          <input matInput formControlName="parentPhone" />
+        </mat-form-field>
+      </div>
+
+      <div class="section" *ngIf="role === 'TEACHER'">
+        <h3 class="section-title">Teacher Profile</h3>
+        <mat-form-field class="full">
+          <mat-label>Department</mat-label>
+          <input matInput formControlName="department" />
+        </mat-form-field>
+      </div>
+
+      <button mat-raised-button color="primary" class="full" [disabled]="loading || form.invalid">
+        <ng-container *ngIf="!loading; else loadingTpl">Create account</ng-container>
+      </button>
+
+      <ng-template #loadingTpl>
+        <mat-progress-spinner mode="indeterminate" diameter="18"></mat-progress-spinner>
+        <span class="btn-text">Creating…</span>
+      </ng-template>
+    </form>
+
+    <div class="links">
+      <a routerLink="/login">Back to login</a>
+    </div>
+  </mat-card>
+  <div class="backdrop"></div>
+</div>
+

@@ -1,0 +1,122 @@
+<div class="wrap">
+  <h2 class="title">Teacher Dashboard</h2>
+  <p class="subtitle">Create sessions, display QR codes, and track live attendance.</p>
+
+  <div class="grid">
+    <mat-card class="card">
+      <h3 class="section-title">Classes</h3>
+
+      <mat-form-field class="full">
+        <mat-label>Select class</mat-label>
+        <mat-select
+          [value]="selectedClassId"
+          (selectionChange)="selectClass($event.value)"
+          [disabled]="!classes.length"
+        >
+          <mat-option *ngFor="let c of classes" [value]="c.id">
+            {{ c.class_name }} (Batch {{ c.batch_id }})
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="empty" *ngIf="!classes.length">No classes found. Ask admin to create classes.</div>
+    </mat-card>
+
+    <mat-card class="card">
+      <h3 class="section-title">Add Schedule</h3>
+      <form [formGroup]="scheduleForm" (ngSubmit)="addSchedule()" class="form">
+        <div class="grid-3">
+          <mat-form-field>
+            <mat-label>Day of week (0=Sun)</mat-label>
+            <input matInput type="number" formControlName="dayOfWeek" />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Start</mat-label>
+            <input matInput formControlName="startTime" placeholder="09:00" />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>End</mat-label>
+            <input matInput formControlName="endTime" placeholder="10:00" />
+          </mat-form-field>
+        </div>
+
+        <button mat-raised-button color="primary" type="submit" [disabled]="busy || !selectedClassId || scheduleForm.invalid">
+          Add Schedule
+        </button>
+        <mat-progress-spinner *ngIf="busy" mode="indeterminate" diameter="18"></mat-progress-spinner>
+      </form>
+    </mat-card>
+
+    <mat-card class="card">
+      <h3 class="section-title">Enroll Student</h3>
+      <form [formGroup]="enrollForm" (ngSubmit)="enrollStudent()" class="form">
+        <mat-form-field class="full">
+          <mat-label>Student ID</mat-label>
+          <input matInput formControlName="studentId" placeholder="Student UUID" />
+        </mat-form-field>
+        <button mat-raised-button color="primary" type="submit" [disabled]="busy || !selectedClassId || enrollForm.invalid">
+          Enroll
+        </button>
+        <mat-progress-spinner *ngIf="busy" mode="indeterminate" diameter="18"></mat-progress-spinner>
+      </form>
+    </mat-card>
+  </div>
+
+  <mat-card class="card big">
+    <h3 class="section-title">Attendance Session</h3>
+    <form [formGroup]="startForm" (ngSubmit)="startAttendance()" class="session-form">
+      <mat-form-field class="inline">
+        <mat-label>Duration (minutes)</mat-label>
+        <input matInput type="number" formControlName="durationMinutes" />
+      </mat-form-field>
+      <button
+        mat-raised-button
+        color="primary"
+        type="submit"
+        [disabled]="busy || !selectedClassId || startForm.invalid"
+      >
+        Start Attendance
+      </button>
+
+      <button mat-button type="button" (click)="stopPolling()" *ngIf="pollHandle">Stop polling</button>
+
+      <mat-progress-spinner *ngIf="busy || liveBusy" mode="indeterminate" diameter="18"></mat-progress-spinner>
+    </form>
+
+    <div class="session-body" *ngIf="session as s">
+      <div class="qr">
+        <div class="qr-title">QR Code</div>
+        <img class="qr-img" *ngIf="qrDataUrl" [src]="qrDataUrl" alt="QR code" />
+        <div class="meta">
+          <div><b>Session ID</b>: {{ s.id }}</div>
+          <div><b>Window</b>: {{ s.start_time }} → {{ s.end_time }}</div>
+        </div>
+      </div>
+
+      <div class="live">
+        <div class="qr-title">Live Attendance</div>
+        <div class="table" *ngIf="(live?.attendances?.length ?? 0) > 0; else noneTpl">
+          <div class="thead">
+            <div>Student</div>
+            <div>Status</div>
+            <div>Time</div>
+          </div>
+          <div class="trow" *ngFor="let a of (live?.attendances || [])">
+            <div class="student">
+              <div class="name">{{ a.student_name }}</div>
+              <div class="email">{{ a.student_email }}</div>
+            </div>
+            <div class="status" [class.late]="lateClass(a.status)">
+              {{ a.status }}
+            </div>
+            <div class="time">{{ a.scan_time }}</div>
+          </div>
+        </div>
+        <ng-template #noneTpl>
+          <div class="empty">No scans yet…</div>
+        </ng-template>
+      </div>
+    </div>
+  </mat-card>
+</div>
+

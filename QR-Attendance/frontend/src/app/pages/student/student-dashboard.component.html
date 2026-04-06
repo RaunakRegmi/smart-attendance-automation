@@ -1,0 +1,76 @@
+<div class="wrap">
+  <h2 class="title">Student Dashboard</h2>
+  <p class="subtitle">Scan the QR during class to mark attendance automatically.</p>
+
+  <div class="grid">
+    <mat-card class="card">
+      <h3 class="section-title">Enrolled Classes</h3>
+      <div class="list" *ngIf="classes.length; else noClassTpl">
+        <div class="class-item" *ngFor="let c of classes">
+          <div class="class-name">{{ c.class_name }}</div>
+          <div class="class-meta">Batch: {{ c.batch_id }}</div>
+        </div>
+      </div>
+      <ng-template #noClassTpl>
+        <div class="empty">No classes enrolled yet.</div>
+      </ng-template>
+    </mat-card>
+
+    <mat-card class="card scan-card">
+      <h3 class="section-title">QR Scanner</h3>
+
+      <div class="video-wrap">
+        <video #videoEl class="video" playsinline></video>
+        <div class="overlay" *ngIf="scanning">Scanning…</div>
+      </div>
+
+      <div class="actions">
+        <button mat-raised-button color="primary" (click)="startScanner()" [disabled]="scanBusy || scanning">
+          Start Scan
+        </button>
+        <button mat-button (click)="stopScanner()" [disabled]="scanBusy || !scanning">Stop</button>
+        <mat-progress-spinner *ngIf="scanBusy" mode="indeterminate" diameter="18"></mat-progress-spinner>
+      </div>
+
+      <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
+    </mat-card>
+  </div>
+
+  <mat-card class="card">
+    <h3 class="section-title">Your Attendance</h3>
+
+    <div class="empty" *ngIf="!lastScan">
+      No scans yet. Start the scanner and scan a teacher’s QR code.
+    </div>
+
+    <div *ngIf="lastScan" class="result">
+      <div class="result-row">
+        <div class="label">Status</div>
+        <div class="value" [class.late]="lastScan.status === 'LATE'">{{ lastScan.status }}</div>
+      </div>
+      <div class="result-row">
+        <div class="label">Scan time</div>
+        <div class="value">{{ lastScan.scan_time }}</div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="correction">
+        <h4 class="section-mini">Request correction</h4>
+        <mat-form-field class="full">
+          <mat-label>Reason</mat-label>
+          <input matInput [(ngModel)]="correctionReason" placeholder="Explain why status is wrong…" />
+        </mat-form-field>
+        <div class="actions">
+          <button mat-raised-button color="primary" (click)="submitCorrection()" [disabled]="correctionBusy || !correctionReason.trim()">
+            <ng-container *ngIf="!correctionBusy; else corrTpl">Submit request</ng-container>
+            <ng-template #corrTpl>
+              <mat-progress-spinner mode="indeterminate" diameter="18"></mat-progress-spinner>
+            </ng-template>
+          </button>
+        </div>
+      </div>
+    </div>
+  </mat-card>
+</div>
+

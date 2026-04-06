@@ -1,0 +1,42 @@
+@use '@angular/material' as mat;
+
+// Teal-forward professional theme
+$primary: mat.m2-define-palette(mat.$m2-teal-palette, 600, 500, 800);
+$accent: mat.m2-define-palette(mat.$m2-cyan-palette, 600);
+$warn: mat.m2-define-palette(mat.$m2-red-palette);
+$theme: mat.m2-define-light-theme((
+  color: (
+    primary: $primary,
+    accent: $accent,
+    warn: $warn,
+  ),
+  typography: mat.m2-define-typography-config($font-family: 'Nunito, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif'),
+  density: 0
+));
+
+@include mat.all-component-themes($theme);
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Nunito', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: #f6fbfb;
+  color: #0f172a;
+}
+
+.container {
+  width: min(1100px, calc(100% - 32px));
+  margin-inline: auto;
+}
+
+.page {
+  padding: 20px 0 48px;
+}
+
+// Hide Angular starter placeholder content (we use real routed pages now).
+main.main {
+  display: none !important;
+}

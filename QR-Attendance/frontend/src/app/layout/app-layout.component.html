@@ -1,0 +1,32 @@
+<mat-toolbar color="primary" class="topbar">
+  <span class="brand">QR Attendance</span>
+  <span class="spacer"></span>
+  <span class="user" *ngIf="user() as u">
+    {{ u.name }} · {{ u.role }}
+  </span>
+  <button mat-button (click)="logout()">Logout</button>
+</mat-toolbar>
+
+<div class="page container">
+  <div class="nav" *ngIf="user() as u">
+    <a class="nav-link" mat-button routerLink="/admin" *ngIf="u.role === 'ADMIN'">
+      Admin
+    </a>
+    <a class="nav-link" mat-button routerLink="/teacher" *ngIf="u.role === 'TEACHER'">
+      Teacher
+    </a>
+    <a class="nav-link" mat-button routerLink="/student" *ngIf="u.role === 'STUDENT'">
+      Student
+    </a>
+    <a class="nav-link" mat-button routerLink="/reports">
+      Reports
+    </a>
+    <mat-divider class="divider"></mat-divider>
+  </div>
+
+  <router-outlet />
+  <div class="footer">
+    QR-based attendance system · Secure session tokens
+  </div>
+</div>
+

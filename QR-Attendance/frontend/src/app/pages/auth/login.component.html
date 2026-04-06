@@ -1,0 +1,33 @@
+<div class="container">
+  <mat-card class="card">
+    <h2 class="title">Login</h2>
+    <p class="subtitle">Scan smarter. Attend faster. Track instantly.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field class="full">
+        <mat-label>Email</mat-label>
+        <input matInput formControlName="email" type="email" autocomplete="email" />
+      </mat-form-field>
+
+      <mat-form-field class="full">
+        <mat-label>Password</mat-label>
+        <input matInput formControlName="password" type="password" autocomplete="current-password" />
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" class="full" [disabled]="loading">
+        <ng-container *ngIf="!loading; else loadingTpl">Login</ng-container>
+      </button>
+
+      <ng-template #loadingTpl>
+        <mat-progress-spinner mode="indeterminate" diameter="18"></mat-progress-spinner>
+        <span class="btn-text">Signing in…</span>
+      </ng-template>
+    </form>
+
+    <div class="links">
+      <a routerLink="/register">Create an account</a>
+    </div>
+  </mat-card>
+  <div class="backdrop"></div>
+</div>
+

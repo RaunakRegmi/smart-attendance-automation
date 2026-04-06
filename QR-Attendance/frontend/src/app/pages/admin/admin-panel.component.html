@@ -1,0 +1,125 @@
+<div class="wrap">
+  <h2 class="title">Admin Panel</h2>
+  <p class="subtitle">Create users and enrollments setup from a single place.</p>
+
+  <mat-card class="card">
+    <div class="row">
+      <mat-form-field class="filter">
+        <mat-label>Filter role</mat-label>
+        <mat-select [formControl]="roleFilter" (selectionChange)="refreshUsers()">
+          <mat-option value="">All</mat-option>
+          <mat-option value="ADMIN">Admin</mat-option>
+          <mat-option value="TEACHER">Teacher</mat-option>
+          <mat-option value="STUDENT">Student</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <div class="spacer"></div>
+    </div>
+
+    <div class="table-wrap" *ngIf="users.length; else emptyTpl">
+      <table mat-table [dataSource]="users" class="table">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let u">{{ u.name }}</td>
+        </ng-container>
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>Email</th>
+          <td mat-cell *matCellDef="let u">{{ u.email }}</td>
+        </ng-container>
+        <ng-container matColumnDef="phone">
+          <th mat-header-cell *matHeaderCellDef>Phone</th>
+          <td mat-cell *matCellDef="let u">{{ u.phone }}</td>
+        </ng-container>
+        <ng-container matColumnDef="role">
+          <th mat-header-cell *matHeaderCellDef>Role</th>
+          <td mat-cell *matCellDef="let u">{{ u.role }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+
+    <ng-template #emptyTpl>
+      <div class="empty">No users found.</div>
+    </ng-template>
+  </mat-card>
+
+  <mat-divider class="divider"></mat-divider>
+
+  <mat-card class="card">
+    <h3 class="section-title">Create User</h3>
+
+    <form class="form" [formGroup]="createForm" (ngSubmit)="submit()">
+      <div class="grid-2">
+        <mat-form-field>
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" />
+        </mat-form-field>
+      </div>
+
+      <div class="grid-2">
+        <mat-form-field>
+          <mat-label>Phone</mat-label>
+          <input matInput formControlName="phone" />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Role</mat-label>
+          <mat-select formControlName="role">
+            <mat-option value="STUDENT">Student</mat-option>
+            <mat-option value="TEACHER">Teacher</mat-option>
+            <mat-option value="ADMIN">Admin</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field class="full">
+        <mat-label>Password</mat-label>
+        <input matInput type="password" formControlName="password" />
+      </mat-form-field>
+
+      <div class="section" *ngIf="role === 'STUDENT'">
+        <h4 class="section-mini">Student profile</h4>
+        <div class="grid-2">
+          <mat-form-field>
+            <mat-label>Batch ID</mat-label>
+            <input matInput formControlName="batchId" />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Parent Name</mat-label>
+            <input matInput formControlName="parentName" />
+          </mat-form-field>
+        </div>
+        <mat-form-field class="full">
+          <mat-label>Parent Phone</mat-label>
+          <input matInput formControlName="parentPhone" />
+        </mat-form-field>
+      </div>
+
+      <div class="section" *ngIf="role === 'TEACHER'">
+        <h4 class="section-mini">Teacher profile</h4>
+        <mat-form-field class="full">
+          <mat-label>Department</mat-label>
+          <input matInput formControlName="department" />
+        </mat-form-field>
+      </div>
+
+      <div class="actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="loading || createForm.invalid">
+          <ng-container *ngIf="!loading; else loadTpl">Create</ng-container>
+          <ng-template #loadTpl>
+            <span class="spinner-row">
+              <mat-progress-spinner mode="indeterminate" diameter="18"></mat-progress-spinner>
+              <span>Saving…</span>
+            </span>
+          </ng-template>
+        </button>
+      </div>
+    </form>
+  </mat-card>
+</div>
+

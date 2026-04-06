@@ -1,0 +1,111 @@
+<div class="wrap">
+  <h2 class="title">Reports</h2>
+  <p class="subtitle">Attendance analytics powered by your backend rules.</p>
+
+  <mat-card class="card" *ngIf="role === 'STUDENT'">
+    <h3 class="section-title">My Attendance</h3>
+    <button mat-raised-button color="primary" (click)="loadMyReport()" [disabled]="busy">
+      <span *ngIf="!busy">Load report</span>
+      <mat-progress-spinner *ngIf="busy" mode="indeterminate" diameter="18"></mat-progress-spinner>
+    </button>
+
+    <div class="empty" *ngIf="!studentReport && !busy">Click “Load report” to view details.</div>
+
+    <div *ngIf="studentReport?.perClass?.length; else noneTpl" class="list">
+      <div class="row-head">
+        <div>Class</div>
+        <div>Attendance</div>
+        <div>Percentage</div>
+        <div>Flag</div>
+      </div>
+
+      <div class="row" *ngFor="let r of studentReport.perClass">
+        <div>
+          <b>{{ r.className }}</b>
+        </div>
+        <div>{{ r.attended }} / {{ r.total }}</div>
+        <div>{{ r.percentage }}%</div>
+        <div class="flag" [class.low]="r.lowAttendance">
+          {{ r.lowAttendance ? 'Low Attendance' : 'OK' }}
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noneTpl>
+      <div class="empty">No attendance sessions found yet.</div>
+    </ng-template>
+  </mat-card>
+
+  <mat-card class="card" *ngIf="role !== 'STUDENT'">
+    <h3 class="section-title">Class-wise Report</h3>
+
+    <div class="controls">
+      <mat-form-field class="full">
+        <mat-label>Select class</mat-label>
+        <mat-select [(ngModel)]="selectedClassId">
+          <mat-option *ngFor="let c of classes" [value]="c.id">
+            {{ c.class_name }} (Batch {{ c.batch_id }})
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" (click)="loadClassReport()" [disabled]="busy || !selectedClassId">
+        Load class report
+      </button>
+    </div>
+
+    <div *ngIf="classReport?.students?.length; else noneTpl2" class="list">
+      <div class="row-head">
+        <div>Student</div>
+        <div>Attendance</div>
+        <div>Percentage</div>
+        <div>Flag</div>
+      </div>
+      <div class="row" *ngFor="let s of classReport.students">
+        <div>
+          <b>{{ s.name }}</b>
+          <div class="sub">{{ s.email }}</div>
+        </div>
+        <div>{{ s.attended }} / {{ s.total }}</div>
+        <div>{{ s.percentage }}%</div>
+        <div class="flag" [class.low]="s.lowAttendance">
+          {{ s.lowAttendance ? 'Low Attendance' : 'OK' }}
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noneTpl2>
+      <div class="empty" *ngIf="!busy">Load a class report to view results.</div>
+    </ng-template>
+  </mat-card>
+
+  <mat-card class="card">
+    <h3 class="section-title">Monthly Report</h3>
+    <div class="controls">
+      <mat-form-field class="month">
+        <mat-label>Month</mat-label>
+        <input matInput [(ngModel)]="month" type="month" />
+      </mat-form-field>
+
+      <mat-form-field class="full" *ngIf="role !== 'STUDENT'">
+        <mat-label>Class (optional)</mat-label>
+        <mat-select [(ngModel)]="selectedClassId">
+          <mat-option [value]="null">All classes</mat-option>
+          <mat-option *ngFor="let c of classes" [value]="c.id">
+            {{ c.class_name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" (click)="loadMonthly()" [disabled]="busy">
+        Load monthly
+      </button>
+      <mat-progress-spinner *ngIf="busy" mode="indeterminate" diameter="18"></mat-progress-spinner>
+    </div>
+
+    <div *ngIf="monthlyReport" class="jsonbox">
+      <pre>{{ monthlyReport | json }}</pre>
+    </div>
+  </mat-card>
+</div>
+
