@@ -84,7 +84,7 @@ exports.getAttendanceStats = async (req, res, next) => {
 
 exports.searchByEmail = async (req, res, next) => {
   try {
-    const { email, page = 1, limit = 10 } = req.query;
+    const { email, date, page = 1, limit = 10 } = req.query;
 
     const student = await Student.findOne({ where: { email } });
 
@@ -97,8 +97,12 @@ exports.searchByEmail = async (req, res, next) => {
 
     const offset = (page - 1) * limit;
 
+    // Build where clause — date is optional
+    const where = { studentId: student.id };
+    if (date) where.date = date;
+
     const { count, rows } = await Attendance.findAndCountAll({
-      where: { studentId: student.id },
+      where,
       include: [
         { model: Student },
         { model: Subject },

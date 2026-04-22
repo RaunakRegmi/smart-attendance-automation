@@ -110,6 +110,13 @@ router.get('/stats', attendanceController.getAttendanceStats);
  *         required: true
  *         description: Student email address
  *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         required: false
+ *         description: Filter by date in YYYY-MM-DD format (optional)
+ *       - in: query
  *         name: page
  *         schema:
  *           type: integer
