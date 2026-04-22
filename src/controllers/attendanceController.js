@@ -27,13 +27,11 @@ exports.uploadExcel = async (req, res, next) => {
           defaults: { subjectName: record.subjectCode },
         });
 
-        await Attendance.findOrCreate({
-          where: {
-            studentId: student.id,
-            subjectId: subject.id,
-            date: record.date,
-          },
-          defaults: { status: record.status },
+        await Attendance.upsert({
+          studentId: student.id,
+          subjectId: subject.id,
+          date: record.date,
+          status: record.status,
         });
 
         result.success++;
