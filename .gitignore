@@ -7,6 +7,3 @@ exports/
 *.log
 .vscode/
 .idea/
-.claude/
-.claude-*
-.claude-*/**
