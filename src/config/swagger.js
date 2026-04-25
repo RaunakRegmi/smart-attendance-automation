@@ -23,7 +23,14 @@ const options = {
       },
     ],
     components: {
-      schemas: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT'
+      }
+    },
+    schemas: {
         Student: {
           type: 'object',
           properties: {
@@ -33,6 +40,17 @@ const options = {
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
           },
+        },
+        User: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 1 },
+            email: { type: 'string', example: 'admin@example.com' },
+            role: { type: 'string', enum: ['ADMIN', 'STUDENT'], example: 'ADMIN' },
+            isActive: { type: 'boolean', example: true },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' }
+          }
         },
         Subject: {
           type: 'object',

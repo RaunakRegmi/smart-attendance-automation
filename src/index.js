@@ -8,19 +8,42 @@ require('dotenv').config();
 const sequelize = require('./config/database');
 const swaggerSpecs = require('./config/swagger');
 const attendanceRoutes = require('./routes/attendanceRoutes');
+const authRoutes = require('./routes/authRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const batchRoutes = require('./routes/batchRoutes');
 const sectionRoutes = require('./routes/sectionRoutes');
 const routineRoutes = require('./routes/routineRoutes');
 const errorHandler = require('./middleware/errorHandler');
 const Student = require('./models/Student');
-const Subject = require('./models/Subject');
-const Attendance = require('./models/Attendance');
+const User = require('./models/User');
+const authMiddleware = require('./middleware/authMiddleware');
 const Batch = require('./models/Batch');
 const Section = require('./models/Section');
 const Routine = require('./models/Routine');
 
 const app = express();
+
+// Initialize Admin User on startup
+const ensureAdminUser = async () => {
+  try {
+    const adminUser = await User.findOne({ where: { email: 'admin@example.com' } });
+    if (!adminUser) {
+      await User.create({
+        email: 'admin@example.com',
+        password: 'admin@123',
+        role: 'ADMIN',
+        isActive: true
+      });
+    }
+  } catch (error) {
+    console.error('Failed to ensure admin user:', error);
+  }
+};
+
+ensureAdminUser();
+
+// Middleware for authentication
+// app.use(authMiddleware); // moved after Swagger routes
 
 const uploadDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadDir)) {
@@ -35,12 +58,14 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
   swaggerOptions: {
     url: '/api-docs/swagger.json',
   },
-}));
+}),);
 
 app.get('/api-docs/swagger.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.send(swaggerSpecs);
 });
+
+app.use(authMiddleware);
 
 Batch.hasMany(Section, { foreignKey: 'batchId' });
 Section.belongsTo(Batch, { foreignKey: 'batchId' });
@@ -59,6 +84,7 @@ app.use('/api/students', studentRoutes);
 app.use('/api/batches', batchRoutes);
 app.use('/api/sections', sectionRoutes);
 app.use('/api/routine', routineRoutes);
+app.use('/api/auth', authRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is running' });
@@ -76,46 +102,18 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-// const startServer = async () => {
-//   try {
-//     await sequelize.authenticate();
-//     console.log('Database connected');
-
-    // await sequelize.sync({ alter: true });
-    // console.log('Database synchronized');
-
-//     app.listen(PORT, () => {
-//       console.log(`Server running on port ${PORT}`);
-//     });
-//   } catch (error) {
-//     console.error('Failed to start server:', error);
-//     process.exit(1);
-//   }
-// };
-
-//Wait for DB to be ready before starting server
 const startServer = async () => {
-  let retries = 5;
-
-  while (retries) {
-    try {
-      await sequelize.authenticate();
-      console.log('Database connected');
-      break;
-    } catch (error) {
-      console.log(`DB not ready, retries left: ${retries}`);
-      retries -= 1;
-      await new Promise(res => setTimeout(res, 3000));
-    }
+  try {
+    await sequelize.authenticate();
+    console.log('Database connected');
+    await sequelize.sync({ alter: true });
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
   }
-
-  // await sequelize.sync(); // safe sync
-  await sequelize.sync({ alter: true }); // updated schema automatically
-
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
 };
-
 
 startServer();

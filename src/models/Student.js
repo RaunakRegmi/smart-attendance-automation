@@ -57,7 +57,7 @@ const Student = sequelize.define('Student', {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  batchId: {
+  userId: {
     type: DataTypes.UUID,
     allowNull: true,
     references: {
