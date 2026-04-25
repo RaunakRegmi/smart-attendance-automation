@@ -1,9 +1,9 @@
 const jwt = require('jsonwebtoken');
-const env = require('dotenv').config();
+require('dotenv').config();
 
 const authenticateJWT = (req, res, next) => {
-  // Allow unauthenticated access to Swagger UI, its JSON spec, and auth endpoints
-  if (req.path.startsWith('/api-docs') || req.path.startsWith('/api/auth')) {
+  // Allow unauthenticated access to Swagger UI, its JSON spec, and the login endpoint
+  if (req.path.startsWith('/api-docs') || req.path === '/api/auth/login') {
     return next();
   }
   const authHeader = req.headers.authorization;
@@ -20,4 +20,5 @@ const authenticateJWT = (req, res, next) => {
     res.status(401).json({ success: false, message: 'Authorization token required' });
   }
 };
+
 module.exports = authenticateJWT;

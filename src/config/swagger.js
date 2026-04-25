@@ -23,14 +23,14 @@ const options = {
       },
     ],
     components: {
-    securitySchemes: {
-      bearerAuth: {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT'
-      }
-    },
-    schemas: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+      schemas: {
         Student: {
           type: 'object',
           properties: {
@@ -49,8 +49,8 @@ const options = {
             role: { type: 'string', enum: ['ADMIN', 'STUDENT'], example: 'ADMIN' },
             isActive: { type: 'boolean', example: true },
             createdAt: { type: 'string', format: 'date-time' },
-            updatedAt: { type: 'string', format: 'date-time' }
-          }
+            updatedAt: { type: 'string', format: 'date-time' },
+          },
         },
         Subject: {
           type: 'object',
@@ -150,10 +150,7 @@ const options = {
           properties: {
             id: { type: 'string', format: 'uuid', example: '123e4567-e89b-12d3-a456-426614174001' },
             name: { type: 'string', example: 'November 2025' },
-            Sections: {
-              type: 'array',
-              items: { $ref: '#/components/schemas/Section' },
-            },
+            Sections: { type: 'array', items: { $ref: '#/components/schemas/Section' } },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
           },
@@ -197,6 +194,8 @@ const options = {
         },
       },
     },
+    // Apply security globally to all endpoints
+    security: [{ bearerAuth: [] }],
   },
   apis: ['./src/routes/*.js'],
 };
