@@ -2,6 +2,7 @@ const { Op } = require('sequelize');
 const Student = require('../models/Student');
 const Subject = require('../models/Subject');
 const Attendance = require('../models/Attendance');
+const User = require('../models/User');
 const { parseExcelFile, exportToExcel } = require('../utils/excelHandler');
 const path = require('path');
 const fs = require('fs');
