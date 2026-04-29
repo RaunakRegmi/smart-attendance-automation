@@ -4,6 +4,109 @@ const path = require('path');
 const fs = require('fs');
 const csv = require('csv-parser');
 
+const normalizeStatus = (status) => {
+  if (!status) return 'Absent';
+  const statusStr = status.toString().trim().toLowerCase();
+  if (statusStr.includes('present') || statusStr.includes('late')) return 'Present';
+  if (statusStr.includes('absent')) return 'Absent';
+  return 'Absent';
+};
+
+const parseDateValue = (dateValue) => {
+  if (!dateValue) return null;
+  if (dateValue instanceof Date) return dateValue;
+  if (typeof dateValue === 'number') {
+    return new Date((dateValue - 25569) * 86400 * 1000);
+  }
+  const parsed = new Date(dateValue);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const parseTabularData = (values) => {
+  if (!Array.isArray(values) || values.length === 0) return [];
+
+  const firstRow = values[0].map((cell) => (cell == null ? '' : cell.toString().trim().toLowerCase()));
+  const hasFlatHeader = firstRow.includes('student name') && firstRow.includes('email (gmail)') && firstRow.includes('subject code') && firstRow.includes('date') && firstRow.some((col) => col.includes('attendance'));
+
+  const result = [];
+
+  if (hasFlatHeader) {
+    const headerIndexes = {
+      studentName: firstRow.indexOf('student name'),
+      email: firstRow.indexOf('email (gmail)'),
+      subjectCode: firstRow.indexOf('subject code'),
+      subjectTitle: firstRow.indexOf('subject title'),
+      lecturer: firstRow.indexOf('lecturer'),
+      date: firstRow.indexOf('date'),
+      status: firstRow.findIndex((col) => col.includes('attendance')),
+    };
+
+    for (let i = 1; i < values.length; i++) {
+      const row = values[i] || [];
+      const studentName = row[headerIndexes.studentName];
+      const email = row[headerIndexes.email];
+      const subjectCode = row[headerIndexes.subjectCode];
+      const dateValue = row[headerIndexes.date];
+      const statusValue = row[headerIndexes.status];
+
+      if (!studentName || !email || !subjectCode || !dateValue || !statusValue) continue;
+
+      const date = parseDateValue(dateValue);
+      if (!date) continue;
+
+      result.push({
+        studentName: studentName.toString().trim(),
+        email: email.toString().trim(),
+        subjectCode: subjectCode.toString().trim(),
+        subjectTitle: headerIndexes.subjectTitle >= 0 && row[headerIndexes.subjectTitle] ? row[headerIndexes.subjectTitle].toString().trim() : null,
+        lecturer: headerIndexes.lecturer >= 0 && row[headerIndexes.lecturer] ? row[headerIndexes.lecturer].toString().trim() : null,
+        date,
+        status: normalizeStatus(statusValue),
+        attendance: normalizeStatus(statusValue),
+      });
+    }
+
+    return result;
+  }
+
+  // Fallback: legacy sheet layout with subject code in row 3 and dates in row 7
+  let subjectCode = 'UNKNOWN';
+  if (values[2] && values[2][0]) {
+    const match = values[2][0].toString().match(/Subject Code\s*:\s*(\S+)/i);
+    if (match) subjectCode = match[1];
+  }
+
+  const dateRow = values[6] || [];
+  for (let i = 7; i < values.length; i++) {
+    const row = values[i];
+    if (!row || !row[2] || !row[3]) continue;
+    const studentName = row[2];
+    const email = row[3];
+
+    for (let j = 4; j < row.length; j++) {
+      const status = row[j];
+      const dateValue = dateRow[j];
+      if (!status || !dateValue) continue;
+
+      const date = parseDateValue(dateValue);
+      if (!date) continue;
+
+      result.push({
+        studentName: studentName.toString().trim(),
+        email: email.toString().trim(),
+        subjectCode,
+        subjectTitle: null,
+        lecturer: null,
+        date,
+        status: normalizeStatus(status),
+        attendance: normalizeStatus(status),
+      });
+    }
+  }
+
+  return result;
+};
+
 const parseExcelFile = (filePath) => {
   try {
     const workbook = xlsx.readFile(filePath);
@@ -15,70 +118,14 @@ const parseExcelFile = (filePath) => {
     console.log('DEBUG: Row 2:', rawData[2]);
     console.log('DEBUG: Row 6:', rawData[6]);
 
-    const result = [];
+    const records = parseTabularData(rawData);
 
-    // Extract subject code from row 2 (row index 2: "Subject Code : DSA001")
-    let subjectCode = 'UNKNOWN';
-    if (rawData[2] && rawData[2][0]) {
-      const match = rawData[2][0].toString().match(/Subject Code\s*:\s*(\S+)/);
-      if (match) subjectCode = match[1];
+    console.log('DEBUG: Total records extracted:', records.length);
+    if (records.length > 0) {
+      console.log('DEBUG: First record:', records[0]);
     }
 
-    console.log('DEBUG: Extracted subject code:', subjectCode);
-
-    // Get column headers from row 4 (index 4)
-    const headerRow = rawData[4] || [];
-
-    // Get dates from row 6 (index 6) - dates are in numeric format
-    const dateRow = rawData[6] || [];
-
-    // Process student data starting from row 7 (index 7)
-    for (let i = 7; i < rawData.length; i++) {
-      const row = rawData[i];
-      if (!row || !row[2] || !row[3]) continue;
-
-      const studentName = row[2];
-      const email = row[3];
-
-      // For each week column (starting from index 4)
-      for (let j = 4; j < row.length; j++) {
-        const status = row[j];
-        const dateValue = dateRow[j];
-
-        // Skip empty cells
-        if (!status || !dateValue) continue;
-
-        // Normalize status values
-        let normalizedStatus = 'Unknown';
-        const statusStr = status.toString().toLowerCase();
-        if (statusStr.includes('present')) normalizedStatus = 'Present';
-        else if (statusStr.includes('absent')) normalizedStatus = 'Absent';
-        else if (statusStr.includes('late')) normalizedStatus = 'Late';
-
-        // Convert Excel date number to JavaScript date
-        let date;
-        if (typeof dateValue === 'number') {
-          date = new Date((dateValue - 25569) * 86400 * 1000);
-        } else {
-          date = new Date(dateValue);
-        }
-
-        result.push({
-          studentName,
-          email,
-          subjectCode,
-          date: date,
-          status: normalizedStatus,
-        });
-      }
-    }
-
-    console.log('DEBUG: Total records extracted:', result.length);
-    if (result.length > 0) {
-      console.log('DEBUG: First record:', result[0]);
-    }
-
-    return result;
+    return records;
   } catch (error) {
     throw new Error(`Failed to parse Excel file: ${error.message}`);
   }
@@ -248,11 +295,12 @@ const parseRoutineFile = async (filePath) => {
   }
 };
 
-module.exports = { 
-  parseExcelFile, 
-  exportToExcel, 
-  parseRoutineExcelFile, 
-  parseRoutineCSVFile, 
+module.exports = {
+  parseExcelFile,
+  parseTabularData,
+  exportToExcel,
+  parseRoutineExcelFile,
+  parseRoutineCSVFile,
   parseRoutineFile,
-  parseCSVFile 
+  parseCSVFile,
 };

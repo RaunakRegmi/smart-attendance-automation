@@ -15,6 +15,7 @@ const sectionRoutes = require('./routes/sectionRoutes');
 const routineRoutes = require('./routes/routineRoutes');
 const sheetsRoutes = require('./routes/sheetsRoutes');
 const auditRoutes = require('./routes/auditRoutes');
+const attendanceController = require('./controllers/attendanceController');
 const errorHandler = require('./middleware/errorHandler');
 const Student = require('./models/Student');
 const User = require('./models/User');
@@ -97,6 +98,7 @@ Section.hasMany(Sheets, { foreignKey: 'sectionId' });
 Sheets.belongsTo(Section, { foreignKey: 'sectionId' });
 
 app.use('/api/attendance', attendanceRoutes);
+app.post('/add-sheet', attendanceController.addSheet);
 app.use('/api/students', studentRoutes);
 app.use('/api/batches', batchRoutes);
 app.use('/api/sections', sectionRoutes);

@@ -357,3 +357,56 @@ exports.getDashboard = async (req, res, next) => {
     next(error);
   }
 };
+
+const { linkSheet, syncSheet } = require('../services/sheetsService');
+
+/**
+ * Add and sync a Google Sheet
+ * POST /add-sheet
+ * body: { url, batchId, sectionId }
+ */
+exports.addSheet = async (req, res, next) => {
+  try {
+    const { url, batchId, sectionId } = req.body;
+
+    if (!url || !batchId || !sectionId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: url, batchId, sectionId',
+      });
+    }
+
+    // Link the sheet first (save to database)
+    const sheet = await linkSheet(url, batchId, sectionId);
+
+    // Immediately trigger sync after saving sheetId
+    console.log('SYNC STARTED: Calling syncSheet for sheetId:', sheet.id);
+
+    try {
+      const syncResult = await syncSheet(sheet.id);
+
+      res.json({
+        success: true,
+        message: 'Sheet added and synced successfully',
+        data: {
+          sheetId: sheet.id,
+          syncResult,
+        },
+      });
+    } catch (syncError) {
+      console.error('SYNC FAILED:', syncError);
+
+      // Mark sheet as failed but still return success with error info
+      res.json({
+        success: true,
+        message: 'Sheet added but sync failed',
+        data: {
+          sheetId: sheet.id,
+          syncError: syncError.message,
+        },
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};

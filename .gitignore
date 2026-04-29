@@ -7,3 +7,11 @@ exports/
 *.log
 .vscode/
 .idea/
+.claude/
+.claude-logs/
+.claude-cache/
+.claude-temp/
+.claude-exports/
+.claude-uploads/
+.claude-exports/
+src/utils/keys.json
