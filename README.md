@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # AttendX
 
 AttendX is a Flutter-based student attendance management app built to provide a polished mobile experience for attendance tracking, course routines, and student profile management.
@@ -60,3 +61,7 @@ This project is configured as a local Flutter app and is not published to a pack
 ## License
 
 This repository does not include a license file. Add one if you want to make the project reusable or open source.
+=======
+# smart-attendance-automation
+The Smart Attendance Automation System is designed to modernize and streamline the traditional attendance-taking process in educational institutions.
+>>>>>>> 5c8c2c87c1e19076843a17a83f24d0383b74b6c6
