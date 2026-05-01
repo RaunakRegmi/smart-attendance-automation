@@ -8,6 +8,7 @@ require('dotenv').config();
 const sequelize = require('./config/database');
 const swaggerSpecs = require('./config/swagger');
 const attendanceRoutes = require('./routes/attendanceRoutes');
+const scheduleRoutes = require('./routes/scheduleRoutes');
 const authRoutes = require('./routes/authRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const batchRoutes = require('./routes/batchRoutes');
@@ -25,6 +26,7 @@ const Section = require('./models/Section');
 const Routine = require('./models/Routine');
 const Sheets = require('./models/Sheets');
 const AuditLog = require('./models/AuditLog');
+const Notification = require('./models/Notification');
 
 const app = express();
 
@@ -105,6 +107,7 @@ app.use('/api/sections', sectionRoutes);
 app.use('/api/routine', routineRoutes);
 app.use('/api/sheets', sheetsRoutes);
 app.use('/api/audit', auditRoutes);
+app.use('/api/schedule', scheduleRoutes);
 app.use('/api/auth', authRoutes);
 
 app.get('/api/health', (req, res) => {
