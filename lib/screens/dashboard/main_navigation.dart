@@ -1,4 +1,4 @@
-// // lib/screens/dashboard/main_navigation.dart
+// lib/screens/dashboard/main_navigation.dart
 //
 // CHANGE FROM ORIGINAL:
 //   Added ChatbotScreen as a 5th tab in the bottom navigation bar.
@@ -59,8 +59,8 @@ class _MainNavigationState extends State<MainNavigation> {
             ),
             // ── NEW ──────────────────────────────────────────────
             BottomNavigationBarItem(
-              icon: Icon(Icons.auto_awesome_outlined),
-              activeIcon: Icon(Icons.auto_awesome),
+              icon: Icon(Icons.school_outlined), // matches AttendX logo icon
+              activeIcon: Icon(Icons.school),
               label: 'Ask AI',
             ),
             // ────────────────────────────────────────────────────
