@@ -12,7 +12,14 @@ class MockData {
     attendancePercentage: 85,
   );
 
-  static const List<String> days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  static const List<String> days = [
+  'SUN',
+  'MON',
+  'TUE',
+  'WED',
+  'THU',
+  'FRI',
+];
 
   static List<ClassSchedule> getRoutine() {
     return [
