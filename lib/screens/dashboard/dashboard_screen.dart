@@ -216,7 +216,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ])),
               const SizedBox(height: 20),
 
-              const _AskAICard(),
+              // const _AskAICard(),
               const SizedBox(height: 20),
 
               const Text('RECENT LOGS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.textSecondary, letterSpacing: 1.0)),
@@ -403,29 +403,29 @@ class _CircularProgressPainter extends CustomPainter {
   bool shouldRepaint(_CircularProgressPainter old) => old.progress != progress;
 }
 
-class _AskAICard extends StatelessWidget {
-  const _AskAICard();
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Tap "Ask AI" in the bottom bar to open Campus AI'),
-      behavior: SnackBarBehavior.floating, duration: Duration(seconds: 2))),
-    child: Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [AppTheme.accent, Color(0xFF0F766E)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: AppTheme.accent.withOpacity(0.3), blurRadius: 16, offset: const Offset(0, 6))]),
-      child: Row(children: [
-        Container(width: 48, height: 48,
-          decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(14)),
-          child: const Icon(Icons.auto_awesome, color: Colors.white, size: 26)),
-        const SizedBox(width: 16),
-        const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Ask Campus AI', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
-          SizedBox(height: 3),
-          Text('Am I eligible for exams? Ask now →', style: TextStyle(fontSize: 12, color: Colors.white70)),
-        ])),
-        const Icon(Icons.chevron_right, color: Colors.white70),
-      ])));
-}
+// class _AskAICard extends StatelessWidget {
+//   const _AskAICard();
+//   @override
+//   Widget build(BuildContext context) => GestureDetector(
+//     onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+//       content: Text('Tap "Ask AI" in the bottom bar to open Campus AI'),
+//       behavior: SnackBarBehavior.floating, duration: Duration(seconds: 2))),
+//     child: Container(
+//       padding: const EdgeInsets.all(18),
+//       decoration: BoxDecoration(
+//         gradient: const LinearGradient(colors: [AppTheme.accent, Color(0xFF0F766E)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+//         borderRadius: BorderRadius.circular(16),
+//         boxShadow: [BoxShadow(color: AppTheme.accent.withOpacity(0.3), blurRadius: 16, offset: const Offset(0, 6))]),
+//       child: Row(children: [
+//         Container(width: 48, height: 48,
+//           decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(14)),
+//           child: const Icon(Icons.auto_awesome, color: Colors.white, size: 26)),
+//         const SizedBox(width: 16),
+//         const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+//           Text('Ask Campus AI', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+//           SizedBox(height: 3),
+//           Text('Am I eligible for exams? Ask now →', style: TextStyle(fontSize: 12, color: Colors.white70)),
+//         ])),
+//         const Icon(Icons.chevron_right, color: Colors.white70),
+//       ])));
+// }
