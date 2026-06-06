@@ -1,0 +1,3 @@
+sno,student_name,batch,attendance_percentage,rank_in_batch,percentile_attendance
+1,Alice Johnson,Spring 2025,93.22,1,100.0
+2,Bob Smith,Spring 2025,69.49,2,0.0

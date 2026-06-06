@@ -1,0 +1,27 @@
+<div class="page-header">
+  <h1>Job queue</h1>
+  <p>BullMQ sheet sync queue summary from <code>GET /api/sync/queue-status</code>.</p>
+</div>
+
+<div class="toolbar">
+  <button type="button" class="btn btn--secondary" (click)="load()" [disabled]="loading()">Refresh</button>
+</div>
+
+@if (loading()) {
+  <div class="card empty-state"><span class="loading-spinner"></span></div>
+} @else {
+  @if (queue(); as q) {
+    <div class="stats-grid">
+      <div class="stat card"><span class="stat__label">Total</span><span class="stat__value">{{ q.totalJobs ?? 0 }}</span></div>
+      <div class="stat card"><span class="stat__label">Waiting</span><span class="stat__value">{{ q.waiting ?? 0 }}</span></div>
+      <div class="stat card"><span class="stat__label">Active</span><span class="stat__value">{{ q.active ?? 0 }}</span></div>
+      <div class="stat card"><span class="stat__label">Completed</span><span class="stat__value">{{ q.completed ?? 0 }}</span></div>
+      <div class="stat card"><span class="stat__label">Failed</span><span class="stat__value">{{ q.failed ?? 0 }}</span></div>
+    </div>
+  }
+
+  <div class="card raw-card">
+    <h2>Response</h2>
+    <pre>{{ raw() }}</pre>
+  </div>
+}

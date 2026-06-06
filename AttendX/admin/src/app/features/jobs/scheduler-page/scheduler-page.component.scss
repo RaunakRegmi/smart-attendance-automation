@@ -1,0 +1,45 @@
+@use '../../../../styles/variables' as *;
+
+.status-card {
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+
+  h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+  }
+
+  pre {
+    margin: 0;
+    padding: 1rem;
+    background: $bg-page;
+    border-radius: $radius-sm;
+    font-size: 0.75rem;
+    overflow: auto;
+    max-height: 320px;
+  }
+}
+
+.card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.time-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  padding: 0.5rem 0;
+
+  .form-field {
+    margin: 0;
+    min-width: 140px;
+  }
+}
+
+.hint {
+  margin: 0 0 1rem;
+  font-size: 0.8125rem;
+  color: $text-secondary;
+}

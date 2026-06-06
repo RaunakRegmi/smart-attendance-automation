@@ -1,0 +1,45 @@
+@use '../../../../styles/variables' as *;
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.stat {
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  &__label {
+    font-size: 0.8125rem;
+    color: $text-secondary;
+  }
+
+  &__value {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+}
+
+.raw-card {
+  padding: 1.25rem 1.5rem;
+
+  h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+  }
+
+  pre {
+    margin: 0;
+    font-size: 0.75rem;
+    overflow: auto;
+    max-height: 240px;
+  }
+}
+
+code {
+  font-size: 0.8125rem;
+}

@@ -1,0 +1,16 @@
+.back-link {
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.routine-days {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.routine-day__title {
+  font-size: 1.125rem;
+  margin-bottom: 0.75rem;
+  color: var(--primary, #2563eb);
+}

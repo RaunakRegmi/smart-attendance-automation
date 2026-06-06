@@ -1,0 +1,46 @@
+@if (loading()) {
+  <div class="empty-state"><span class="loading-spinner"></span></div>
+} @else if (entries().length > 0) {
+  <div class="page-header">
+    <h1>Routine Detail</h1>
+    <p>{{ entries()[0].Section?.Batch?.name ?? '' }} / {{ entries()[0].Section?.name ?? '' }} &mdash; {{ entries().length }} class entries</p>
+  </div>
+  <p class="back-link"><a routerLink="/routines">← All routines</a></p>
+
+  <div class="routine-days">
+    @for (group of groupedEntries(); track group.day) {
+      <div class="card routine-day">
+        <h2 class="routine-day__title">{{ group.day }}</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Start</th>
+              <th>End</th>
+              <th>Subject</th>
+              <th>Code</th>
+              <th>Lecturer</th>
+              <th>Block</th>
+              <th>Room</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of group.classes; track c.id) {
+              <tr>
+                <td>{{ c.startTime }}</td>
+                <td>{{ c.endTime }}</td>
+                <td>{{ c.subjectName }}</td>
+                <td>{{ c.subjectCode }}</td>
+                <td>{{ c.teacher || '—' }}</td>
+                <td>{{ c.block || '—' }}</td>
+                <td>{{ c.room || '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+} @else {
+  <div class="page-header"><h1>Routine Detail</h1></div>
+  <p class="empty-state">No routine entries found for this section. <a routerLink="/routines">Back to list</a></p>
+}

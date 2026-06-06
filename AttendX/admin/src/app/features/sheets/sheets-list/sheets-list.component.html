@@ -1,0 +1,81 @@
+<div class="page-header">
+  <h1>Sheets</h1>
+  <p>View linked Google Sheets, open them, toggle status, and trigger sync.</p>
+</div>
+
+<div class="toolbar">
+  <select (change)="onBatchFilter($any($event.target).value)">
+    <option value="">All batches</option>
+    @for (b of batches(); track b.id) {
+      <option [value]="b.id">{{ b.name }}</option>
+    }
+  </select>
+  <select (change)="filterSectionId.set($any($event.target).value); load()">
+    <option value="">All sections</option>
+    @for (s of sections(); track s.id) {
+      <option [value]="s.id">{{ s.name }}</option>
+    }
+  </select>
+  <select (change)="filterStatus.set($any($event.target).value); load()">
+    <option value="">All statuses</option>
+    <option value="active">Active</option>
+    <option value="inactive">Inactive</option>
+  </select>
+  <button type="button" class="btn btn--secondary" (click)="syncAll()">Sync all active</button>
+  <a routerLink="/sheets/add" class="btn btn--primary">+ Link sheet</a>
+</div>
+
+<div class="card">
+  @if (loading()) {
+    <div class="empty-state"><span class="loading-spinner"></span></div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Sheet</th>
+            <th>Batch</th>
+            <th>Section</th>
+            <th>Status</th>
+            <th>Last sync</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (sheet of sheets(); track sheet.id) {
+            <tr>
+              <td>{{ sheetDisplayName(sheet) }}</td>
+              <td>{{ sheet.Batch?.name ?? '—' }}</td>
+              <td>{{ sheet.Section?.name ?? '—' }}</td>
+              <td>
+                <span class="badge" [class.badge--active]="sheet.status === 'active'" [class.badge--inactive]="sheet.status !== 'active'">
+                  {{ sheet.status }}
+                </span>
+              </td>
+              <td>{{ sheet.lastSuccessfulSyncTime | date: 'short' }}</td>
+              <td class="actions">
+                <a class="btn btn--ghost btn--sm" [href]="sheetUrl(sheet)" target="_blank" rel="noopener">Open</a>
+                <a class="btn btn--ghost btn--sm" [routerLink]="['/sheets', sheet.id]">View / modify</a>
+                <button type="button" class="btn btn--ghost btn--sm" (click)="syncOne(sheet)">Sync</button>
+                <button type="button" class="btn btn--ghost btn--sm" (click)="toggle(sheet)">Toggle</button>
+                <button type="button" class="btn btn--danger btn--sm" (click)="confirmDelete(sheet)">Delete</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="empty-state">No sheets yet. <a routerLink="/sheets/add">Link a sheet</a>.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+@if (deleteTarget()) {
+  <app-confirm-dialog
+    title="Delete Sheet"
+    message="Are you sure you want to delete '{{ sheetDisplayName(deleteTarget()!) }}'? This cannot be undone."
+    (confirm)="deleteSheet()"
+    (cancel)="deleteTarget.set(null)" />
+}

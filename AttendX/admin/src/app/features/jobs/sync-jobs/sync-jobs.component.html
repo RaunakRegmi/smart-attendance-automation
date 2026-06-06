@@ -1,0 +1,73 @@
+<div class="page-header">
+  <h1>Sync jobs</h1>
+  <p>Background sheet sync jobs from <code>GET /api/sync/status</code> and manual trigger via <code>POST /api/sync/manual</code>.</p>
+</div>
+
+<div class="toolbar" [formGroup]="filters">
+  <select formControlName="sheetId" (change)="load()">
+    <option value="">All sheets</option>
+    @for (sh of sheets(); track sh.id) {
+      <option [value]="sh.id">{{ sh.sheetName }}</option>
+    }
+  </select>
+  <select formControlName="status" (change)="load()">
+    <option value="">All statuses</option>
+    <option value="PENDING">PENDING</option>
+    <option value="RUNNING">RUNNING</option>
+    <option value="SUCCESS">SUCCESS</option>
+    <option value="FAILED">FAILED</option>
+    <option value="SKIPPED">SKIPPED</option>
+  </select>
+  <button type="button" class="btn btn--secondary" (click)="load()">Refresh</button>
+</div>
+
+<div class="card card--inline">
+  <h2>Manual sync</h2>
+  <p class="hint">Uses the sheet’s database UUID (from the Sheets list), not the Google spreadsheet ID.</p>
+  <div class="manual-row">
+    <select (change)="manualSheetId.set($any($event.target).value)">
+      <option value="">Select linked sheet…</option>
+      @for (sh of sheets(); track sh.id) {
+        <option [value]="sh.id">{{ sh.sheetName }} ({{ sh.id.slice(0, 8) }}…)</option>
+      }
+    </select>
+    <button type="button" class="btn btn--primary" (click)="manualSync()">Run manual sync</button>
+  </div>
+</div>
+
+<div class="card">
+  @if (loading()) {
+    <div class="empty-state"><span class="loading-spinner"></span></div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Sheet</th>
+            <th>Status</th>
+            <th>Type</th>
+            <th>Scheduled</th>
+            <th>Ended</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (job of jobs(); track job.id ?? $index) {
+            <tr>
+              <td>{{ job.id }}</td>
+              <td class="mono">{{ job.sheetId }}</td>
+              <td>{{ job.status }}</td>
+              <td>{{ job.syncType }}</td>
+              <td>{{ job.scheduledTime | date: 'short' }}</td>
+              <td>{{ job.endTime | date: 'short' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="empty-state">No jobs match the filters.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

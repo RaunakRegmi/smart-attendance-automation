@@ -1,0 +1,3 @@
+sno,student_name,batch,attendance_percentage,risk_level,risk_score,intervention_needed,risk_factors
+1,Alice Johnson,Spring 2025,93.22,Low,15.0,False,None
+2,Bob Smith,Spring 2025,69.49,High,70.0,True,Low overall attendance

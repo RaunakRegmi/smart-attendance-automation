@@ -1,0 +1,17 @@
+node_modules/
+.env
+.env.local
+.DS_Store
+uploads/
+exports/
+*.log
+.vscode/
+.idea/
+.claude/
+.claude-logs/
+.claude-cache/
+.claude-temp/
+.claude-exports/
+.claude-uploads/
+.claude-exports/
+src/utils/keys.json

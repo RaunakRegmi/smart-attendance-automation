@@ -1,0 +1,55 @@
+<div class="page-header">
+  <h1>Routines</h1>
+  <p>Uploaded class schedules grouped by section. Upload a new routine file to replace the existing one.</p>
+</div>
+
+<div class="toolbar">
+  <a routerLink="/routines/add" class="btn btn--primary">+ Upload routine</a>
+</div>
+
+<div class="card">
+  @if (loading()) {
+    <div class="empty-state"><span class="loading-spinner"></span></div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Batch</th>
+            <th>Section</th>
+            <th>Entries</th>
+            <th>Last uploaded</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of routines(); track r.sectionId) {
+            <tr>
+              <td>{{ r.batch.name }}</td>
+              <td>{{ r.section.name }}</td>
+              <td>{{ r.entryCount }}</td>
+              <td>{{ r.lastUploadedAt | date: 'medium' }}</td>
+              <td class="actions">
+                <a class="btn btn--ghost btn--sm" [routerLink]="['/routines', r.sectionId]">View</a>
+                <button
+                  type="button"
+                  class="btn btn--ghost btn--sm btn--danger"
+                  (click)="deleteRoutine(r.sectionId)"
+                  [disabled]="deleting() === r.sectionId"
+                >
+                  {{ deleting() === r.sectionId ? 'Deleting...' : 'Delete' }}
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="empty-state">
+                No routines uploaded yet. <a routerLink="/routines/add">Upload one</a>.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

@@ -1,0 +1,46 @@
+<div class="page-header">
+  <h1>Link Google Sheet</h1>
+  <p>Register a spreadsheet URL for a batch and section (same as API <code>POST /api/sheets</code>).</p>
+</div>
+
+<p class="back-link"><a routerLink="/sheets">← Back to sheets</a></p>
+
+<div class="card card--form">
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="form-field">
+      <label for="url">Sheet URL</label>
+      <input id="url" type="url" formControlName="url" placeholder="https://docs.google.com/spreadsheets/d/..." />
+      @if (form.controls.url.touched && form.controls.url.errors?.['required']) {
+        <span class="error">URL is required</span>
+      }
+    </div>
+    <div class="form-field">
+      <label for="batch">Batch</label>
+      <select id="batch" formControlName="batchId" (change)="onBatchChange($any($event.target).value)">
+        <option value="">Select batch</option>
+        @for (b of batches(); track b.id) {
+          <option [value]="b.id">{{ b.name }}</option>
+        }
+      </select>
+      @if (form.controls.batchId.touched && form.controls.batchId.errors?.['required']) {
+        <span class="error">Batch is required</span>
+      }
+    </div>
+    <div class="form-field">
+      <label for="section">Section</label>
+      <select id="section" formControlName="sectionId">
+        <option value="">Select section</option>
+        @for (s of sections(); track s.id) {
+          <option [value]="s.id">{{ s.name }}</option>
+        }
+      </select>
+      @if (form.controls.sectionId.touched && form.controls.sectionId.errors?.['required']) {
+        <span class="error">Section is required</span>
+      }
+    </div>
+    <div class="form-actions">
+      <a routerLink="/sheets" class="btn btn--secondary">Cancel</a>
+      <button type="submit" class="btn btn--primary" [disabled]="saving() || form.invalid">Link sheet</button>
+    </div>
+  </form>
+</div>

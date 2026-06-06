@@ -1,0 +1,34 @@
+<div class="page-header">
+  <h1>Scheduler</h1>
+  <p>Attendance sync scheduler: status, start, stop, and daily time (<code>POST /api/sync/modify</code>).</p>
+</div>
+
+<div class="toolbar">
+  <button type="button" class="btn btn--secondary" (click)="refreshStatus()" [disabled]="loading() || busy()">Refresh status</button>
+  <button type="button" class="btn btn--primary" (click)="start()" [disabled]="busy()">Start scheduler</button>
+  <button type="button" class="btn btn--danger" (click)="stop()" [disabled]="busy()">Stop scheduler</button>
+</div>
+
+<div class="card status-card">
+  <h2>Current status (raw)</h2>
+  @if (loading()) {
+    <div class="empty-state"><span class="loading-spinner"></span></div>
+  } @else {
+    <pre>{{ statusJson() }}</pre>
+  }
+</div>
+
+<div class="card">
+  <h2>Change sync time</h2>
+  <p class="hint">24-hour <code>HH:MM</code> as required by the API.</p>
+  <form [formGroup]="timeForm" (ngSubmit)="modifyTime()" class="time-form">
+    <div class="form-field">
+      <label for="t">New sync time</label>
+      <input id="t" type="text" formControlName="newSyncTime" placeholder="07:30" />
+      @if (timeForm.controls.newSyncTime.touched && timeForm.controls.newSyncTime.invalid) {
+        <span class="error">Use HH:MM (24h)</span>
+      }
+    </div>
+    <button type="submit" class="btn btn--primary" [disabled]="busy()">Apply</button>
+  </form>
+</div>

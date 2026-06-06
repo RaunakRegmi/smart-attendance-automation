@@ -1,0 +1,92 @@
+<div class="page-header">
+  <h1>Batches</h1>
+  <p>Manage academic batches</p>
+</div>
+
+<div class="toolbar">
+  <div class="search-input">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+    </svg>
+    <input type="search" placeholder="Search batches..." (input)="onSearch($any($event.target).value)" />
+  </div>
+  <button type="button" class="btn btn--primary" (click)="openCreate()">+ Create Batch</button>
+</div>
+
+<div class="card">
+  @if (loading()) {
+    <div class="empty-state"><span class="loading-spinner"></span></div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Batch Name</th>
+            <th>Abbreviation</th>
+            <th>Created At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (batch of filtered(); track batch.id) {
+            <tr>
+              <td>{{ batch.name }}</td>
+              <td>{{ batch.abbreviation }}</td>
+              <td>{{ batch.createdAt | date: 'medium' }}</td>
+              <td class="actions">
+                <button type="button" class="btn btn--ghost btn--sm" (click)="openEdit(batch)">Edit</button>
+                <button type="button" class="btn btn--ghost btn--sm" (click)="confirmDelete(batch)">Delete</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="4" class="empty-state">No batches found</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+@if (showModal()) {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2>{{ editing() ? 'Update Batch' : 'Create Batch' }}</h2>
+        <button type="button" class="btn btn--ghost" (click)="closeModal()">×</button>
+      </div>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="modal__body">
+          <div class="form-field">
+            <label>Batch Name</label>
+            <input formControlName="name" [class.invalid]="form.controls.name.touched && form.controls.name.invalid" />
+            @if (form.controls.name.touched && form.controls.name.invalid) {
+              <span class="error">Name is required</span>
+            }
+          </div>
+          <div class="form-field">
+            <label>Abbreviation (e.g. A25)</label>
+            <input formControlName="abbreviation" style="text-transform: uppercase" />
+            @if (form.controls.abbreviation.touched && form.controls.abbreviation.invalid) {
+              <span class="error">Uppercase alphanumeric required</span>
+            }
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn btn--secondary" (click)="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn--primary" [disabled]="saving() || form.invalid">
+            {{ editing() ? 'Save' : 'Create' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (deleteTarget()) {
+  <app-confirm-dialog
+    title="Delete Batch"
+    [message]="'Are you sure you want to delete ' + deleteTarget()!.name + '?'"
+    (confirm)="delete()"
+    (cancel)="deleteTarget.set(null)"
+  />
+}

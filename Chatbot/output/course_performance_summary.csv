@@ -1,0 +1,3 @@
+course_code,course_name,avg_attendance_pct,performance_tier,total_students,students_perfect,students_below_75
+CS201,Data Structures,84.48,Healthy,2,0,1
+CS301,Algorithms,78.33,Healthy,2,0,1
