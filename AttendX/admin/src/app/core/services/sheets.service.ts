@@ -11,10 +11,10 @@ export class SheetsService {
   private readonly api = inject(ApiService);
   private readonly baseUrl = environment.apiUrl;
 
-  getSheets(params?: { batchId?: string; sectionId?: string; status?: string }): Observable<SheetRecord[]> {
-    return this.http.get<{ success: boolean; data: SheetRecord[] }>(`${this.baseUrl}/sheets`, {
+  getSheets(params?: { batchId?: string; sectionId?: string; status?: string; page?: number; limit?: number }): Observable<{ data: SheetRecord[]; pagination: { total: number; page: number; limit: number; totalPages: number } }> {
+    return this.http.get<{ success: boolean; data: SheetRecord[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>(`${this.baseUrl}/sheets`, {
       params: params as Record<string, string>,
-    }).pipe(map(r => r.data ?? []));
+    }).pipe(map(r => ({ data: r.data ?? [], pagination: r.pagination ?? { total: 0, page: 1, limit: 10, totalPages: 0 } })));
   }
 
   /** POST /api/sheets — response shape is backend-specific (201 body, not always { success, data }). */

@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, AfterViewChecked, inject, signal } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewChecked, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { ChatbotService } from '../../core/services/chatbot.service';
@@ -17,7 +17,7 @@ interface Message {
   templateUrl: './chatbot.component.html',
   styleUrl: './chatbot.component.scss',
 })
-export class ChatbotComponent implements AfterViewChecked {
+export class ChatbotComponent implements OnInit, AfterViewChecked {
   private readonly chatbot = inject(ChatbotService);
   private readonly toast = inject(ToastService);
 
@@ -26,6 +26,9 @@ export class ChatbotComponent implements AfterViewChecked {
   readonly sending = signal(false);
   readonly refreshing = signal(false);
   readonly vectorReady = signal<boolean | null>(null);
+
+  /** Unique per page-visit; cleared when navigating away. */
+  private sessionId = '';
 
   @ViewChild('scrollContainer') private scrollContainer?: ElementRef<HTMLDivElement>;
   private _shouldScroll = false;
@@ -41,6 +44,10 @@ export class ChatbotComponent implements AfterViewChecked {
   constructor() {
     // Backend now proxies; assume healthy until first call fails.
     this.vectorReady.set(true);
+  }
+
+  ngOnInit(): void {
+    this.sessionId = crypto.randomUUID();
   }
 
   ngAfterViewChecked(): void {
@@ -66,7 +73,7 @@ export class ChatbotComponent implements AfterViewChecked {
     this._shouldScroll = true;
 
     try {
-      const reply = await this.chatbot.sendAdminMessage(text);
+      const reply = await this.chatbot.sendAdminMessage(text, this.sessionId);
       this.messages.update((m) => [
         ...m,
         { role: 'assistant', text: reply || "I don't have that information.", ts: new Date() },

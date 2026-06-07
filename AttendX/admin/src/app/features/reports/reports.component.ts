@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NgTemplateOutlet, DecimalPipe } from '@angular/common';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { ReportService } from '../../core/services/report.service';
 import { BatchService } from '../../core/services/batch.service';
 import { SectionService } from '../../core/services/section.service';
@@ -58,7 +59,7 @@ const REPORT_TABS: ReportTab[] = [
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [ReactiveFormsModule, NgTemplateOutlet, DecimalPipe],
+  imports: [ReactiveFormsModule, NgTemplateOutlet, DecimalPipe, PaginationComponent],
   templateUrl: './reports.component.html',
   styleUrl: './reports.component.scss',
 })
@@ -113,6 +114,7 @@ export class ReportsComponent implements OnInit {
   readonly reportData = signal<any>(null);
   readonly pagination = signal<{ total: number; page: number; limit: number; totalPages: number } | null>(null);
   readonly page = signal(1);
+  readonly limit = signal(10);
 
   ngOnInit(): void {
     this.batchService.getAll().subscribe(r => this.batches.set(r.data ?? []));
@@ -184,21 +186,21 @@ export class ReportsComponent implements OnInit {
         break;
       case 'section-wise':
         if (!f.sectionId) { this.toast.warning('Select a section'); this.loading.set(false); return; }
-        this.reportService.getSectionWiseReport(f.sectionId, { page: this.page(), search: f.search || undefined }).subscribe({
+        this.reportService.getSectionWiseReport(f.sectionId, { page: this.page(), limit: this.limit(), search: f.search || undefined }).subscribe({
           next: (r) => { this.reportData.set(r.data); this.pagination.set(r.pagination ?? null); this.loading.set(false); },
           error: this.onError,
         });
         break;
       case 'batch-wise':
         if (!f.batchId) { this.toast.warning('Select a batch'); this.loading.set(false); return; }
-        this.reportService.getBatchWiseReport(f.batchId, { page: this.page(), search: f.search || undefined }).subscribe({
+        this.reportService.getBatchWiseReport(f.batchId, { page: this.page(), limit: this.limit(), search: f.search || undefined }).subscribe({
           next: (r) => { this.reportData.set(r.data); this.pagination.set(r.pagination ?? null); this.loading.set(false); },
           error: this.onError,
         });
         break;
       case 'subject-report':
         if (!f.subjectId && !f.subjectCode) { this.toast.warning('Select a subject'); this.loading.set(false); return; }
-        this.reportService.getSubjectWiseReport({ subjectId: f.subjectId ? Number(f.subjectId) : undefined, subjectCode: f.subjectCode || undefined, page: this.page() }).subscribe({
+        this.reportService.getSubjectWiseReport({ subjectId: f.subjectId ? Number(f.subjectId) : undefined, subjectCode: f.subjectCode || undefined, page: this.page(), limit: this.limit() }).subscribe({
           next: (r) => { this.reportData.set(r.data); this.pagination.set(r.pagination ?? null); this.loading.set(false); },
           error: this.onError,
         });
@@ -211,19 +213,19 @@ export class ReportsComponent implements OnInit {
         break;
       case 'date-range':
         if (!f.startDate || !f.endDate) { this.toast.warning('Select start and end dates'); this.loading.set(false); return; }
-        this.reportService.getDateRangeReport({ startDate: f.startDate, endDate: f.endDate, sectionId: f.sectionId || undefined, batchId: f.batchId || undefined, page: this.page() }).subscribe({
+        this.reportService.getDateRangeReport({ startDate: f.startDate, endDate: f.endDate, sectionId: f.sectionId || undefined, batchId: f.batchId || undefined, page: this.page(), limit: this.limit() }).subscribe({
           next: (r) => { this.reportData.set(r.data); this.pagination.set(r.pagination ?? null); this.loading.set(false); },
           error: this.onError,
         });
         break;
       case 'low-attendance':
-        this.reportService.getLowAttendanceReport({ threshold: Number(f.threshold || 80), batchId: f.batchId || undefined, sectionId: f.sectionId || undefined, page: this.page() }).subscribe({
+        this.reportService.getLowAttendanceReport({ threshold: Number(f.threshold || 80), batchId: f.batchId || undefined, sectionId: f.sectionId || undefined, page: this.page(), limit: this.limit() }).subscribe({
           next: (r) => { this.reportData.set(r.data); this.pagination.set(r.pagination ?? null); this.loading.set(false); },
           error: this.onError,
         });
         break;
       case 'absent-students':
-        this.reportService.getAbsentStudentsReport({ date: f.date || undefined, subjectId: f.subjectId ? Number(f.subjectId) : undefined, sectionId: f.sectionId || undefined, page: this.page() }).subscribe({
+        this.reportService.getAbsentStudentsReport({ date: f.date || undefined, subjectId: f.subjectId ? Number(f.subjectId) : undefined, sectionId: f.sectionId || undefined, page: this.page(), limit: this.limit() }).subscribe({
           next: (r) => { this.reportData.set(r.data); this.pagination.set(r.pagination ?? null); this.loading.set(false); },
           error: this.onError,
         });
@@ -254,13 +256,18 @@ export class ReportsComponent implements OnInit {
     this.loading.set(false);
   };
 
-  private readonly onError = (err: any) => {
-    this.toast.error(err.error?.message ?? 'Failed to load report');
+  private readonly onError = () => {
     this.loading.set(false);
   };
 
   goToPage(p: number): void {
     this.page.set(p);
+    this.generate();
+  }
+
+  onLimitChange(l: number): void {
+    this.limit.set(l);
+    this.page.set(1);
     this.generate();
   }
 

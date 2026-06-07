@@ -5,11 +5,12 @@ import { BatchService } from '../../core/services/batch.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Batch } from '../../core/models/api.models';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-batches',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe, ConfirmDialogComponent],
+  imports: [ReactiveFormsModule, DatePipe, ConfirmDialogComponent, PaginationComponent],
   templateUrl: './batches.component.html',
   styleUrl: './batches.component.scss',
 })
@@ -20,12 +21,16 @@ export class BatchesComponent implements OnInit {
 
   readonly loading = signal(true);
   readonly batches = signal<Batch[]>([]);
-  readonly filtered = signal<Batch[]>([]);
   readonly search = signal('');
   readonly showModal = signal(false);
   readonly editing = signal<Batch | null>(null);
   readonly deleteTarget = signal<Batch | null>(null);
+  readonly deleting = signal(false);
   readonly saving = signal(false);
+  readonly page = signal(1);
+  readonly totalPages = signal(1);
+  readonly total = signal(0);
+  readonly limit = signal(10);
 
   readonly form = this.fb.nonNullable.group({
     name: ['', Validators.required],
@@ -38,10 +43,17 @@ export class BatchesComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.batchService.getAll().subscribe({
-      next: (res) => {
-        this.batches.set(res.data ?? []);
-        this.applyFilter();
+    this.batchService.getAll({ search: this.search(), page: this.page(), limit: this.limit() }).subscribe({
+      next: (res: any) => {
+        if (res.pagination) {
+          this.batches.set(res.data ?? []);
+          this.totalPages.set(res.pagination.totalPages ?? 1);
+          this.total.set(res.pagination.total ?? 0);
+        } else {
+          this.batches.set(res.data ?? []);
+          this.total.set(res.data?.length ?? 0);
+          this.totalPages.set(1);
+        }
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
@@ -50,18 +62,8 @@ export class BatchesComponent implements OnInit {
 
   onSearch(value: string): void {
     this.search.set(value);
-    this.applyFilter();
-  }
-
-  applyFilter(): void {
-    const q = this.search().toLowerCase();
-    this.filtered.set(
-      this.batches().filter(
-        (b) =>
-          b.name.toLowerCase().includes(q) ||
-          (b.abbreviation?.toLowerCase().includes(q) ?? false)
-      )
-    );
+    this.page.set(1);
+    this.load();
   }
 
   openCreate(): void {
@@ -100,8 +102,7 @@ export class BatchesComponent implements OnInit {
         this.load();
         this.saving.set(false);
       },
-      error: (err) => {
-        this.toast.error(err.error?.message ?? 'Failed to save batch');
+      error: () => {
         this.saving.set(false);
       },
     });
@@ -113,14 +114,18 @@ export class BatchesComponent implements OnInit {
 
   delete(): void {
     const batch = this.deleteTarget();
-    if (!batch) return;
+    if (!batch || this.deleting()) return;
+    this.deleting.set(true);
     this.batchService.delete(batch.id).subscribe({
       next: () => {
         this.toast.success('Batch deleted');
         this.deleteTarget.set(null);
+        this.deleting.set(false);
         this.load();
       },
-      error: (err) => this.toast.error(err.error?.message ?? 'Failed to delete'),
+      error: () => {
+        this.deleting.set(false);
+      },
     });
   }
 }

@@ -28,7 +28,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (batch of filtered(); track batch.id) {
+          @for (batch of batches(); track batch.id) {
             <tr>
               <td>{{ batch.name }}</td>
               <td>{{ batch.abbreviation }}</td>
@@ -44,6 +44,14 @@
         </tbody>
       </table>
     </div>
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [total]="total()"
+      [limit]="limit()"
+      (pageChange)="page.set($event); load()"
+      (limitChange)="limit.set($event); page.set(1); load()"
+    />
   }
 </div>
 
@@ -85,7 +93,8 @@
 @if (deleteTarget()) {
   <app-confirm-dialog
     title="Delete Batch"
-    [message]="'Are you sure you want to delete ' + deleteTarget()!.name + '?'"
+    [message]="'Are you sure you want to delete ' + deleteTarget()!.name + '? Sections and sheets under this batch must be removed first.'"
+    confirmLabel="Delete"
     (confirm)="delete()"
     (cancel)="deleteTarget.set(null)"
   />

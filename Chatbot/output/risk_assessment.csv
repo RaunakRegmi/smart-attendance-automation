@@ -1,3 +1,34 @@
 sno,student_name,batch,attendance_percentage,risk_level,risk_score,intervention_needed,risk_factors
-1,Alice Johnson,Spring 2025,93.22,Low,15.0,False,None
-2,Bob Smith,Spring 2025,69.49,High,70.0,True,Low overall attendance
+463,Aayush Sharma,Atumn 2025,96.55,Low,15.0,False,None
+464,Binita Rijal,Atumn 2025,89.66,Low,15.0,False,None
+465,Chirag Gautam,Atumn 2025,79.31,Medium,40.0,False,None
+466,Dinesh Kunwar,Atumn 2025,82.76,Medium,40.0,False,None
+467,Elina Bista,Atumn 2025,82.76,Medium,40.0,False,None
+468,Firoj Ansari,Atumn 2025,79.31,Medium,40.0,False,None
+469,Gaurav Kafle,Atumn 2025,86.21,Low,15.0,False,None
+470,Hema Lama,Atumn 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
+471,Ishan Koirala,Atumn 2025,65.52,High,70.0,True,"Low overall attendance, High absence count"
+472,Juna Khadgi,Atumn 2025,93.1,Low,15.0,False,None
+473,Kamal Rokaya,Atumn 2025,79.31,Medium,40.0,False,None
+474,Lalita Budhathoki,Atumn 2025,86.21,Low,15.0,False,None
+475,Manoj Dong,Atumn 2025,96.55,Low,15.0,False,None
+476,Nirmala Karki,Atumn 2025,89.66,Low,15.0,False,None
+477,Omkar Pokharel,Atumn 2025,86.21,Low,15.0,False,None
+478,Pabitra Dhakal,Atumn 2025,93.1,Low,15.0,False,None
+479,Qasim Miya,Atumn 2025,93.1,Low,15.0,False,None
+480,Ramesh Suwal,Atumn 2025,89.66,Low,15.0,False,None
+481,Sanjay Khadka,Atumn 2025,96.55,Low,15.0,False,None
+482,Tara Ghale,Atumn 2025,75.86,Medium,40.0,False,None
+483,Ujjwal Basnet,Atumn 2025,68.97,High,70.0,True,Low overall attendance
+484,Bipin Sigdel,Atumn 2025,93.1,Low,15.0,False,None
+485,Chetana Thagunna,Atumn 2025,93.1,Low,15.0,False,None
+486,Dev Rai,Atumn 2025,89.66,Low,15.0,False,None
+487,Esha Karki,Atumn 2025,93.1,Low,15.0,False,None
+488,Ganesh Baral,Atumn 2025,82.76,Medium,40.0,False,None
+489,Hari Bogati,Atumn 2025,93.1,Low,15.0,False,None
+490,Indira Sapkota,Atumn 2025,72.41,High,70.0,True,Low overall attendance
+491,Jeevan Giri,Atumn 2025,82.76,Medium,40.0,False,None
+492,Kabita Chhetri,Atumn 2025,68.97,High,70.0,True,Low overall attendance
+493,Lokesh Karki,Atumn 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
+494,Mamata Shahi,Atumn 2025,55.17,Critical,90.0,True,"Low overall attendance, High absence count"
+495,Nawaraj Bista,Atumn 2025,96.55,Low,15.0,False,None

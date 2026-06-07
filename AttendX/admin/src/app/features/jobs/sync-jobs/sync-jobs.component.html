@@ -4,13 +4,13 @@
 </div>
 
 <div class="toolbar" [formGroup]="filters">
-  <select formControlName="sheetId" (change)="load()">
+  <select formControlName="sheetId" (change)="page.set(1); load()">
     <option value="">All sheets</option>
     @for (sh of sheets(); track sh.id) {
       <option [value]="sh.id">{{ sh.sheetName }}</option>
     }
   </select>
-  <select formControlName="status" (change)="load()">
+  <select formControlName="status" (change)="page.set(1); load()">
     <option value="">All statuses</option>
     <option value="PENDING">PENDING</option>
     <option value="RUNNING">RUNNING</option>
@@ -69,5 +69,12 @@
         </tbody>
       </table>
     </div>
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [total]="total()"
+      [limit]="limit()"
+      (pageChange)="onPageChange($event)"
+      (limitChange)="onLimitChange($event)" />
   }
 </div>

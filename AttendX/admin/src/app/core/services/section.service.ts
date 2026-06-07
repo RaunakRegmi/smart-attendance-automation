@@ -1,13 +1,18 @@
 import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { Section } from '../models/api.models';
+import { Section, ApiResponse, Pagination } from '../models/api.models';
 
 @Injectable({ providedIn: 'root' })
 export class SectionService {
   private readonly api = inject(ApiService);
 
-  getAll(batchId?: string) {
-    return this.api.get<Section[]>('/sections', batchId ? { batchId } : undefined);
+  getAll(batchId?: string, params?: Record<string, string | number | undefined>): Observable<ApiResponse<Section[]> & { pagination?: Pagination }> {
+    const query = { ...(batchId ? { batchId } : {}), ...params };
+    if (params?.['page']) {
+      return this.api.getPaginated<Section>('/sections', query);
+    }
+    return this.api.get<Section[]>('/sections', query);
   }
 
   create(data: { name: string; batchId: string }) {

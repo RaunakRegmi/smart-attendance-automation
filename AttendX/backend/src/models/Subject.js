@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
+const refresh = require('../services/knowledgeRefreshService');
 
 const Subject = sequelize.define('Subject', {
   id: {
@@ -10,7 +11,6 @@ const Subject = sequelize.define('Subject', {
   subjectCode: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
   },
   subjectName: {
     type: DataTypes.STRING,
@@ -22,6 +22,14 @@ const Subject = sequelize.define('Subject', {
 }, {
   tableName: 'subjects',
   timestamps: true,
+  paranoid: true,
+  hooks: {
+    afterCreate: () => refresh.trigger(),
+    afterUpdate: (record) => {
+      if (record.changed('deletedAt')) refresh.trigger();
+    },
+    afterDestroy: () => refresh.trigger(),
+  },
 });
 
 module.exports = Subject;

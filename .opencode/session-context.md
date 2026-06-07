@@ -1,45 +1,24 @@
-# Session Context — Context Awareness Implementation
+# Session Context
 
 ## Goal
-Add Redis-backed conversation history (context awareness) to the RAG chatbot while preserving backward compatibility.
+Complete soft-delete implementation: run the database migration successfully and verify the server starts.
 
-## Completed
-- Added `redis.asyncio` dependency, async Redis connection via `get_redis()` at `Chatbot/chatbot_app.py:39`
-- Implemented `load_history(session_id)` and `save_history(session_id, messages)` at `:48` and `:58`
-- Fixed `setex` deprecation → using `set()` with `ex=` at `:63`
-- Added `session_id` parameter to all 5 chat endpoints:
-  - `/chat` (streaming admin) at `:380`
-  - `/chat-sync` (sync admin) at `:390`
-  - `/student/chat` (streaming student by ID) at `:337`
-  - `/student/chat-by-email` (sync student by email) at `:351`
-- All streaming/sync/student reply functions are now `async` to support Redis I/O:
-  - `stream_response()` at `:122`
-  - `collect_reply()` at `:160`
-  - `stream_student_response()` at `:245`
-  - `collect_student_reply()` at `:285`
-- Conversation history (max 10 turns = `MAX_HISTORY * 2` messages) saved to Redis with 3600s TTL
-- **Backward compatible**: endpoints work without `session_id` → no history loaded/saved
-- Fixed `rag_indexer.py` to use absolute paths (`BASE_DIR` based on `__file__`) so it works regardless of CWD
-- Fixed `chatbot_app.py` to use absolute path for `CHROMA_DIR` matching the indexer
-- Seeds vector store with `/ingest` endpoint (test data: Alice Johnson + Bob Smith)
-- Redis connection at `redis://localhost:6379/0` (matches Docker stack)
+## What Was Accomplished
+- Created `attendance_db` database in PostgreSQL (was missing)
+- Fixed migration `20260607000000-add-soft-delete.js` to handle already-existing columns/indexes (wrapped `addColumn` and `addIndex` in try/catch for "already exists" errors)
+- Manually recorded the migration in `sequelize_meta` since all structural changes (deletedAt columns, partial unique indexes, sheetId) were already applied by `sync({ alter: true })`
+- Created `.env` file in backend with DB credentials
+- Verified server starts on port 5000 (only pre-existing issue: Redis not running for BullMQ worker)
 
-## Key Config (env vars)
-| Variable | Default | Description |
-|---|---|---|
-| `REDIS_URL` | `redis://localhost:6379/0` | Redis connection |
-| `SESSION_TTL` | `3600` | Session expiry seconds |
-| `MAX_HISTORY` | `10` | Max conversation turns retained |
+## Pending / Next Steps
+- Redis is not running (port 6379) — BullMQ sheet sync worker fails. Start Redis if needed: `redis-server` or `sudo service redis-server start`.
+- Verify all delete flows end-to-end (backend + frontend admin UI).
+- Update reports module to use `paranoid: false` on includes for historical accuracy (separate task).
+- Update chatbot `buildPayload()` to exclude soft-deleted records (may already work via `User.isActive` filter).
 
-## Test Results
-- ✅ First message: "My name is Bob" → model greets "Bob Smith!"
-- ✅ Second message (same session_id): "What is my name?" → "Your name is Bob Smith! I remember that..."
-- ✅ Third message: "Tell me about Alice Johnson's attendance" → RAG vector search returns real data
-- ✅ No session_id: fresh session, no memory (backward compatible)
-- ✅ Health endpoint confirms `vector_store: ready`
+## Key Decisions
+- All soft-delete columns and partial unique indexes were already created by `sync({ alter: true })` when models started using `paranoid: true` and removed `unique: true`. The migration was only needed for `sequelize-cli` tracking — but since it failed on "already exists", we wrapped DDL ops in try/catch and force-recorded it.
 
 ## Relevant Files
-- `Chatbot/chatbot_app.py` — all endpoints and history logic
-- `Chatbot/rag_indexer.py` — fixed absolute paths (`BASE_DIR`)
-- `Chatbot/csv_builder.py` — generates CSVs from `/ingest` JSON payload
-- `Chatbot/requirements.txt` — added `redis>=5.0.0`
+- `AttendX/backend/src/migrations/20260607000000-add-soft-delete.js` — updated with try/catch for idempotent execution
+- `AttendX/backend/.env` — created with DB credentials

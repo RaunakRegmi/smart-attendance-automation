@@ -95,11 +95,17 @@ const parseTabularData = (values) => {
     return result;
   }
 
-  // Fallback: legacy sheet layout with subject code in row 3 and dates in row 7
+  // Fallback: legacy sheet layout with subject code in row 3, lecturer in row 4, dates in row 7
   let subjectCode = 'UNKNOWN';
   if (values[2] && values[2][0]) {
     const match = values[2][0].toString().match(/Subject Code\s*:\s*(\S+)/i);
     if (match) subjectCode = match[1];
+  }
+
+  let lecturer = null;
+  if (values[3] && values[3][0]) {
+    const match = values[3][0].toString().match(/Lecturer\s*:\s*(.+)/i);
+    if (match) lecturer = match[1].trim();
   }
 
   // Validate date headers in row 7 (index 6)
@@ -134,7 +140,7 @@ const parseTabularData = (values) => {
         email: email.toString().trim(),
         subjectCode,
         subjectTitle: null,
-        lecturer: null,
+        lecturer,
         date,
         status: normalizeStatus(statusValue),
         attendance: normalizeStatus(statusValue),

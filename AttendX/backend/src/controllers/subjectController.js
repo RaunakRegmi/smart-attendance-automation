@@ -1,4 +1,5 @@
 const Subject = require('../models/Subject');
+const Lecturer = require('../models/Lecturer');
 const { Op } = require('sequelize');
 
 exports.getSubjects = async (req, res, next) => {
@@ -65,6 +66,15 @@ exports.deleteSubject = async (req, res, next) => {
     if (!subject) {
       return res.status(404).json({ success: false, message: 'Subject not found' });
     }
+
+    // Check blocking condition: lecturer assigned
+    if (subject.lecturerId) {
+      return res.status(409).json({
+        success: false,
+        message: `Cannot delete subject "${subject.subjectCode}" — a lecturer is assigned to it. Remove the lecturer link first.`,
+      });
+    }
+
     await subject.destroy();
     res.json({ success: true, message: 'Subject deleted successfully' });
   } catch (error) {

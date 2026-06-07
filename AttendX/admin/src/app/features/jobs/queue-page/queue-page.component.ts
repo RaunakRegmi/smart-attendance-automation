@@ -32,7 +32,6 @@ export class QueuePageComponent implements OnInit {
       error: (err) => {
         this.raw.set(err.error?.error ?? err.error?.message ?? String(err.message));
         this.loading.set(false);
-        this.toast.error('Could not load queue status');
       },
     });
   }

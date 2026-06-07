@@ -37,7 +37,7 @@ export class AdminLayoutComponent {
         { label: 'Subject', route: '/subjects', icon: 'subject' },
         { label: 'Lecturer', route: '/lecturers', icon: 'lecturer' },
         { label: 'Reports', route: '/reports', icon: 'reports' },
-        { label: 'AI Assistant', route: '/chatbot', icon: 'reports' },
+        { label: 'AI Assistant', route: '/chatbot', icon: 'chatbot' },
         { label: 'Profile', route: '/profile', icon: 'profile' },
       ],
     },

@@ -10,11 +10,13 @@ export class SyncService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/sync`;
 
-  listJobs(params?: { sheetId?: string; status?: string }): Observable<{ success: boolean; jobs?: SyncJob[]; message?: string }> {
+  listJobs(params?: { sheetId?: string; status?: string; page?: number; limit?: number }): Observable<{ success: boolean; jobs?: SyncJob[]; pagination?: { total: number; page: number; limit: number; totalPages: number }; message?: string }> {
     let httpParams = new HttpParams();
     if (params?.sheetId) httpParams = httpParams.set('sheetId', params.sheetId);
     if (params?.status) httpParams = httpParams.set('status', params.status);
-    return this.http.get<{ success: boolean; jobs?: SyncJob[]; message?: string }>(`${this.base}/status`, {
+    if (params?.page) httpParams = httpParams.set('page', params.page);
+    if (params?.limit) httpParams = httpParams.set('limit', params.limit);
+    return this.http.get<{ success: boolean; jobs?: SyncJob[]; pagination?: { total: number; page: number; limit: number; totalPages: number }; message?: string }>(`${this.base}/status`, {
       params: httpParams,
     });
   }

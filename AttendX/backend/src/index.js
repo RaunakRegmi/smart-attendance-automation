@@ -23,6 +23,7 @@ const reportsRoutes = require('./routes/reportsRoutes');
 const studentPortalRoutes = require('./routes/studentPortalRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const chatbotRoutes = require('./routes/chatbotRoutes');
+const restoreRoutes = require('./routes/restoreRoutes');
 const schedulerService = require('./services/schedulerService');
 const errorHandler = require('./middleware/errorHandler');
 const User = require('./models/User');
@@ -31,6 +32,8 @@ const authMiddleware = require('./middleware/authMiddleware');
 const Batch = require('./models/Batch');
 const Section = require('./models/Section');
 const Routine = require('./models/Routine');
+const Subject = require('./models/Subject');
+const Lecturer = require('./models/Lecturer');
 const Sheets = require('./models/Sheets');
 const AuditLog = require('./models/AuditLog');
 const Notification = require('./models/Notification');
@@ -138,6 +141,7 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/student', studentPortalRoutes);
 app.use('/api', notificationRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/admin', restoreRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is running' });

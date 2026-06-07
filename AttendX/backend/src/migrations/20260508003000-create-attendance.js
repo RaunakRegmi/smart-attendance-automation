@@ -53,11 +53,15 @@ module.exports = {
     });
 
     // Add unique constraint for (studentId, subjectId, date)
-    await queryInterface.addConstraint('attendance', {
-      type: 'unique',
-      name: 'attendance_studentId_subjectId_date_unique',
-      fields: ['studentId', 'subjectId', 'date'],
-    });
+    try {
+      await queryInterface.addConstraint('attendance', {
+        type: 'unique',
+        name: 'attendance_studentId_subjectId_date_unique',
+        fields: ['studentId', 'subjectId', 'date'],
+      });
+    } catch (e) {
+      if (!e.message.includes('already exists')) throw e;
+    }
   },
 
   async down(queryInterface, Sequelize) {

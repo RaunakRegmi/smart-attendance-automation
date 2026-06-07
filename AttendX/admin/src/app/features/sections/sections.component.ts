@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { SectionService } from '../../core/services/section.service';
@@ -6,11 +6,12 @@ import { BatchService } from '../../core/services/batch.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Section, Batch } from '../../core/models/api.models';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-sections',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe, ConfirmDialogComponent],
+  imports: [ReactiveFormsModule, DatePipe, ConfirmDialogComponent, PaginationComponent],
   templateUrl: './sections.component.html',
 })
 export class SectionsComponent implements OnInit {
@@ -27,17 +28,12 @@ export class SectionsComponent implements OnInit {
   readonly showModal = signal(false);
   readonly editing = signal<Section | null>(null);
   readonly deleteTarget = signal<Section | null>(null);
+  readonly deleting = signal(false);
   readonly saving = signal(false);
-
-  readonly filtered = computed(() => {
-    const q = this.search().toLowerCase();
-    return this.sections().filter((s) => {
-      const matchSearch =
-        s.name.toLowerCase().includes(q) || (s.Batch?.name?.toLowerCase().includes(q) ?? false);
-      const matchBatch = !this.filterBatchId() || s.batchId === this.filterBatchId();
-      return matchSearch && matchBatch;
-    });
-  });
+  readonly page = signal(1);
+  readonly totalPages = signal(1);
+  readonly total = signal(0);
+  readonly limit = signal(10);
 
   readonly form = this.fb.nonNullable.group({
     name: ['', Validators.required],
@@ -51,9 +47,20 @@ export class SectionsComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.sectionService.getAll().subscribe({
-      next: (res) => {
-        this.sections.set(res.data ?? []);
+    const params: Record<string, string | number | undefined> = { page: this.page(), limit: this.limit() };
+    if (this.search()) params['search'] = this.search();
+    if (this.filterBatchId()) params['batchId'] = this.filterBatchId();
+    this.sectionService.getAll(undefined, params).subscribe({
+      next: (res: any) => {
+        if (res.pagination) {
+          this.sections.set(res.data ?? []);
+          this.totalPages.set(res.pagination.totalPages ?? 1);
+          this.total.set(res.pagination.total ?? 0);
+        } else {
+          this.sections.set(res.data ?? []);
+          this.total.set(res.data?.length ?? 0);
+          this.totalPages.set(1);
+        }
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
@@ -94,8 +101,7 @@ export class SectionsComponent implements OnInit {
         this.load();
         this.saving.set(false);
       },
-      error: (err) => {
-        this.toast.error(err.error?.message ?? 'Failed to save');
+      error: () => {
         this.saving.set(false);
       },
     });
@@ -107,14 +113,18 @@ export class SectionsComponent implements OnInit {
 
   delete(): void {
     const s = this.deleteTarget();
-    if (!s) return;
+    if (!s || this.deleting()) return;
+    this.deleting.set(true);
     this.sectionService.delete(s.id).subscribe({
       next: () => {
         this.toast.success('Section deleted');
         this.deleteTarget.set(null);
+        this.deleting.set(false);
         this.load();
       },
-      error: (err) => this.toast.error(err.error?.message ?? 'Failed to delete'),
+      error: () => {
+        this.deleting.set(false);
+      },
     });
   }
 }

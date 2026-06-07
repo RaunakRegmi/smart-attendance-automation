@@ -5,11 +5,12 @@ import { SyncService } from '../../../core/services/sync.service';
 import { SheetsService } from '../../../core/services/sheets.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { SyncJob, SheetRecord } from '../../../core/models/api.models';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-sync-jobs',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, DatePipe, PaginationComponent],
   templateUrl: './sync-jobs.component.html',
   styleUrl: './sync-jobs.component.scss',
 })
@@ -24,14 +25,19 @@ export class SyncJobsComponent implements OnInit {
   readonly sheets = signal<SheetRecord[]>([]);
   readonly manualSheetId = signal('');
 
+  readonly page = signal(1);
+  readonly limit = signal(10);
+  readonly total = signal(0);
+  readonly totalPages = signal(0);
+
   readonly filters = this.fb.nonNullable.group({
     sheetId: [''],
     status: [''],
   });
 
   ngOnInit(): void {
-    this.sheetsService.getSheets().subscribe({
-      next: (data) => this.sheets.set(Array.isArray(data) ? data : []),
+    this.sheetsService.getSheets({ limit: 200 }).subscribe({
+      next: (res) => this.sheets.set(res.data),
       error: () => {},
     });
     this.load();
@@ -44,17 +50,31 @@ export class SyncJobsComponent implements OnInit {
       .listJobs({
         sheetId: sheetId || undefined,
         status: status || undefined,
+        page: this.page(),
+        limit: this.limit(),
       })
       .subscribe({
         next: (res) => {
           this.jobs.set(res.jobs ?? []);
+          this.total.set(res.pagination?.total ?? 0);
+          this.totalPages.set(res.pagination?.totalPages ?? 0);
           this.loading.set(false);
         },
-        error: () => {
-          this.loading.set(false);
-          this.toast.error('Failed to load sync jobs');
-        },
+      error: () => {
+        this.loading.set(false);
+      },
       });
+  }
+
+  onPageChange(p: number): void {
+    this.page.set(p);
+    this.load();
+  }
+
+  onLimitChange(l: number): void {
+    this.limit.set(l);
+    this.page.set(1);
+    this.load();
   }
 
   manualSync(): void {
@@ -68,7 +88,7 @@ export class SyncJobsComponent implements OnInit {
         this.toast.success(res.message ?? 'Manual sync created');
         this.load();
       },
-      error: (err) => this.toast.error(err.error?.message ?? 'Manual sync failed'),
+      error: () => {},
     });
   }
 }

@@ -82,8 +82,7 @@ export class RoutinesAddComponent implements OnInit {
         this.toast.success(res.message ?? 'Routine uploaded');
         this.router.navigate(['/routines']);
       },
-      error: (err) => {
-        this.toast.error(err.error?.message ?? err.message ?? 'Upload failed');
+      error: () => {
         this.saving.set(false);
       },
     });

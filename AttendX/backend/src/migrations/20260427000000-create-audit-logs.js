@@ -73,11 +73,14 @@ module.exports = {
       }
     });
 
-    // Add indexes
-    await queryInterface.addIndex('audit_logs', ['user_id']);
-    await queryInterface.addIndex('audit_logs', ['timestamp']);
-    await queryInterface.addIndex('audit_logs', ['endpoint']);
-    await queryInterface.addIndex('audit_logs', ['audit_event_type']);
+    // Add indexes (may already exist from previous sync alter)
+    for (const field of ['user_id', 'timestamp', 'endpoint', 'audit_event_type']) {
+      try {
+        await queryInterface.addIndex('audit_logs', [field]);
+      } catch (e) {
+        if (!e.message.includes('already exists')) throw e;
+      }
+    }
   },
 
   down: async (queryInterface, Sequelize) => {

@@ -7,11 +7,12 @@ import { SheetsService } from '../../core/services/sheets.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Student, Batch, Section } from '../../core/models/api.models';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-students',
   standalone: true,
-  imports: [ReactiveFormsModule, ConfirmDialogComponent],
+  imports: [ReactiveFormsModule, ConfirmDialogComponent, PaginationComponent],
   templateUrl: './students.component.html',
 })
 export class StudentsComponent implements OnInit {
@@ -34,10 +35,13 @@ export class StudentsComponent implements OnInit {
   readonly filterSectionId = signal('');
   readonly page = signal(1);
   readonly totalPages = signal(1);
+  readonly total = signal(0);
+  readonly limit = signal(10);
   readonly showModal = signal(false);
   readonly showUpload = signal(false);
   readonly editing = signal<Student | null>(null);
   readonly deleteTarget = signal<Student | null>(null);
+  readonly deleting = signal(false);
   readonly saving = signal(false);
   readonly uploadFile = signal<File | null>(null);
 
@@ -62,12 +66,13 @@ export class StudentsComponent implements OnInit {
         batchId: this.filterBatchId(),
         sectionId: this.filterSectionId(),
         page: this.page(),
-        limit: 10,
+        limit: this.limit(),
       })
       .subscribe({
         next: (res) => {
           this.students.set(res.data ?? []);
           this.totalPages.set(res.pagination?.totalPages ?? 1);
+          this.total.set(res.pagination?.total ?? 0);
           this.loading.set(false);
         },
         error: () => this.loading.set(false),
@@ -136,8 +141,7 @@ export class StudentsComponent implements OnInit {
         this.load();
         this.saving.set(false);
       },
-      error: (err) => {
-        this.toast.error(err.error?.message ?? 'Failed to save');
+      error: () => {
         this.saving.set(false);
       },
     });
@@ -145,14 +149,18 @@ export class StudentsComponent implements OnInit {
 
   delete(): void {
     const s = this.deleteTarget();
-    if (!s) return;
+    if (!s || this.deleting()) return;
+    this.deleting.set(true);
     this.studentService.delete(s.id).subscribe({
       next: () => {
         this.toast.success('Student deleted');
         this.deleteTarget.set(null);
+        this.deleting.set(false);
         this.load();
       },
-      error: (err) => this.toast.error(err.error?.message ?? 'Failed to delete'),
+      error: () => {
+        this.deleting.set(false);
+      },
     });
   }
 
@@ -174,7 +182,7 @@ export class StudentsComponent implements OnInit {
         this.uploadFile.set(null);
         this.load();
       },
-      error: (err) => this.toast.error(err.error?.message ?? 'Upload failed'),
+      error: () => {},
     });
   }
 

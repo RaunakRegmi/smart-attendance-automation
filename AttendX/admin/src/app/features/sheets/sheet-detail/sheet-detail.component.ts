@@ -29,10 +29,9 @@ export class SheetDetailComponent implements OnInit {
       this.loading.set(false);
       return;
     }
-    this.sheetsService.getSheets().subscribe({
+    this.sheetsService.getSheets({ limit: 200 }).subscribe({
       next: (rows) => {
-        const list = Array.isArray(rows) ? rows : [];
-        const found = list.find((s) => s.id === id) ?? null;
+        const found = rows.data.find((s) => s.id === id) ?? null;
         this.sheet.set(found);
         this.loading.set(false);
         if (!found) {
@@ -41,7 +40,6 @@ export class SheetDetailComponent implements OnInit {
       },
       error: () => {
         this.loading.set(false);
-        this.toast.error('Failed to load sheet');
       },
     });
   }
@@ -63,7 +61,7 @@ export class SheetDetailComponent implements OnInit {
         this.toast.success('Status updated');
         this.reload(s.id);
       },
-      error: (err) => this.toast.error(err.error?.error ?? 'Failed'),
+      error: () => {},
     });
   }
 
@@ -74,7 +72,7 @@ export class SheetDetailComponent implements OnInit {
       next: (res: unknown) => {
         this.toast.success((res as { message?: string })?.message ?? 'Sync enqueued');
       },
-      error: (err) => this.toast.error(err.error?.error ?? 'Sync failed'),
+      error: () => {},
     });
   }
 

@@ -15,7 +15,6 @@ const Student = sequelize.define('Student', {
   email: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
     validate: {
       isEmail: true,
     },
@@ -31,12 +30,10 @@ const Student = sequelize.define('Student', {
   regNum: {
     type: DataTypes.STRING,
     allowNull: true,
-    unique: true,
   },
   univId: {
     type: DataTypes.STRING,
     allowNull: true,
-    unique: true,
   },
   admissionDate: {
     type: DataTypes.DATEONLY,
@@ -73,9 +70,12 @@ const Student = sequelize.define('Student', {
 }, {
   tableName: 'students',
   timestamps: true,
+  paranoid: true,
   hooks: {
     afterCreate: () => refresh.trigger(),
-    afterUpdate: () => refresh.trigger(),
+    afterUpdate: (record) => {
+      if (record.changed('deletedAt')) refresh.trigger();
+    },
     afterDestroy: () => refresh.trigger(),
   },
 });

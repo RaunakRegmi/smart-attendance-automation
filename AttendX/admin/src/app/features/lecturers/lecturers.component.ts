@@ -4,11 +4,12 @@ import { LecturerService } from '../../core/services/lecturer.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Lecturer } from '../../core/models/api.models';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-lecturers',
   standalone: true,
-  imports: [ReactiveFormsModule, ConfirmDialogComponent],
+  imports: [ReactiveFormsModule, ConfirmDialogComponent, PaginationComponent],
   templateUrl: './lecturers.component.html',
 })
 export class LecturersComponent implements OnInit {
@@ -21,9 +22,12 @@ export class LecturersComponent implements OnInit {
   readonly search = signal('');
   readonly page = signal(1);
   readonly totalPages = signal(1);
+  readonly total = signal(0);
+  readonly limit = signal(10);
   readonly showModal = signal(false);
   readonly editing = signal<Lecturer | null>(null);
   readonly deleteTarget = signal<Lecturer | null>(null);
+  readonly deleting = signal(false);
   readonly saving = signal(false);
 
   readonly form = this.fb.nonNullable.group({
@@ -38,10 +42,11 @@ export class LecturersComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.lecturerService.getAll({ search: this.search(), page: this.page(), limit: 10 }).subscribe({
+    this.lecturerService.getAll({ search: this.search(), page: this.page(), limit: this.limit() }).subscribe({
       next: (res) => {
         this.lecturers.set(res.data ?? []);
         this.totalPages.set(res.pagination?.totalPages ?? 1);
+        this.total.set(res.pagination?.total ?? 0);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
@@ -78,8 +83,7 @@ export class LecturersComponent implements OnInit {
         this.load();
         this.saving.set(false);
       },
-      error: (err) => {
-        this.toast.error(err.error?.message ?? 'Failed');
+      error: () => {
         this.saving.set(false);
       },
     });
@@ -87,14 +91,18 @@ export class LecturersComponent implements OnInit {
 
   delete(): void {
     const l = this.deleteTarget();
-    if (!l) return;
+    if (!l || this.deleting()) return;
+    this.deleting.set(true);
     this.lecturerService.delete(l.id).subscribe({
       next: () => {
-        this.toast.success('Deleted');
+        this.toast.success('Lecturer deleted');
         this.deleteTarget.set(null);
+        this.deleting.set(false);
         this.load();
       },
-      error: (err) => this.toast.error(err.error?.message ?? 'Failed'),
+      error: () => {
+        this.deleting.set(false);
+      },
     });
   }
 }

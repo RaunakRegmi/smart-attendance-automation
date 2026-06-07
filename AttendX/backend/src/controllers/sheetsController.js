@@ -15,8 +15,8 @@ module.exports = {
 
   getSheets: async (req, res) => {
     try {
-      const { batchId, sectionId, status } = req.query;
-      const sheets = await sheetsService.getSheets({ batchId, sectionId, status });
+      const { batchId, sectionId, status, page, limit } = req.query;
+      const sheets = await sheetsService.getSheets({ batchId, sectionId, status, page, limit });
       res.json(sheets);
     } catch (error) {
       res.status(500).json({ error: error.message });

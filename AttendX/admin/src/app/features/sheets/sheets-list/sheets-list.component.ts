@@ -7,11 +7,12 @@ import { SectionService } from '../../../core/services/section.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { SheetRecord, Batch, Section } from '../../../core/models/api.models';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-sheets-list',
   standalone: true,
-  imports: [RouterLink, DatePipe, ConfirmDialogComponent],
+  imports: [RouterLink, DatePipe, ConfirmDialogComponent, PaginationComponent],
   templateUrl: './sheets-list.component.html',
   styleUrl: './sheets-list.component.scss',
 })
@@ -29,6 +30,12 @@ export class SheetsListComponent implements OnInit {
   readonly filterSectionId = signal('');
   readonly filterStatus = signal('');
   readonly deleteTarget = signal<SheetRecord | null>(null);
+  readonly deleting = signal(false);
+
+  readonly page = signal(1);
+  readonly limit = signal(10);
+  readonly total = signal(0);
+  readonly totalPages = signal(0);
 
   ngOnInit(): void {
     this.batchService.getAll().subscribe((r) => this.batches.set(r.data ?? []));
@@ -37,25 +44,40 @@ export class SheetsListComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    const params: { batchId?: string; sectionId?: string; status?: string } = {};
+    const params: { batchId?: string; sectionId?: string; status?: string; page?: number; limit?: number } = {};
     if (this.filterBatchId()) params.batchId = this.filterBatchId();
     if (this.filterSectionId()) params.sectionId = this.filterSectionId();
     if (this.filterStatus()) params.status = this.filterStatus();
+    params.page = this.page();
+    params.limit = this.limit();
     this.sheetsService.getSheets(params).subscribe({
-      next: (data) => {
-        this.sheets.set(Array.isArray(data) ? data : []);
+      next: (res) => {
+        this.sheets.set(res.data);
+        this.total.set(res.pagination.total);
+        this.totalPages.set(res.pagination.totalPages);
         this.loading.set(false);
       },
       error: () => {
         this.loading.set(false);
-        this.toast.error('Failed to load sheets');
       },
     });
+  }
+
+  onPageChange(p: number): void {
+    this.page.set(p);
+    this.load();
+  }
+
+  onLimitChange(l: number): void {
+    this.limit.set(l);
+    this.page.set(1);
+    this.load();
   }
 
   onBatchFilter(batchId: string): void {
     this.filterBatchId.set(batchId);
     this.filterSectionId.set('');
+    this.page.set(1);
     if (batchId) {
       this.sectionService.getAll(batchId).subscribe((r) => this.sections.set(r.data ?? []));
     } else {
@@ -70,7 +92,7 @@ export class SheetsListComponent implements OnInit {
         this.toast.success('Status updated');
         this.load();
       },
-      error: (err) => this.toast.error(err.error?.error ?? 'Toggle failed'),
+      error: () => {},
     });
   }
 
@@ -80,7 +102,7 @@ export class SheetsListComponent implements OnInit {
         const msg = (res as { message?: string })?.message ?? 'Sync job enqueued';
         this.toast.success(msg);
       },
-      error: (err) => this.toast.error(err.error?.error ?? err.error?.message ?? 'Sync failed'),
+      error: () => {},
     });
   }
 
@@ -90,7 +112,7 @@ export class SheetsListComponent implements OnInit {
         const msg = (res as { message?: string })?.message ?? 'Sync jobs enqueued';
         this.toast.success(msg);
       },
-      error: (err) => this.toast.error(err.error?.error ?? 'Sync failed'),
+      error: () => {},
     });
   }
 
@@ -112,14 +134,18 @@ export class SheetsListComponent implements OnInit {
 
   deleteSheet(): void {
     const sheet = this.deleteTarget();
-    if (!sheet) return;
+    if (!sheet || this.deleting()) return;
+    this.deleting.set(true);
     this.sheetsService.deleteSheet(sheet.id).subscribe({
       next: () => {
         this.toast.success('Sheet deleted');
         this.deleteTarget.set(null);
+        this.deleting.set(false);
         this.load();
       },
-      error: (err) => this.toast.error(err.error?.error ?? 'Delete failed'),
+      error: () => {
+        this.deleting.set(false);
+      },
     });
   }
 }

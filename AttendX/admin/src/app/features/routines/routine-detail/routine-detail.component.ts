@@ -41,7 +41,6 @@ export class RoutineDetailComponent implements OnInit {
       },
       error: () => {
         this.loading.set(false);
-        this.toast.error('Failed to load routine');
       },
     });
   }

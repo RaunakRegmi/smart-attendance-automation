@@ -1,7 +1,7 @@
 <div class="page-header"><h1>Sections</h1><p>Manage sections by batch</p></div>
 <div class="toolbar">
-  <div class="search-input"><input type="search" placeholder="Search sections..." (input)="search.set($any($event.target).value)" /></div>
-  <select (change)="filterBatchId.set($any($event.target).value)">
+  <div class="search-input"><input type="search" placeholder="Search sections..." (input)="search.set($any($event.target).value); page.set(1); load()" /></div>
+  <select (change)="filterBatchId.set($any($event.target).value); page.set(1); load()">
     <option value="">All Batches</option>
     @for (b of batches(); track b.id) { <option [value]="b.id">{{ b.name }}</option> }
   </select>
@@ -13,7 +13,7 @@
     <table class="data-table">
       <thead><tr><th>Section</th><th>Batch</th><th>Created</th><th>Actions</th></tr></thead>
       <tbody>
-        @for (s of filtered(); track s.id) {
+        @for (s of sections(); track s.id) {
           <tr>
             <td>{{ s.name }}</td>
             <td>{{ s.Batch?.name }}</td>
@@ -26,6 +26,14 @@
         } @empty { <tr><td colspan="4" class="empty-state">No sections</td></tr> }
       </tbody>
     </table>
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [total]="total()"
+      [limit]="limit()"
+      (pageChange)="page.set($event); load()"
+      (limitChange)="limit.set($event); page.set(1); load()"
+    />
   }
 </div>
 @if (showModal()) {
@@ -54,5 +62,11 @@
   </div>
 }
 @if (deleteTarget()) {
-  <app-confirm-dialog title="Delete Section" message="Are you sure?" (confirm)="delete()" (cancel)="deleteTarget.set(null)" />
+  <app-confirm-dialog
+    title="Delete Section"
+    [message]="'Are you sure you want to delete ' + deleteTarget()!.name + '? Students and sheets under this section must be removed first.'"
+    confirmLabel="Delete"
+    (confirm)="delete()"
+    (cancel)="deleteTarget.set(null)"
+  />
 }

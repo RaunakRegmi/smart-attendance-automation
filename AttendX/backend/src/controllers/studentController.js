@@ -113,9 +113,18 @@ exports.deleteStudent = async (req, res, next) => {
     if (!student) {
       return res.status(404).json({ success: false, message: 'Student not found' });
     }
-    if (student.userId) {
-      await User.destroy({ where: { id: student.userId } });
+
+    // Block if already deleted
+    if (student.deletedAt) {
+      return res.status(409).json({ success: false, message: 'Student is already deleted' });
     }
+
+    // Deactivate user account (soft-delete login)
+    if (student.userId) {
+      await User.update({ isActive: false }, { where: { id: student.userId } });
+    }
+
+    // Soft-delete the student
     await student.destroy();
     res.json({ success: true, message: 'Student deleted successfully' });
   } catch (error) {

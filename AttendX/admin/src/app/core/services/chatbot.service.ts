@@ -35,9 +35,9 @@ export class ChatbotService {
   private readonly base = environment.apiUrl;
 
   /** Admin chat — backend proxy enforces admin RBAC. */
-  async sendAdminMessage(message: string): Promise<string> {
+  async sendAdminMessage(message: string, sessionId: string): Promise<string> {
     const res = await firstValueFrom(
-      this.http.post<ChatResponse>(`${this.base}/chatbot/chat`, { message })
+      this.http.post<ChatResponse>(`${this.base}/chatbot/chat`, { message, session_id: sessionId })
     );
     return res?.reply ?? '';
   }

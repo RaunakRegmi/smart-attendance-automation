@@ -1,0 +1,48 @@
+[
+  {
+    "batch": "Autumn 2025",
+    "batchAbbreviation": "AUT2025",
+    "sections": [
+      {
+        "section": "L1",
+        "sheets": [
+          { "subject": "WEB", "sheetName": "WEB_L2", "url": "https://docs.google.com/spreadsheets/d/1uLiGYDvWxntRSXw_AzhK-_cEwG78tqZuN9kOQl_g1PI/edit?gid=469923117#gid=469923117" },
+          { "subject": "WEB", "sheetName": "WEB_L1", "url": "https://docs.google.com/spreadsheets/d/1RY_kku4EJBjs3D7VMuM0FEiCZX2qqzPYxsK_J9bZBrs/edit?gid=469923117#gid=469923117" },
+          { "subject": "DSA", "sheetName": "DSA_L1", "url": "https://docs.google.com/spreadsheets/d/1830l0U3enFDdmC5YQLMFRW4Mv1Vq00X601etxR4l3Eo/edit?gid=469923117#gid=469923117" },
+          { "subject": "Maths", "sheetName": "Maths_L1", "url": "https://docs.google.com/spreadsheets/d/1wcxZ5cO9AgDkdIv1yKH6qcbOIhAVktlaxWVBJzxexPU/edit?gid=469923117#gid=469923117" },
+          { "subject": "AI", "sheetName": "AI_L1", "url": "https://docs.google.com/spreadsheets/d/1ZisKyTMnIjW0zQ2RKhgKfeQ770yMuzDDos48MsldxPY/edit?gid=469923117#gid=469923117" }
+        ]
+      },
+      {
+        "section": "L2",
+        "sheets": [
+          { "subject": "DSA", "sheetName": "DSA_L2", "url": "https://docs.google.com/spreadsheets/d/1zf6szJ1wz_OcJst2jRwyaFU3pXdZFJ5_yOIgeizViQQ/edit?gid=469923117#gid=469923117" }
+        ]
+      },
+      {
+        "section": "L3",
+        "sheets": [
+          { "subject": "Maths", "sheetName": "AI_L2", "url": "https://docs.google.com/spreadsheets/d/1IPrBjwYE7YjuUciysHYP3ExsDD8M57pKVFqTQAdwuus/edit?gid=469923117#gid=469923117" }
+        ]
+      },
+      {
+        "section": "L4",
+        "sheets": [
+          { "subject": "AI", "sheetName": "Maths_L2", "url": "https://docs.google.com/spreadsheets/d/1fpJPndn13BJfz63hPd-a-5eveDsSY7ZxJGuhkQO-Qyg/edit?gid=469923117#gid=469923117" }
+        ]
+      }
+    ]
+  },
+  {
+    "batch": "Summer 2025",
+    "batchAbbreviation": "SUM2025",
+    "sections": [
+      {
+        "section": "M1",
+        "sheets": [
+          { "subject": "Python", "sheetName": "Python_M1", "url": "https://docs.google.com/spreadsheets/d/1JJsqQTXkRBLObgZwlClV0hVzWT6MAXpm1Gf482HjwXQ/edit?gid=469923117#gid=469923117" }
+        ]
+      }
+    ]
+  }
+]

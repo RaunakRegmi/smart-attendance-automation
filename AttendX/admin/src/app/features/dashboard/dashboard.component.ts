@@ -164,8 +164,7 @@ export class DashboardComponent implements OnInit {
         this.toast.success(`Weekly reports sent to ${res.data.generated} students`);
         this.sendingWeekly.set(false);
       },
-      error: (err) => {
-        this.toast.error(err.error?.message ?? 'Failed to send weekly reports');
+      error: () => {
         this.sendingWeekly.set(false);
       },
     });

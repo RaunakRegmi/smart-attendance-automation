@@ -34,10 +34,10 @@
                 <button
                   type="button"
                   class="btn btn--ghost btn--sm btn--danger"
-                  (click)="deleteRoutine(r.sectionId)"
-                  [disabled]="deleting() === r.sectionId"
+                  (click)="confirmDelete(r)"
+                  [disabled]="deleting()"
                 >
-                  {{ deleting() === r.sectionId ? 'Deleting...' : 'Delete' }}
+                  {{ deleting() ? 'Deleting...' : 'Delete' }}
                 </button>
               </td>
             </tr>
@@ -51,5 +51,22 @@
         </tbody>
       </table>
     </div>
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [total]="total()"
+      [limit]="limit()"
+      (pageChange)="onPageChange($event)"
+      (limitChange)="onLimitChange($event)" />
   }
 </div>
+
+@if (deleteTarget()) {
+  <app-confirm-dialog
+    title="Delete Routine"
+    [message]="'Delete all routine entries for ' + deleteTarget()!.section?.name + '? The associated section must be deleted first.'"
+    confirmLabel="Delete"
+    (confirm)="deleteRoutine()"
+    (cancel)="deleteTarget.set(null)"
+  />
+}

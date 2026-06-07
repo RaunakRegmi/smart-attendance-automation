@@ -235,16 +235,13 @@
   </div>
 
   @if (pagination(); as p) {
-    <div class="pagination">
-      <span>Showing page {{ p.page }} of {{ p.totalPages }} ({{ p.total }} records)</span>
-      <div class="pagination-controls">
-        <button class="btn btn--ghost btn--sm" [disabled]="p.page <= 1" (click)="goToPage(p.page - 1)">Previous</button>
-        @for (i of [].constructor(p.totalPages); track $index) {
-          <button class="btn btn--ghost btn--sm" [class.active]="p.page === $index + 1" (click)="goToPage($index + 1)">{{ $index + 1 }}</button>
-        }
-        <button class="btn btn--ghost btn--sm" [disabled]="p.page >= p.totalPages" (click)="goToPage(p.page + 1)">Next</button>
-      </div>
-    </div>
+    <app-pagination
+      [page]="p.page"
+      [totalPages]="p.totalPages"
+      [total]="p.total"
+      [limit]="limit()"
+      (pageChange)="goToPage($event)"
+      (limitChange)="onLimitChange($event)" />
   }
 }
 

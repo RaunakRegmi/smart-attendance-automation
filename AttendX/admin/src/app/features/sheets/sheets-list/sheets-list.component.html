@@ -10,13 +10,13 @@
       <option [value]="b.id">{{ b.name }}</option>
     }
   </select>
-  <select (change)="filterSectionId.set($any($event.target).value); load()">
+  <select (change)="filterSectionId.set($any($event.target).value); page.set(1); load()">
     <option value="">All sections</option>
     @for (s of sections(); track s.id) {
       <option [value]="s.id">{{ s.name }}</option>
     }
   </select>
-  <select (change)="filterStatus.set($any($event.target).value); load()">
+  <select (change)="filterStatus.set($any($event.target).value); page.set(1); load()">
     <option value="">All statuses</option>
     <option value="active">Active</option>
     <option value="inactive">Inactive</option>
@@ -69,13 +69,21 @@
         </tbody>
       </table>
     </div>
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [total]="total()"
+      [limit]="limit()"
+      (pageChange)="onPageChange($event)"
+      (limitChange)="onLimitChange($event)" />
   }
 </div>
 
 @if (deleteTarget()) {
   <app-confirm-dialog
     title="Delete Sheet"
-    message="Are you sure you want to delete '{{ sheetDisplayName(deleteTarget()!) }}'? This cannot be undone."
+    [message]="'Are you sure you want to delete ' + sheetDisplayName(deleteTarget()!) + '? Attendance records linked to this sheet must be removed first.'"
+    confirmLabel="Delete"
     (confirm)="deleteSheet()"
     (cancel)="deleteTarget.set(null)" />
 }

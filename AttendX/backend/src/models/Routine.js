@@ -50,6 +50,7 @@ const Routine = sequelize.define('Routine', {
 }, {
   tableName: 'routines',
   timestamps: true,
+  paranoid: true,
 });
 
 module.exports = Routine;

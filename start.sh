@@ -17,7 +17,7 @@ ok=" ✓"; fail=" ✗"; info=" •"
 
 cleanup() {
   echo -e "\n${YELLOW}Shutting down services...${NC}"
-  kill $CHATBOT_PID $ADMIN_PID 2>/dev/null || true
+  kill $OLLAMA_PID $CHATBOT_PID $ADMIN_PID 2>/dev/null || true
   echo "  Stopping Docker containers..."
   cd "$ATTENDX_DIR" && docker compose down 2>/dev/null || true
   wait 2>/dev/null || true
@@ -77,8 +77,28 @@ docker compose up -d --build db redis backend > /tmp/attendx-docker.log 2>&1
 echo -e "  ${GREEN}${ok}${NC} Docker services starting (log: /tmp/attendx-docker.log)"
 wait_for "http://localhost:5001/api/health" "Backend API" 60
 
-# ── 4. Chatbot + Admin ──────────────────────────────────────────
-echo -e "${YELLOW}[4/4]${NC} Chatbot + Admin"
+# ── 4. Ollama ───────────────────────────────────────────────────
+echo -e "${YELLOW}[4/5]${NC} Ollama (LLM service)"
+if ! pgrep -x ollama > /dev/null; then
+  lsof -ti :11434 2>/dev/null | xargs kill -9 2>/dev/null || true
+  ollama serve > /dev/null 2>&1 &
+  OLLAMA_PID=$!
+  echo -e "  ${GREEN}${ok}${NC} Ollama starting (PID $OLLAMA_PID)"
+  wait_for "http://localhost:11434/api/tags" "Ollama" 15
+else
+  OLLAMA_PID=$(pgrep -x ollama)
+  echo -e "  ${GREEN}${ok}${NC} Ollama already running (PID $OLLAMA_PID)"
+fi
+
+# Pull required Ollama models
+EMBED_MODEL="${EMBED_MODEL:-nomic-embed-text}"
+LLM_MODEL="${LLM_MODEL:-llama3.2}"
+echo -e "  ${info} Checking Ollama models..."
+ollama pull "$EMBED_MODEL" > /dev/null 2>&1 && echo -e "  ${GREEN}${ok}${NC} Embedding model: $EMBED_MODEL" || echo -e "  ${RED}${fail}${NC} Failed to pull $EMBED_MODEL"
+ollama pull "$LLM_MODEL" > /dev/null 2>&1 && echo -e "  ${GREEN}${ok}${NC} LLM model: $LLM_MODEL" || echo -e "  ${RED}${fail}${NC} Failed to pull $LLM_MODEL"
+
+# ── 5. Chatbot + Admin ──────────────────────────────────────────
+echo -e "${YELLOW}[5/5]${NC} Chatbot + Admin"
 
 # Chatbot (FastAPI on 8000)
 lsof -ti :8000 2>/dev/null | xargs kill -9 2>/dev/null || true

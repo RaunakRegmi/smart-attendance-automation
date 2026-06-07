@@ -3,44 +3,25 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    // Add foreign key constraint for userId
-    await queryInterface.addConstraint('students', {
-      type: 'foreign key',
-      name: 'fk_students_userId',
-      fields: ['userId'],
-      references: {
-        table: 'users',
-        field: 'id',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
-    });
-
-    // Add foreign key constraint for sectionId
-    await queryInterface.addConstraint('students', {
-      type: 'foreign key',
-      name: 'fk_students_sectionId',
-      fields: ['sectionId'],
-      references: {
-        table: 'sections',
-        field: 'id',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
-    });
-
-    // Add foreign key constraint for batchId
-    await queryInterface.addConstraint('students', {
-      type: 'foreign key',
-      name: 'fk_students_batchId',
-      fields: ['batchId'],
-      references: {
-        table: 'batches',
-        field: 'id',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
-    });
+    const fkConstraints = [
+      { name: 'fk_students_userId', fields: ['userId'], table: 'users' },
+      { name: 'fk_students_sectionId', fields: ['sectionId'], table: 'sections' },
+      { name: 'fk_students_batchId', fields: ['batchId'], table: 'batches' },
+    ];
+    for (const fk of fkConstraints) {
+      try {
+        await queryInterface.addConstraint('students', {
+          type: 'foreign key',
+          name: fk.name,
+          fields: fk.fields,
+          references: { table: fk.table, field: 'id' },
+          onUpdate: 'CASCADE',
+          onDelete: 'SET NULL',
+        });
+      } catch (e) {
+        if (!e.message.includes('already exists')) throw e;
+      }
+    }
   },
 
   async down(queryInterface, Sequelize) {

@@ -21,6 +21,14 @@
         } @empty { <tr><td colspan="3" class="empty-state">No subjects</td></tr> }
       </tbody>
     </table>
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [total]="total()"
+      [limit]="limit()"
+      (pageChange)="page.set($event); load()"
+      (limitChange)="limit.set($event); page.set(1); load()"
+    />
   }
 </div>
 @if (showModal()) {
@@ -45,5 +53,11 @@
   </div>
 }
 @if (deleteTarget()) {
-  <app-confirm-dialog title="Delete Subject" message="Are you sure?" (confirm)="delete()" (cancel)="deleteTarget.set(null)" />
+  <app-confirm-dialog
+    title="Delete Subject"
+    [message]="'Are you sure you want to delete ' + deleteTarget()!.subjectCode + '? A lecturer must not be assigned to this subject.'"
+    confirmLabel="Delete"
+    (confirm)="delete()"
+    (cancel)="deleteTarget.set(null)"
+  />
 }

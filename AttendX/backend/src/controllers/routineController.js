@@ -148,6 +148,16 @@ exports.getRoutine = async (req, res, next) => {
 
 exports.listRoutines = async (req, res, next) => {
   try {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(120, Math.max(1, parseInt(req.query.limit, 10) || 10));
+    const offset = (page - 1) * limit;
+
+    const countResult = await Routine.findAll({
+      attributes: [fn('DISTINCT', col('sectionId')), 'sectionId'],
+      raw: true,
+    });
+    const total = countResult.length;
+
     const routines = await Routine.findAll({
       attributes: [
         'sectionId',
@@ -161,6 +171,8 @@ exports.listRoutines = async (req, res, next) => {
       }],
       group: ['sectionId', 'Section.id', 'Section.name', 'Section.Batch.id', 'Section.Batch.name', 'Section.Batch.abbreviation'],
       order: [[fn('MAX', col('Routine.createdAt')), 'DESC']],
+      limit,
+      offset,
       raw: true,
       nest: true,
     });
@@ -173,7 +185,16 @@ exports.listRoutines = async (req, res, next) => {
       lastUploadedAt: r.lastUploadedAt,
     }));
 
-    res.json({ success: true, data });
+    res.json({
+      success: true,
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -185,8 +206,22 @@ exports.deleteRoutine = async (req, res, next) => {
     if (!sectionId) {
       return res.status(400).json({ success: false, message: 'sectionId is required' });
     }
-    const deleted = await Routine.destroy({ where: { sectionId } });
-    res.json({ success: true, message: `Deleted ${deleted} routine entries for section`, data: { deleted } });
+
+    // Check if section exists and is soft-deleted
+    const section = await Section.findByPk(sectionId, { paranoid: false });
+    if (!section) {
+      return res.status(404).json({ success: false, message: 'Section not found' });
+    }
+    if (!section.deletedAt) {
+      return res.status(409).json({
+        success: false,
+        message: 'Cannot delete routines — the section must be deleted first. Delete the section to cascade-delete its routines.',
+      });
+    }
+
+    // Soft-delete routines for this section (cascade cleanup)
+    await Routine.update({ deletedAt: new Date() }, { where: { sectionId } });
+    res.json({ success: true, message: 'Routine entries deleted successfully' });
   } catch (error) {
     next(error);
   }

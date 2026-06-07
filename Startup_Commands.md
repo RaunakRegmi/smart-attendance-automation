@@ -23,5 +23,14 @@ cd ../AttendX/admin && nohup npm start > /tmp/attendx-admin.log 2>&1 &
 The full detailed guide (including verification steps and a one-shot restart.sh script) is now in Latest_Config.md at the bottom.
 
 
+# command to delete all data from the database:
 
-also implement the auto triggerrefresh ai knowledge on dtaa addition and deletion in the system in a standard manner.
+docker exec -i attendance_db psql -U postgres -d attendance_db -c "TRUNCATE TABLE \"users\" CASCADE; TRUNCATE TABLE \"batches\" CASCADE; TRUNCATE TABLE \"sections\" CASCADE; TRUNCATE TABLE \"Sheets\" CASCADE; TRUNCATE TABLE \"students\" CASCADE; TRUNCATE TABLE \"attendance\" CASCADE; TRUNCATE TABLE \"subjects\" CASCADE; TRUNCATE TABLE \"routines\" CASCADE; TRUNCATE TABLE \"notifications\" CASCADE; TRUNCATE TABLE \"SyncJobs\" CASCADE; TRUNCATE TABLE \"lecturers\" CASCADE; TRUNCATE TABLE \"audit_logs\" CASCADE; TRUNCATE TABLE \"sequelize_meta\" CASCADE;"
+
+# This keeps the table structure but removes all rows. After running, you'll need to re-run migrations and seed to have the admin user again:
+
+docker exec -i attendance_backend npm run migrate
+docker exec -i attendance_backend npm run seed
+
+
+npx playwright test tests/setup.spec.js  --workers=1

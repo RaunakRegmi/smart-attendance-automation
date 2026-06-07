@@ -55,10 +55,8 @@ export class ProfileComponent implements OnInit {
           this.toast.error(res.message || 'Failed to update profile');
         }
       },
-      error: (err) => {
+      error: () => {
         this.profileLoading.set(false);
-        const msg = err.error?.message || 'Failed to update profile';
-        this.toast.error(msg);
       },
     });
   }
@@ -82,10 +80,8 @@ export class ProfileComponent implements OnInit {
           this.toast.error(res.message || 'Failed to update password');
         }
       },
-      error: (err) => {
+      error: () => {
         this.passwordLoading.set(false);
-        const msg = err.error?.message || 'Failed to update password';
-        this.toast.error(msg);
       },
     });
   }

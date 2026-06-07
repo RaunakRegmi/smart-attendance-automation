@@ -463,5 +463,19 @@ async def health():
 
 
 if __name__ == "__main__":
+    # Auto-build knowledge base on startup if CSVs exist but no vector store
+    if state["collection"] is None:
+        output_dir = os.path.join(_BASE_DIR, "output")
+        csv_files = [f for f in os.listdir(output_dir) if f.endswith(".csv")] if os.path.isdir(output_dir) else []
+        if csv_files:
+            print("Auto-building knowledge base from existing CSVs...")
+            try:
+                import rag_indexer
+                rag_indexer.build_index()
+                state["collection"] = get_collection()
+                print(f"Knowledge base ready ({len(csv_files)} CSVs indexed)")
+            except Exception as e:
+                print(f"Auto-index failed (will be available after /ingest or /reindex): {e}")
+
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)

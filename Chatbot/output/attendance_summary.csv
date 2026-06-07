@@ -1,3 +1,34 @@
 sno,batch,student_name,email,total_present,total_absent,total_late,total_present_with_late,total_classes,attendance_percentage,status
-1,Spring 2025,Alice Johnson,alice@example.com,53,4,2,55,59,93.22,Excellent
-2,Spring 2025,Bob Smith,bob@example.com,38,18,3,41,59,69.49,At Risk
+463,Atumn 2025,Aayush Sharma,aayush_sharma_a25@sunway.edu.np,28,1,0,28,29,96.55,Excellent
+464,Atumn 2025,Binita Rijal,binita_rijal_a25@sunway.edu.np,26,3,0,26,29,89.66,Satisfactory
+465,Atumn 2025,Chirag Gautam,chirag_gautam_a25@sunway.edu.np,23,6,0,23,29,79.31,Satisfactory
+466,Atumn 2025,Dinesh Kunwar,dinesh_kunwar_a25@sunway.edu.np,24,5,0,24,29,82.76,Satisfactory
+467,Atumn 2025,Elina Bista,elina_bista_a25@sunway.edu.np,24,5,0,24,29,82.76,Satisfactory
+468,Atumn 2025,Firoj Ansari,firoj_ansari_a25@sunway.edu.np,23,6,0,23,29,79.31,Satisfactory
+469,Atumn 2025,Gaurav Kafle,gaurav_kafle_a25@sunway.edu.np,25,4,0,25,29,86.21,Satisfactory
+470,Atumn 2025,Hema Lama,hema_lama_a25@sunway.edu.np,17,12,0,17,29,58.62,Critical
+471,Atumn 2025,Ishan Koirala,ishan_koirala_a25@sunway.edu.np,19,10,0,19,29,65.52,At Risk
+472,Atumn 2025,Juna Khadgi,juna_khadgi_a25@sunway.edu.np,27,2,0,27,29,93.1,Excellent
+473,Atumn 2025,Kamal Rokaya,kamal_rokaya_a25@sunway.edu.np,23,6,0,23,29,79.31,Satisfactory
+474,Atumn 2025,Lalita Budhathoki,lalita_budhathoki_a25@sunway.edu.np,25,4,0,25,29,86.21,Satisfactory
+475,Atumn 2025,Manoj Dong,manoj_dong_a25@sunway.edu.np,28,1,0,28,29,96.55,Excellent
+476,Atumn 2025,Nirmala Karki,nirmala_karki_a25@sunway.edu.np,26,3,0,26,29,89.66,Satisfactory
+477,Atumn 2025,Omkar Pokharel,omkar_pokharel_a25@sunway.edu.np,25,4,0,25,29,86.21,Satisfactory
+478,Atumn 2025,Pabitra Dhakal,pabitra_dhakal_a25@sunway.edu.np,27,2,0,27,29,93.1,Excellent
+479,Atumn 2025,Qasim Miya,qasim_miya_a25@sunway.edu.np,27,2,0,27,29,93.1,Excellent
+480,Atumn 2025,Ramesh Suwal,ramesh_suwal_a25@sunway.edu.np,26,3,0,26,29,89.66,Satisfactory
+481,Atumn 2025,Sanjay Khadka,sanjay_khadka_a25@sunway.edu.np,28,1,0,28,29,96.55,Excellent
+482,Atumn 2025,Tara Ghale,tara_ghale_a25@sunway.edu.np,22,7,0,22,29,75.86,Satisfactory
+483,Atumn 2025,Ujjwal Basnet,ujjwal_basnet_a25@sunway.edu.np,20,9,0,20,29,68.97,At Risk
+484,Atumn 2025,Bipin Sigdel,bipin_sigdel_a25@sunway.edu.np,27,2,0,27,29,93.1,Excellent
+485,Atumn 2025,Chetana Thagunna,chetana_thagunna_a25@sunway.edu.np,27,2,0,27,29,93.1,Excellent
+486,Atumn 2025,Dev Rai,dev_rai_a25@sunway.edu.np,26,3,0,26,29,89.66,Satisfactory
+487,Atumn 2025,Esha Karki,esha_karki_a25@sunway.edu.np,27,2,0,27,29,93.1,Excellent
+488,Atumn 2025,Ganesh Baral,ganesh_baral_a25@sunway.edu.np,24,5,0,24,29,82.76,Satisfactory
+489,Atumn 2025,Hari Bogati,hari_bogati_a25@sunway.edu.np,27,2,0,27,29,93.1,Excellent
+490,Atumn 2025,Indira Sapkota,indira_sapkota_a25@sunway.edu.np,21,8,0,21,29,72.41,At Risk
+491,Atumn 2025,Jeevan Giri,jeevan_giri_a25@sunway.edu.np,24,5,0,24,29,82.76,Satisfactory
+492,Atumn 2025,Kabita Chhetri,kabita_chhetri_a25@sunway.edu.np,20,9,0,20,29,68.97,At Risk
+493,Atumn 2025,Lokesh Karki,lokesh_karki_a25@sunway.edu.np,17,12,0,17,29,58.62,Critical
+494,Atumn 2025,Mamata Shahi,mamata_shahi_a25@sunway.edu.np,16,13,0,16,29,55.17,Critical
+495,Atumn 2025,Nawaraj Bista,nawaraj_bista_a25@sunway.edu.np,28,1,0,28,29,96.55,Excellent

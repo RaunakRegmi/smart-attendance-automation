@@ -57,8 +57,7 @@ export class SheetsAddComponent implements OnInit {
         this.router.navigate(['/sheets']);
         this.saving.set(false);
       },
-      error: (err) => {
-        this.toast.error(err.error?.error ?? err.error?.message ?? 'Link failed');
+      error: () => {
         this.saving.set(false);
       },
     });

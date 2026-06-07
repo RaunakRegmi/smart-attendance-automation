@@ -4,11 +4,12 @@ import { SubjectService } from '../../core/services/subject.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Subject } from '../../core/models/api.models';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-subjects',
   standalone: true,
-  imports: [ReactiveFormsModule, ConfirmDialogComponent],
+  imports: [ReactiveFormsModule, ConfirmDialogComponent, PaginationComponent],
   templateUrl: './subjects.component.html',
 })
 export class SubjectsComponent implements OnInit {
@@ -20,10 +21,13 @@ export class SubjectsComponent implements OnInit {
   readonly subjects = signal<Subject[]>([]);
   readonly page = signal(1);
   readonly totalPages = signal(1);
+  readonly total = signal(0);
+  readonly limit = signal(10);
   readonly search = signal('');
   readonly showModal = signal(false);
   readonly editing = signal<Subject | null>(null);
   readonly deleteTarget = signal<Subject | null>(null);
+  readonly deleting = signal(false);
   readonly saving = signal(false);
 
   readonly form = this.fb.nonNullable.group({
@@ -37,10 +41,11 @@ export class SubjectsComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.subjectService.getAll({ search: this.search(), page: this.page(), limit: 10 }).subscribe({
+    this.subjectService.getAll({ search: this.search(), page: this.page(), limit: this.limit() }).subscribe({
       next: (res) => {
         this.subjects.set(res.data ?? []);
         this.totalPages.set(res.pagination?.totalPages ?? 1);
+        this.total.set(res.pagination?.total ?? 0);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
@@ -77,8 +82,7 @@ export class SubjectsComponent implements OnInit {
         this.load();
         this.saving.set(false);
       },
-      error: (err) => {
-        this.toast.error(err.error?.message ?? 'Failed');
+      error: () => {
         this.saving.set(false);
       },
     });
@@ -86,14 +90,18 @@ export class SubjectsComponent implements OnInit {
 
   delete(): void {
     const s = this.deleteTarget();
-    if (!s) return;
+    if (!s || this.deleting()) return;
+    this.deleting.set(true);
     this.subjectService.delete(s.id).subscribe({
       next: () => {
-        this.toast.success('Deleted');
+        this.toast.success('Subject deleted');
         this.deleteTarget.set(null);
+        this.deleting.set(false);
         this.load();
       },
-      error: (err) => this.toast.error(err.error?.message ?? 'Failed'),
+      error: () => {
+        this.deleting.set(false);
+      },
     });
   }
 }

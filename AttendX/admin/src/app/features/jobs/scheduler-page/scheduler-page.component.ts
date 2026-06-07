@@ -37,7 +37,6 @@ export class SchedulerPageComponent implements OnInit {
       error: (err) => {
         this.statusJson.set(err.error?.error ?? err.error?.message ?? String(err.message));
         this.loading.set(false);
-        this.toast.error('Could not load scheduler status');
       },
     });
   }
@@ -50,8 +49,7 @@ export class SchedulerPageComponent implements OnInit {
         this.refreshStatus();
         this.busy.set(false);
       },
-      error: (err) => {
-        this.toast.error(err.error?.message ?? 'Start failed');
+      error: () => {
         this.busy.set(false);
       },
     });
@@ -65,8 +63,7 @@ export class SchedulerPageComponent implements OnInit {
         this.refreshStatus();
         this.busy.set(false);
       },
-      error: (err) => {
-        this.toast.error(err.error?.message ?? 'Stop failed');
+      error: () => {
         this.busy.set(false);
       },
     });
@@ -84,8 +81,7 @@ export class SchedulerPageComponent implements OnInit {
         this.refreshStatus();
         this.busy.set(false);
       },
-      error: (err) => {
-        this.toast.error(err.error?.message ?? 'Modify failed');
+      error: () => {
         this.busy.set(false);
       },
     });

@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
+const refresh = require('../services/knowledgeRefreshService');
 
 const Batch = sequelize.define('Batch', {
   id: {
@@ -10,12 +11,10 @@ const Batch = sequelize.define('Batch', {
   name: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
   },
   abbreviation: {
     type: DataTypes.STRING,
     allowNull: true,
-    unique: true,
     validate: {
       isUppercase: true,
       isAlphanumeric: true,
@@ -24,6 +23,14 @@ const Batch = sequelize.define('Batch', {
 }, {
   tableName: 'batches',
   timestamps: true,
+  paranoid: true,
+  hooks: {
+    afterCreate: () => refresh.trigger(),
+    afterUpdate: (record) => {
+      if (record.changed('deletedAt')) refresh.trigger();
+    },
+    afterDestroy: () => refresh.trigger(),
+  },
 });
 
 module.exports = Batch;

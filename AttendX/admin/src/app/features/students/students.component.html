@@ -32,13 +32,14 @@
         } @empty { <tr><td colspan="5" class="empty-state">No students</td></tr> }
       </tbody>
     </table>
-    <div class="pagination">
-      <span>Page {{ page() }} of {{ totalPages() }}</span>
-      <div class="pages">
-        <button [disabled]="page() <= 1" (click)="goPage(page() - 1)">Prev</button>
-        <button [disabled]="page() >= totalPages()" (click)="goPage(page() + 1)">Next</button>
-      </div>
-    </div>
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [total]="total()"
+      [limit]="limit()"
+      (pageChange)="goPage($event)"
+      (limitChange)="limit.set($event); page.set(1); load()"
+    />
   }
 </div>
 @if (showModal()) {
@@ -87,5 +88,11 @@
   </div>
 }
 @if (deleteTarget()) {
-  <app-confirm-dialog title="Delete Student" message="Are you sure?" (confirm)="delete()" (cancel)="deleteTarget.set(null)" />
+  <app-confirm-dialog
+    title="Delete Student"
+    [message]="'Are you sure you want to delete ' + deleteTarget()!.name + '? Attendance records will be preserved but the student will lose login access.'"
+    confirmLabel="Delete"
+    (confirm)="delete()"
+    (cancel)="deleteTarget.set(null)"
+  />
 }

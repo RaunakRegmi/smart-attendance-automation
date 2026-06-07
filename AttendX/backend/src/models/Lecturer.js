@@ -23,6 +23,7 @@ const Lecturer = sequelize.define('Lecturer', {
 }, {
   tableName: 'lecturers',
   timestamps: true,
+  paranoid: true,
 });
 
 module.exports = Lecturer;

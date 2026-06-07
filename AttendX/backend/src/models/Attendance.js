@@ -34,6 +34,10 @@ const Attendance = sequelize.define('Attendance', {
     type: DataTypes.ENUM('Present', 'Absent', 'Late'),
     defaultValue: 'Absent',
   },
+  sheetId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+  },
 }, {
   tableName: 'attendance',
   timestamps: true,

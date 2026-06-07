@@ -142,14 +142,16 @@ exports.preview = async (req, res) => {
 // Admin chat proxy — keeps the chatbot port private and applies admin RBAC.
 exports.adminChat = async (req, res) => {
   try {
-    const { message } = req.body || {};
+    const { message, session_id } = req.body || {};
     if (!message || typeof message !== 'string' || !message.trim()) {
       return res.status(400).json({ success: false, message: 'message is required' });
     }
+    const payload = { message: message.trim() };
+    if (session_id) payload.session_id = session_id;
     const resp = await fetch(`${CHATBOT_URL}/chat-sync`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: message.trim() }),
+      body: JSON.stringify(payload),
     });
     if (!resp.ok) {
       return res.status(502).json({ success: false, message: `Chatbot returned ${resp.status}` });

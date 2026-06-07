@@ -25,12 +25,31 @@ async function manualSync(req, res) {
  */
 async function getStatus(req, res) {
   try {
-    const { sheetId, status } = req.query;
+    const { sheetId, status, page: pageStr, limit: limitStr } = req.query;
     const where = {};
     if (sheetId) where.sheetId = sheetId;
     if (status) where.status = status;
-    const jobs = await SyncJob.findAll({ where, order: [['createdAt', 'DESC']] });
-    return res.json({ success: true, jobs });
+
+    const page = Math.max(1, parseInt(pageStr, 10) || 1);
+    const limit = Math.min(120, Math.max(1, parseInt(limitStr, 10) || 10));
+    const offset = (page - 1) * limit;
+
+    const { rows, count } = await SyncJob.findAndCountAll({
+      where,
+      order: [['createdAt', 'DESC']],
+      limit,
+      offset,
+    });
+    return res.json({
+      success: true,
+      jobs: rows,
+      pagination: {
+        total: count,
+        page,
+        limit,
+        totalPages: Math.ceil(count / limit),
+      },
+    });
   } catch (err) {
     console.error('Get sync status error:', err);
     return res.status(500).json({ success: false, message: err.message });

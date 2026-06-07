@@ -29,8 +29,8 @@ export interface RoutineGroup {
 export class RoutineService {
   private readonly api = inject(ApiService);
 
-  listRoutines(): Observable<{ success: boolean; data: RoutineGroup[] }> {
-    return this.api.get<RoutineGroup[]>('/routine/list');
+  listRoutines(params?: { page?: number; limit?: number }): Observable<{ success: boolean; data: RoutineGroup[]; pagination?: { total: number; page: number; limit: number; totalPages: number } }> {
+    return this.api.get<RoutineGroup[]>('/routine/list', params);
   }
 
   getRoutineBySection(sectionId: string): Observable<{ success: boolean; data: RoutineEntry[] }> {

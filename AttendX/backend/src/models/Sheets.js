@@ -14,7 +14,6 @@ const Sheets = sequelize.define('Sheets', {
   sheetId: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
   },
   batchId: {
     type: DataTypes.UUID,

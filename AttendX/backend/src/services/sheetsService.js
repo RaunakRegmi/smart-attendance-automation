@@ -203,7 +203,8 @@ async function syncSheet(sheetId, syncType = 'AUTO', syncJobId = null, lastSynce
           studentId: student.id,
           subjectId: subject.id,
           date: record.date,
-          status: record.status
+          status: record.status,
+          sheetId: sheet.id,
         });
         result.success++;
       } catch (recErr) {
@@ -369,18 +370,30 @@ async function getSheets(filters = {}) {
     if (filters.sectionId) where.sectionId = filters.sectionId;
     if (filters.status) where.status = filters.status;
 
-    const sheets = await Sheets.findAll({
+    const page = Math.max(1, parseInt(filters.page, 10) || 1);
+    const limit = Math.min(120, Math.max(1, parseInt(filters.limit, 10) || 10));
+    const offset = (page - 1) * limit;
+
+    const { rows, count } = await Sheets.findAndCountAll({
       where,
       include: [
         { model: Batch, attributes: ['id', 'name'] },
         { model: Section, attributes: ['id', 'name'] }
-      ]
+      ],
+      limit,
+      offset,
+      order: [['createdAt', 'DESC']],
     });
 
     return {
       success: true,
-      data: sheets,
-      count: sheets.length
+      data: rows,
+      pagination: {
+        total: count,
+        page,
+        limit,
+        totalPages: Math.ceil(count / limit),
+      },
     };
   } catch (error) {
     throw new Error(`Failed to fetch sheets: ${error.message}`);
@@ -414,8 +427,17 @@ async function toggleSheetStatus(sheetId) {
 async function deleteSheet(sheetId) {
   const sheet = await Sheets.findByPk(sheetId);
   if (!sheet) throw new Error('Sheet not found');
-  await sheet.destroy();
-  return { success: true, message: 'Sheet deleted successfully' };
+
+  // Check blocking condition: attendance records reference this sheet
+  const attendanceCount = await Attendance.count({ where: { sheetId: sheet.id } });
+  if (attendanceCount > 0) {
+    throw new Error(`Cannot delete sheet "${sheet.sheetName}" — ${attendanceCount} attendance record(s) reference it.` +
+      ' Set the sheet to inactive instead, or remove the attendance records first.');
+  }
+
+  // Soft-delete: set status to inactive
+  await sheet.update({ status: 'inactive' });
+  return { success: true, message: 'Sheet deactivated successfully' };
 }
 
 module.exports = {

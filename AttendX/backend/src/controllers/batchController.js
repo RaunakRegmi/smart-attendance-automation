@@ -1,5 +1,7 @@
 const Batch = require('../models/Batch');
 const Section = require('../models/Section');
+const Sheets = require('../models/Sheets');
+const { Op } = require('sequelize');
 
 exports.createBatch = async (req, res, next) => {
   try {
@@ -29,7 +31,33 @@ exports.createBatch = async (req, res, next) => {
 
 exports.getBatches = async (req, res, next) => {
   try {
+    const { search, page, limit } = req.query;
+    const where = {};
+    if (search) {
+      where[Op.or] = [
+        { name: { [Op.iLike]: `%${search}%` } },
+        { abbreviation: { [Op.iLike]: `%${search}%` } },
+      ];
+    }
+    if (page && limit) {
+      const p = Math.max(1, parseInt(page, 10));
+      const l = parseInt(limit, 10);
+      const offset = (p - 1) * l;
+      const { count, rows } = await Batch.findAndCountAll({
+        where,
+        include: [{ model: Section }],
+        order: [['createdAt', 'DESC']],
+        limit: l,
+        offset,
+      });
+      return res.json({
+        success: true,
+        data: rows,
+        pagination: { total: count, page: p, limit: l, totalPages: Math.ceil(count / l) },
+      });
+    }
     const batches = await Batch.findAll({
+      where,
       include: [{ model: Section }],
       order: [['createdAt', 'DESC']],
     });
@@ -91,6 +119,23 @@ exports.deleteBatch = async (req, res, next) => {
 
     if (!batch) {
       return res.status(404).json({ success: false, message: 'Batch not found' });
+    }
+
+    // Check blocking conditions: sections OR sheets exist
+    const sectionCount = await Section.count({ where: { batchId: id } });
+    if (sectionCount > 0) {
+      return res.status(409).json({
+        success: false,
+        message: `Cannot delete batch "${batch.name}" — ${sectionCount} section(s) exist under it. Remove all sections first.`,
+      });
+    }
+
+    const sheetCount = await Sheets.count({ where: { batchId: id } });
+    if (sheetCount > 0) {
+      return res.status(409).json({
+        success: false,
+        message: `Cannot delete batch "${batch.name}" — ${sheetCount} sheet(s) are linked to it. Remove all sheets first.`,
+      });
     }
 
     await batch.destroy();

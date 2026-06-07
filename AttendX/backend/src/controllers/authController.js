@@ -346,8 +346,9 @@ exports.deleteUser = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    await user.destroy();
-    res.json({ success: true, message: 'User deleted successfully' });
+    // Soft-deactivate user instead of hard-delete
+    await user.update({ isActive: false });
+    res.json({ success: true, message: 'User deactivated successfully' });
   } catch (error) {
     next(error);
   }

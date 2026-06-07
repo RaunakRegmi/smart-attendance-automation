@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
+const refresh = require('../services/knowledgeRefreshService');
 
 const Section = sequelize.define('Section', {
   id: {
@@ -22,12 +23,14 @@ const Section = sequelize.define('Section', {
 }, {
   tableName: 'sections',
   timestamps: true,
-  indexes: [
-    {
-      unique: true,
-      fields: ['name', 'batchId'],
+  paranoid: true,
+  hooks: {
+    afterCreate: () => refresh.trigger(),
+    afterUpdate: (record) => {
+      if (record.changed('deletedAt')) refresh.trigger();
     },
-  ],
+    afterDestroy: () => refresh.trigger(),
+  },
 });
 
 module.exports = Section;
