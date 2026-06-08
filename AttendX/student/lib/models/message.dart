@@ -16,7 +16,7 @@ class ChatMessage {
   final String text;
   final MessageRole role;
   final DateTime timestamp;
-  final bool isTyping; // true = show animated dots, not text
+  final bool isTyping;
 
   ChatMessage({
     required this.id,
@@ -25,6 +25,20 @@ class ChatMessage {
     required this.timestamp,
     this.isTyping = false,
   });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'text': text,
+    'role': role == MessageRole.user ? 'user' : 'assistant',
+    'timestamp': timestamp.toIso8601String(),
+  };
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) => ChatMessage(
+    id: json['id'] as String,
+    text: json['text'] as String,
+    role: json['role'] == 'user' ? MessageRole.user : MessageRole.assistant,
+    timestamp: DateTime.parse(json['timestamp'] as String),
+  );
 
   // Quick factory for a user bubble
   factory ChatMessage.fromUser(String text) {

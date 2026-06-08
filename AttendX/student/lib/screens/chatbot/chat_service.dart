@@ -4,16 +4,39 @@
 // The backend identifies the student from their JWT and only ever returns
 // data scoped to that student — the chatbot port is not exposed to clients.
 
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/api_client.dart';
 
 class ChatService {
+  static String? _sessionId;
+
+  /// Initialises (or resumes) a session ID from local storage.
+  /// Call once from the screen's initState.
+  static Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    _sessionId = prefs.getString('chat_session_id');
+    if (_sessionId == null) {
+      _sessionId = 'stu_${DateTime.now().millisecondsSinceEpoch}_${_randomString(8)}';
+      await prefs.setString('chat_session_id', _sessionId!);
+    }
+  }
+
+  static String _randomString(int len) {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    final r = DateTime.now().microsecondsSinceEpoch;
+    return List.generate(len, (i) => chars[(r >> (i * 3)) % chars.length]).join();
+  }
+
   /// Sends a user message and returns the assistant reply.
   /// Throws if the network request itself fails — the screen catches it and
   /// shows a friendly error bubble.
   static Future<String> sendMessage(String userMessage) async {
+    final body = <String, dynamic>{'message': userMessage};
+    if (_sessionId != null) body['session_id'] = _sessionId;
+
     final response = await ApiClient.post(
       '/api/student/chat',
-      body: {'message': userMessage},
+      body: body,
     );
 
     final reply = response['reply'] as String?;

@@ -47,7 +47,24 @@ export class ChatbotComponent implements OnInit, AfterViewChecked {
   }
 
   ngOnInit(): void {
-    this.sessionId = crypto.randomUUID();
+    const savedId = sessionStorage.getItem('chat_session_id');
+    this.sessionId = savedId || crypto.randomUUID();
+    if (!savedId) {
+      sessionStorage.setItem('chat_session_id', this.sessionId);
+    }
+
+    const savedMessages = sessionStorage.getItem('chat_messages');
+    if (savedMessages) {
+      try {
+        const parsed = JSON.parse(savedMessages) as { role: 'user' | 'assistant'; text: string; ts: string }[];
+        this.messages.set(parsed.map((m) => ({ ...m, ts: new Date(m.ts) })));
+        setTimeout(() => (this._shouldScroll = true));
+      } catch { /* ignore corrupt data */ }
+    }
+  }
+
+  private saveMessages(): void {
+    sessionStorage.setItem('chat_messages', JSON.stringify(this.messages()));
   }
 
   ngAfterViewChecked(): void {
@@ -78,6 +95,7 @@ export class ChatbotComponent implements OnInit, AfterViewChecked {
         ...m,
         { role: 'assistant', text: reply || "I don't have that information.", ts: new Date() },
       ]);
+      this.saveMessages();
     } catch (err) {
       this.vectorReady.set(false);
       this.messages.update((m) => [
@@ -122,5 +140,6 @@ export class ChatbotComponent implements OnInit, AfterViewChecked {
 
   clear(): void {
     this.messages.set([]);
+    sessionStorage.removeItem('chat_messages');
   }
 }

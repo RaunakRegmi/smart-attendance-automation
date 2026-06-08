@@ -31,4 +31,4 @@ sno,student_name,batch,attendance_percentage,risk_level,risk_score,intervention_
 492,Kabita Chhetri,Atumn 2025,68.97,High,70.0,True,Low overall attendance
 493,Lokesh Karki,Atumn 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
 494,Mamata Shahi,Atumn 2025,55.17,Critical,90.0,True,"Low overall attendance, High absence count"
-495,Nawaraj Bista,Atumn 2025,96.55,Low,15.0,False,None
+497,Nawaraj Bista,Atumn 2025,96.55,Low,15.0,False,None

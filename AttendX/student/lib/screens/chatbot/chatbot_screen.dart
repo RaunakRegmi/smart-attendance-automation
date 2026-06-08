@@ -32,8 +32,10 @@
 //
 // FIX 8 — Send button always active: button appeared enabled even with an empty
 //          field. Added a text listener so it dims correctly when nothing is typed.
- 
+
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../theme/app_theme.dart';
 import '../../models/message.dart';
 import 'chat_service.dart';
@@ -63,6 +65,29 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       final hasText = _controller.text.trim().isNotEmpty;
       if (hasText != _hasText) setState(() => _hasText = hasText);
     });
+    _initSession();
+  }
+
+  Future<void> _initSession() async {
+    await ChatService.init();
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString('chat_messages');
+    if (saved != null && mounted) {
+      final list = (jsonDecode(saved) as List<dynamic>)
+          .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
+          .toList();
+      setState(() => _messages.addAll(list));
+      _scrollToBottom();
+    }
+  }
+
+  Future<void> _saveMessages() async {
+    final prefs = await SharedPreferences.getInstance();
+    final json = jsonEncode(_messages
+        .where((m) => !m.isTyping)
+        .map((m) => m.toJson())
+        .toList());
+    await prefs.setString('chat_messages', json);
   }
  
   @override
@@ -109,6 +134,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         _messages.add(ChatMessage.fromAssistant(reply));
         _isLoading = false;
       });
+      _saveMessages();
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -151,6 +177,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     );
     if (confirmed == true && mounted) {
       setState(() => _messages.clear());
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('chat_messages');
     }
   }
  

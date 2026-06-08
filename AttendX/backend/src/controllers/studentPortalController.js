@@ -274,7 +274,7 @@ const getTodaySchedule = async (sectionId) => {
 // about their own data. The chatbot is never exposed to the client directly.
 exports.chat = async (req, res, next) => {
   try {
-    const { message } = req.body || {};
+    const { message, session_id } = req.body || {};
     if (!message || typeof message !== 'string' || !message.trim()) {
       return res.status(400).json({ success: false, message: 'message is required' });
     }
@@ -288,10 +288,13 @@ exports.chat = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Student has no email on file' });
     }
 
+    const payload = { message: message.trim(), email };
+    if (session_id) payload.session_id = session_id;
+
     const resp = await fetch(`${CHATBOT_URL}/student/chat-by-email`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: message.trim(), email }),
+      body: JSON.stringify(payload),
     }).catch((err) => {
       throw new Error(`Chatbot service unreachable: ${err.message}`);
     });
