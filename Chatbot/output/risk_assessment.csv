@@ -31,4 +31,39 @@ sno,student_name,batch,attendance_percentage,risk_level,risk_score,intervention_
 492,Kabita Chhetri,Atumn 2025,68.97,High,70.0,True,Low overall attendance
 493,Lokesh Karki,Atumn 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
 494,Mamata Shahi,Atumn 2025,55.17,Critical,90.0,True,"Low overall attendance, High absence count"
+501,Sushmita Neupane,Atumn 2025,89.66,Low,15.0,False,None
 497,Nawaraj Bista,Atumn 2025,96.55,Low,15.0,False,None
+498,Aaditya Dhakal,Atumn 2025,79.31,Medium,40.0,False,None
+500,Prakash Adhikari,Atumn 2025,96.55,Low,15.0,False,None
+502,Rohit Poudel,Atumn 2025,79.31,Medium,40.0,False,None
+503,Anjali Thapa,Atumn 2025,82.76,Medium,40.0,False,None
+504,Bibek Shrestha,Atumn 2025,82.76,Medium,40.0,False,None
+505,Rupendra Dhungana,Atumn 2025,79.31,Medium,40.0,False,None
+506,Nabin Gurung,Atumn 2025,86.21,Low,15.0,False,None
+507,Asmita KC,Atumn 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
+508,Rijan Acharya,Atumn 2025,65.52,High,70.0,True,"Low overall attendance, High absence count"
+509,Sneha Maharjan,Atumn 2025,93.1,Low,15.0,False,None
+510,Dipesh Bhandari,Atumn 2025,79.31,Medium,40.0,False,None
+511,Karuna Basyal,Atumn 2025,86.21,Low,15.0,False,None
+512,Niraj Ghimire,Atumn 2025,96.55,Low,15.0,False,None
+513,Samiksha Adhikari,Atumn 2025,89.66,Low,15.0,False,None
+514,Tek Bahadur Ale,Atumn 2025,86.21,Low,15.0,False,None
+515,Apeksha Regmi,Atumn 2025,93.1,Low,15.0,False,None
+516,Bijay Tamang,Atumn 2025,93.1,Low,15.0,False,None
+517,Nikita Panta,Atumn 2025,89.66,Low,15.0,False,None
+499,Raunak Regmi,Atumn 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
+518,Sujan Kharel,Atumn 2025,96.55,Low,15.0,False,None
+519,Puja Bhandari,Atumn 2025,75.86,Medium,40.0,False,None
+520,Rabin Chaudhary,Atumn 2025,68.97,High,70.0,True,Low overall attendance
+521,Melina Joshi,Atumn 2025,93.1,Low,15.0,False,None
+522,Sagar Bhattarai,Atumn 2025,93.1,Low,15.0,False,None
+523,Alisha Raut,Atumn 2025,89.66,Low,15.0,False,None
+524,Kritesh Pandey,Atumn 2025,93.1,Low,15.0,False,None
+525,Monika Kandel,Atumn 2025,82.76,Medium,40.0,False,None
+526,Nischal Aryal,Atumn 2025,93.1,Low,15.0,False,None
+527,Prerana Shah,Atumn 2025,72.41,High,70.0,True,Low overall attendance
+528,Ritik Lama,Atumn 2025,82.76,Medium,40.0,False,None
+529,Sunita Bhandari,Atumn 2025,68.97,High,70.0,True,Low overall attendance
+530,Yubraj Thapa,Atumn 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
+531,Aarati Sharma,Atumn 2025,55.17,Critical,90.0,True,"Low overall attendance, High absence count"
+532,Bishal Karki,Atumn 2025,96.55,Low,15.0,False,None
