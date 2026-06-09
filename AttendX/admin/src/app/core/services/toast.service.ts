@@ -26,7 +26,7 @@ export class ToastService {
   private show(message: string, type: Toast['type']): void {
     const id = ++this.idCounter;
     this.toasts.update((list) => [...list, { id, message, type }]);
-    setTimeout(() => this.dismiss(id), 4000);
+    setTimeout(() => this.dismiss(id), 6000);
   }
 
   dismiss(id: number): void {

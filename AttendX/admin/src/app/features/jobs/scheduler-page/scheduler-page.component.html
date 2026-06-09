@@ -1,34 +1,64 @@
 <div class="page-header">
   <h1>Scheduler</h1>
-  <p>Attendance sync scheduler: status, start, stop, and daily time (<code>POST /api/sync/modify</code>).</p>
+  <p>Manage the attendance sync schedule</p>
 </div>
 
-<div class="toolbar">
-  <button type="button" class="btn btn--secondary" (click)="refreshStatus()" [disabled]="loading() || busy()">Refresh status</button>
-  <button type="button" class="btn btn--primary" (click)="start()" [disabled]="busy()">Start scheduler</button>
-  <button type="button" class="btn btn--danger" (click)="stop()" [disabled]="busy()">Stop scheduler</button>
-</div>
-
-<div class="card status-card">
-  <h2>Current status (raw)</h2>
-  @if (loading()) {
-    <div class="empty-state"><span class="loading-spinner"></span></div>
-  } @else {
-    <pre>{{ statusJson() }}</pre>
-  }
-</div>
-
-<div class="card">
-  <h2>Change sync time</h2>
-  <p class="hint">24-hour <code>HH:MM</code> as required by the API.</p>
-  <form [formGroup]="timeForm" (ngSubmit)="modifyTime()" class="time-form">
-    <div class="form-field">
-      <label for="t">New sync time</label>
-      <input id="t" type="text" formControlName="newSyncTime" placeholder="07:30" />
-      @if (timeForm.controls.newSyncTime.touched && timeForm.controls.newSyncTime.invalid) {
-        <span class="error">Use HH:MM (24h)</span>
-      }
+<div class="scheduler-grid">
+  <section class="card scheduler-status">
+    <div class="scheduler-status__header">
+      <h2>Status</h2>
+      <span class="status-badge" [class.status-badge--running]="running()" [class.status-badge--paused]="!running()">
+        @if (running()) { Running } @else { Paused }
+      </span>
     </div>
-    <button type="submit" class="btn btn--primary" [disabled]="busy()">Apply</button>
-  </form>
+
+    @if (loading()) {
+      <div class="scheduler-status__loading"><span class="loading-spinner"></span></div>
+    } @else {
+      <div class="scheduler-metrics">
+        <div class="scheduler-metric">
+          <span class="scheduler-metric__label">Sync time</span>
+          <span class="scheduler-metric__value">{{ syncTimeDisplay() }}</span>
+        </div>
+        <div class="scheduler-metric">
+          <span class="scheduler-metric__label">Timezone</span>
+          <span class="scheduler-metric__value">{{ timezone() }}</span>
+        </div>
+        <div class="scheduler-metric">
+          <span class="scheduler-metric__label">Next run</span>
+          <span class="scheduler-metric__value">{{ nextRunDisplay() }}</span>
+        </div>
+      </div>
+    }
+
+    <div class="scheduler-status__actions">
+      <button type="button" class="btn btn--primary toggle-btn" (click)="toggle()" [disabled]="busy()">
+        @if (running()) {
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+          Pause scheduler
+        } @else {
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>
+          Resume scheduler
+        }
+      </button>
+      <button type="button" class="btn btn--secondary" (click)="refreshStatus()" [disabled]="loading() || busy()">Refresh</button>
+    </div>
+  </section>
+
+  <section class="card scheduler-time">
+    <h2>Change sync time</h2>
+    <p class="hint">The daily time attendance data is synced. Uses 24-hour <code>HH:MM</code> format.</p>
+    <form [formGroup]="timeForm" (ngSubmit)="modifyTime()" class="time-form">
+      <div class="time-form__row">
+        <div class="form-field">
+          <label for="t">New sync time</label>
+          <input id="t" type="text" formControlName="newSyncTime" placeholder="07:30" />
+          @if (timeForm.controls.newSyncTime.touched && timeForm.controls.newSyncTime.invalid) {
+            <span class="error">Enter a valid 24-hour time (e.g. 06:00, 14:30)</span>
+          }
+        </div>
+        <button type="submit" class="btn btn--primary" [disabled]="busy()">Apply</button>
+      </div>
+    </form>
+  </section>
 </div>

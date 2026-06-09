@@ -58,7 +58,7 @@
                 <a class="btn btn--ghost btn--sm" [routerLink]="['/sheets', sheet.id]">View / modify</a>
                 <button type="button" class="btn btn--ghost btn--sm" (click)="syncOne(sheet)">Sync</button>
                 <button type="button" class="btn btn--ghost btn--sm" (click)="toggle(sheet)">Toggle</button>
-                <button type="button" class="btn btn--danger btn--sm" (click)="confirmDelete(sheet)">Delete</button>
+                <button type="button" class="btn btn--ghost btn--sm" (click)="confirmDelete(sheet)">Delete</button>
               </td>
             </tr>
           } @empty {

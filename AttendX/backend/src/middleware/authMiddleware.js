@@ -6,7 +6,8 @@ const authenticateJWT = (req, res, next) => {
   if (
     req.path.startsWith('/api-docs') ||
     req.path === '/api/auth/login' ||
-    req.path === '/api/health'
+    req.path === '/api/health' ||
+    req.path.startsWith('/api/samples')
   ) {
     return next();
   }

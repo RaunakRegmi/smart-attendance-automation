@@ -1,4 +1,5 @@
 course_code,course_name,avg_attendance_pct,performance_tier,total_students,students_perfect,students_below_75
-WEB002,WEB002,82.86,Healthy,68,0,15
-DSA001,DSA001,83.28,Healthy,33,0,7
-Maths004,Maths004,83.28,Healthy,66,0,14
+WEB002,WEB002,80.49,Healthy,70,0,17
+DSA001,DSA001,78.52,Healthy,35,0,9
+Maths004,Maths004,80.83,Healthy,68,0,16
+Python005,Python005,83.28,Healthy,33,0,7

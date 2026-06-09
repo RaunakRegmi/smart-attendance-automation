@@ -45,6 +45,10 @@ export class SheetsAddComponent implements OnInit {
     }
   }
 
+  downloadAttendanceSample(): void {
+    window.open('/api/samples/attendance', '_blank');
+  }
+
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -52,12 +56,17 @@ export class SheetsAddComponent implements OnInit {
     }
     this.saving.set(true);
     this.sheetsService.linkSheet(this.form.getRawValue()).subscribe({
-      next: () => {
-        this.toast.success('Sheet linked');
+      next: (res) => {
+        if (res.syncStatus === 'FAILED') {
+          this.toast.warning(res.syncError || 'Sheet linked but initial sync failed — check the sheet format.');
+        } else {
+          this.toast.success(res.message || 'Sheet linked');
+        }
         this.router.navigate(['/sheets']);
         this.saving.set(false);
       },
-      error: () => {
+      error: (err) => {
+        this.toast.error(err.error?.message || err.error?.error || 'Failed to link sheet');
         this.saving.set(false);
       },
     });

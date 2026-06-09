@@ -67,3 +67,38 @@ sno,student_name,batch,attendance_percentage,risk_level,risk_score,intervention_
 530,Yubraj Thapa,Atumn 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
 531,Aarati Sharma,Atumn 2025,55.17,Critical,90.0,True,"Low overall attendance, High absence count"
 532,Bishal Karki,Atumn 2025,96.55,Low,15.0,False,None
+538,Aarav Joshi,Summer 2025,96.55,Low,15.0,False,None
+539,Bhumi Adhikari,Summer 2025,89.66,Low,15.0,False,None
+540,Chetan Pariyar,Summer 2025,79.31,Medium,40.0,False,None
+541,Diya Kandel,Summer 2025,82.76,Medium,40.0,False,None
+542,Ekraj Thakuri,Summer 2025,82.76,Medium,40.0,False,None
+543,Falguni Shrestha,Summer 2025,79.31,Medium,40.0,False,None
+544,Gitesh Rana,Summer 2025,86.21,Low,15.0,False,None
+545,Harshita Poudyal,Summer 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
+546,Iresh Jha,Summer 2025,65.52,High,70.0,True,"Low overall attendance, High absence count"
+547,Jyotsna Dahal,Summer 2025,93.1,Low,15.0,False,None
+548,Kushal Dev,Summer 2025,79.31,Medium,40.0,False,None
+549,Luna Basyal,Summer 2025,86.21,Low,15.0,False,None
+550,Meksam Ale,Summer 2025,96.55,Low,15.0,False,None
+551,Nivaan Kharel,Summer 2025,89.66,Low,15.0,False,None
+552,Oshin Karki,Summer 2025,86.21,Low,15.0,False,None
+553,Pratiksha Ghimire,Summer 2025,93.1,Low,15.0,False,None
+554,Qurina Rai,Summer 2025,93.1,Low,15.0,False,None
+555,Rivaan Sapkota,Summer 2025,89.66,Low,15.0,False,None
+556,Sewanta Bohora,Summer 2025,96.55,Low,15.0,False,None
+557,Trisha Budhathoki,Summer 2025,75.86,Medium,40.0,False,None
+558,Utkarsh Bhandari,Summer 2025,68.97,High,70.0,True,Low overall attendance
+559,Vinesh Subedi,Summer 2025,93.1,Low,15.0,False,None
+560,Wilson Rokka,Summer 2025,93.1,Low,15.0,False,None
+561,Xenia Guragain,Summer 2025,89.66,Low,15.0,False,None
+562,Yugant Khatiwada,Summer 2025,93.1,Low,15.0,False,None
+563,Zenia Oli,Summer 2025,82.76,Medium,40.0,False,None
+564,Anugraha Koirala,Summer 2025,93.1,Low,15.0,False,None
+565,Bivek Khadka,Summer 2025,72.41,High,70.0,True,Low overall attendance
+566,Celine Maharjan,Summer 2025,82.76,Medium,40.0,False,None
+567,Dron Acharya,Summer 2025,68.97,High,70.0,True,Low overall attendance
+568,Eshan KC,Summer 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
+569,Fiona Lama,Summer 2025,55.17,Critical,90.0,True,"Low overall attendance, High absence count"
+570,Grishma Chaulagai,Summer 2025,96.55,Low,15.0,False,None
+536,Aarnav Dahal,Atumn 2025,0.0,Critical,90.0,True,"Low overall attendance, High absence count"
+537,Aaditya Joshi,Atumn 2025,0.0,Critical,90.0,True,"Low overall attendance, High absence count"

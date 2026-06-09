@@ -28,6 +28,10 @@ export class RoutinesAddComponent implements OnInit {
   readonly dragOver = signal(false);
   readonly saving = signal(false);
 
+  downloadRoutineSample(): void {
+    window.open('/api/samples/routine', '_blank');
+  }
+
   ngOnInit(): void {
     this.batchService.getAll().subscribe((r) => this.batches.set(r.data ?? []));
   }

@@ -17,9 +17,8 @@ export class SheetsService {
     }).pipe(map(r => ({ data: r.data ?? [], pagination: r.pagination ?? { total: 0, page: 1, limit: 10, totalPages: 0 } })));
   }
 
-  /** POST /api/sheets — response shape is backend-specific (201 body, not always { success, data }). */
-  linkSheet(data: { url: string; batchId: string; sectionId: string }): Observable<unknown> {
-    return this.http.post<unknown>(`${this.baseUrl}/sheets`, data);
+  linkSheet(data: { url: string; batchId: string; sectionId: string }): Observable<{ success: boolean; syncStatus?: string; syncError?: string; message?: string }> {
+    return this.http.post<{ success: boolean; syncStatus?: string; syncError?: string; message?: string }>(`${this.baseUrl}/sheets`, data);
   }
 
   addSheet(data: { url: string; batchId: string; sectionId: string }) {

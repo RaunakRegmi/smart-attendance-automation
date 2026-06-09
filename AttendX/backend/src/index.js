@@ -24,6 +24,7 @@ const studentPortalRoutes = require('./routes/studentPortalRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const chatbotRoutes = require('./routes/chatbotRoutes');
 const restoreRoutes = require('./routes/restoreRoutes');
+const sampleRoutes = require('./routes/sampleRoutes');
 const schedulerService = require('./services/schedulerService');
 const errorHandler = require('./middleware/errorHandler');
 const User = require('./models/User');
@@ -37,6 +38,7 @@ const Lecturer = require('./models/Lecturer');
 const Sheets = require('./models/Sheets');
 const AuditLog = require('./models/AuditLog');
 const Notification = require('./models/Notification');
+const Setting = require('./models/Setting');
 
 const app = express();
 
@@ -142,6 +144,7 @@ app.use('/api/student', studentPortalRoutes);
 app.use('/api', notificationRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/admin', restoreRoutes);
+app.use('/api/samples', sampleRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is running' });
@@ -172,6 +175,8 @@ const startServer = async () => {
     schedulerService.start();
     // Start BullMQ worker to process sheet sync jobs
     require('./workers/sheetSyncWorker');
+    // Start BullMQ worker to process sheet append jobs
+    require('./workers/sheetAppendWorker');
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });

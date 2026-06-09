@@ -16,8 +16,11 @@ export class SchedulerPageComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
 
   readonly loading = signal(true);
-  readonly statusJson = signal<string>('');
   readonly busy = signal(false);
+  readonly running = signal(false);
+  readonly syncTimeDisplay = signal('--:--');
+  readonly timezone = signal('--');
+  readonly nextRunDisplay = signal('--');
 
   readonly timeForm = this.fb.nonNullable.group({
     newSyncTime: ['07:30', [Validators.required, Validators.pattern(/^([01]\d|2[0-3]):[0-5]\d$/)]],
@@ -31,39 +34,35 @@ export class SchedulerPageComponent implements OnInit {
     this.loading.set(true);
     this.syncService.getSchedulerStatus().subscribe({
       next: (res) => {
-        this.statusJson.set(JSON.stringify(res.syncStatus ?? res, null, 2));
+        const status = (res.syncStatus ?? res) as { running?: boolean; syncTime?: string; timezone?: string; nextRun?: string };
+        this.running.set(status.running ?? false);
+        this.syncTimeDisplay.set(status.syncTime ?? '--:--');
+        this.timezone.set(status.timezone ?? '--');
+        this.nextRunDisplay.set(status.nextRun ? new Date(status.nextRun).toLocaleString() : '--');
+        if (status.syncTime) {
+          this.timeForm.controls.newSyncTime.setValue(status.syncTime);
+        }
         this.loading.set(false);
       },
       error: (err) => {
-        this.statusJson.set(err.error?.error ?? err.error?.message ?? String(err.message));
+        this.syncTimeDisplay.set('Error');
         this.loading.set(false);
       },
     });
   }
 
-  start(): void {
+  toggle(): void {
+    if (this.busy()) return;
     this.busy.set(true);
-    this.syncService.startScheduler().subscribe({
+    const action = this.running() ? this.syncService.stopScheduler() : this.syncService.startScheduler();
+    action.subscribe({
       next: (r) => {
-        this.toast.success(r.message ?? 'Started');
+        this.toast.success(r.message ?? (this.running() ? 'Stopped' : 'Started'));
         this.refreshStatus();
         this.busy.set(false);
       },
-      error: () => {
-        this.busy.set(false);
-      },
-    });
-  }
-
-  stop(): void {
-    this.busy.set(true);
-    this.syncService.stopScheduler().subscribe({
-      next: (r) => {
-        this.toast.success(r.message ?? 'Stopped');
-        this.refreshStatus();
-        this.busy.set(false);
-      },
-      error: () => {
+      error: (err) => {
+        this.toast.error(err.error?.message ?? err.error?.error ?? 'Invalid time format. Use HH:MM (24-hour)');
         this.busy.set(false);
       },
     });
@@ -81,7 +80,8 @@ export class SchedulerPageComponent implements OnInit {
         this.refreshStatus();
         this.busy.set(false);
       },
-      error: () => {
+      error: (err) => {
+        this.toast.error(err.error?.message ?? err.error?.error ?? 'Invalid time format. Use HH:MM (24-hour)');
         this.busy.set(false);
       },
     });

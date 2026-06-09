@@ -24,7 +24,7 @@ const keys = JSON.parse(fs.readFileSync(keysPath, 'utf8'));
 
 const auth = new google.auth.GoogleAuth({
   credentials: keys,
-  scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
 });
 const sheetsAPI = google.sheets({ version: 'v4', auth });
 const serviceAccountEmail = keys.client_email || 'service account';
@@ -123,7 +123,10 @@ async function syncSheet(sheetId, syncType = 'AUTO', syncJobId = null, lastSynce
       records = allRecords.filter(r => r.date && new Date(r.date) > lastSync);
     }
     if (records.length === 0) {
-      const msg = `Attendance already synced up to ${lastSyncedDate || 'never'}`;
+      const isFirstSync = !lastSyncedDate;
+      const msg = isFirstSync
+        ? 'This sheet does not match the expected attendance format. Ensure the sheet has columns: Student Name, Email (Gmail), Subject Code, Date, and Attendance status (flat layout) OR the Subject Code / Lecturer / Date structure (legacy layout).'
+        : `No new attendance records since last sync (${lastSyncedDate}).`;
       console.log(msg);
       await syncJob.update({ status: 'SKIPPED', endTime: new Date(), failureDetails: msg });
       throw new Error(msg);
@@ -340,20 +343,9 @@ async function linkSheet(url, batchId, sectionId) {
         syncResult: syncResult
       };
     } catch (syncError) {
-      // If first-time sync fails, still return the sheet but with error details
-      console.error('WARNING: First-time sync failed for sheet:', sheet.id, 'Error:', syncError.message);
-      return {
-        success: true,
-        id: sheet.id,
-        sheetId: sheet.sheetId,
-        sheetName: sheet.sheetName,
-        batchId: sheet.batchId,
-        sectionId: sheet.sectionId,
-        status: sheet.status,
-        message: 'Sheet added but initial sync failed',
-        syncStatus: 'FAILED',
-        syncError: syncError.message
-      };
+      console.error('First-time sync failed for sheet:', sheet.id, 'Error:', syncError.message);
+      await sheet.destroy();
+      throw new Error(`Format validation failed: ${syncError.message}`);
     }
   } catch (error) {
     throw new Error(`Failed to link sheet: ${error.message}`);
@@ -424,6 +416,154 @@ async function toggleSheetStatus(sheetId) {
   }
 }
 
+async function appendStudentToSheets(student) {
+  const { name, email, batchId, sectionId } = student;
+  if (!batchId || !sectionId) return { success: true, skipped: true, reason: 'Student has no batch/section' };
+
+  const sheets = await Sheets.findAll({
+    where: { batchId, sectionId, status: 'active' }
+  });
+
+  if (sheets.length === 0) return { success: true, skipped: true, reason: 'No active sheets for this batch/section' };
+
+  let appended = 0;
+  let skipped = 0;
+
+  for (const sheet of sheets) {
+    try {
+      const sheetInfo = await sheetsAPI.spreadsheets.get({ spreadsheetId: sheet.sheetId });
+      const firstSheetTitle = sheetInfo.data.sheets[0].properties.title;
+      const sheetInternalId = sheetInfo.data.sheets[0].properties.sheetId;
+      const quotedSheetTitle = `'${firstSheetTitle.replace(/'/g, "''")}'`;
+
+      const res = await sheetsAPI.spreadsheets.values.get({
+        spreadsheetId: sheet.sheetId,
+        range: `${quotedSheetTitle}!A:AL`,
+      });
+
+      const values = res.data.values || [];
+      if (values.length === 0) continue;
+
+      const firstRow = values[0].map((c) => (c == null ? '' : c.toString().trim().toLowerCase()));
+      const hasFlatHeader = firstRow.includes('student name') && firstRow.includes('email (gmail)');
+
+      if (hasFlatHeader) {
+        const nameColIndex = firstRow.indexOf('student name');
+        const emailColIndex = firstRow.indexOf('email (gmail)');
+        if (nameColIndex === -1 || emailColIndex === -1) { skipped++; continue; }
+
+        // Data rows start at index 1 (after header). Find last data row.
+        let lastDataIdx = values.length - 1;
+        for (let i = 1; i < values.length; i++) {
+          const r = values[i];
+          const nm = r && r[nameColIndex] ? r[nameColIndex].toString().trim() : '';
+          const em = r && r[emailColIndex] ? r[emailColIndex].toString().trim() : '';
+          if (!nm && !em) { lastDataIdx = i - 1; break; }
+        }
+        if (lastDataIdx < 1) { skipped++; continue; }
+
+        // Duplicate check within data rows only
+        const emailExists = values.slice(1, lastDataIdx + 1).some((row) => {
+          const cell = row[emailColIndex];
+          return cell && cell.toString().trim().toLowerCase() === email.toLowerCase();
+        });
+        if (emailExists) { skipped++; continue; }
+
+        const newRow = new Array(firstRow.length).fill('');
+        newRow[nameColIndex] = name;
+        newRow[emailColIndex] = email;
+
+        // Insert row before any summary/counter rows (position lastDataIdx + 1, 0-indexed)
+        const insertAt = lastDataIdx + 1;
+        await sheetsAPI.spreadsheets.batchUpdate({
+          spreadsheetId: sheet.sheetId,
+          requestBody: {
+            requests: [{
+              insertDimension: {
+                range: { sheetId: sheetInternalId, startIndex: insertAt, endIndex: insertAt + 1, dimension: 'ROWS' },
+                inheritFromBefore: true,
+              }
+            }]
+          }
+        });
+        await sheetsAPI.spreadsheets.values.update({
+          spreadsheetId: sheet.sheetId,
+          range: `${quotedSheetTitle}!A${insertAt + 1}`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: { values: [newRow] },
+        });
+        appended++;
+      } else {
+        // Legacy layout: metadata in rows 1-7, data starts at row 8 (index 7)
+        // S.NO = col 0, Batch = col 1, Name = col 2, Email = col 3
+        if (values.length < 8) { skipped++; continue; }
+
+        const dataStartIndex = 7;
+        const nameCol = 2;
+        const emailCol = 3;
+
+        // Find last data row (first row where S.NO or Name is empty)
+        let lastDataIdx = values.length - 1;
+        for (let i = dataStartIndex; i < values.length; i++) {
+          const r = values[i];
+          const sno = r && r[0] ? r[0].toString().trim() : '';
+          const nm = r && r[nameCol] ? r[nameCol].toString().trim() : '';
+          if (!sno || !nm) { lastDataIdx = i - 1; break; }
+        }
+        if (lastDataIdx < dataStartIndex) { skipped++; continue; }
+
+        // Duplicate check within data rows only
+        const emailExists = values.slice(dataStartIndex, lastDataIdx + 1).some((row) => {
+          const cell = row[emailCol];
+          return cell && cell.toString().trim().toLowerCase() === email.toLowerCase();
+        });
+        if (emailExists) { skipped++; continue; }
+
+        // Auto-increment S.NO
+        let maxSno = 0;
+        values.slice(dataStartIndex, lastDataIdx + 1).forEach((row) => {
+          if (row[0]) { const sno = parseInt(row[0], 10); if (!isNaN(sno) && sno > maxSno) maxSno = sno; }
+        });
+
+        const maxCols = values.slice(dataStartIndex, lastDataIdx + 1).reduce((max, row) => Math.max(max, row.length), 8);
+        const batchName = (values[lastDataIdx] && values[lastDataIdx][1]) || '';
+
+        const newRow = new Array(maxCols).fill('');
+        newRow[0] = maxSno + 1;
+        newRow[1] = batchName;
+        newRow[nameCol] = name;
+        newRow[emailCol] = email;
+
+        // Insert row before any summary/counter rows (position lastDataIdx + 1, 0-indexed)
+        const insertAt = lastDataIdx + 1;
+        await sheetsAPI.spreadsheets.batchUpdate({
+          spreadsheetId: sheet.sheetId,
+          requestBody: {
+            requests: [{
+              insertDimension: {
+                range: { sheetId: sheetInternalId, startIndex: insertAt, endIndex: insertAt + 1, dimension: 'ROWS' },
+                inheritFromBefore: true,
+              }
+            }]
+          }
+        });
+        await sheetsAPI.spreadsheets.values.update({
+          spreadsheetId: sheet.sheetId,
+          range: `${quotedSheetTitle}!A${insertAt + 1}`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: { values: [newRow] },
+        });
+        appended++;
+      }
+    } catch (err) {
+      console.error(`Failed to append student to sheet ${sheet.id}: ${err.message}`);
+      skipped++;
+    }
+  }
+
+  return { success: true, appended, skipped, total: sheets.length };
+}
+
 async function deleteSheet(sheetId) {
   const sheet = await Sheets.findByPk(sheetId);
   if (!sheet) throw new Error('Sheet not found');
@@ -448,5 +588,6 @@ module.exports = {
   getSheets,
   toggleSheetStatus,
   deleteSheet,
+  appendStudentToSheets,
   SyncJob // expose for worker updates
 };

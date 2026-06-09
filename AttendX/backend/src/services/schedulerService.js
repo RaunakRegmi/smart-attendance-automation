@@ -1,10 +1,14 @@
 const cron = require('node-cron');
 const Sheets = require('../models/Sheets');
 const SyncJob = require('../models/SyncJob');
+const Setting = require('../models/Setting');
 const sheetSyncQueue = require('../queues/sheetSyncQueue');
 const { Op } = require('sequelize');
 const moment = require('moment-timezone');
 const weeklyReportService = require('./weeklyReportService');
+const sequelize = require('../config/database');
+
+const SYNC_TIME_KEY = 'scheduler_sync_time';
 
 class SchedulerService {
   constructor() {
@@ -17,10 +21,31 @@ class SchedulerService {
     this.weeklyReportDay = parseInt(process.env.WEEKLY_REPORT_DAY ?? '5', 10); // 0=Sun..6=Sat
   }
 
+  async loadSyncTime() {
+    try {
+      await sequelize.query(
+        `CREATE TABLE IF NOT EXISTS "Settings" (
+          "key" VARCHAR(255) NOT NULL PRIMARY KEY,
+          "value" VARCHAR(255) NOT NULL,
+          "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )`
+      );
+      const setting = await Setting.findByPk(SYNC_TIME_KEY);
+      if (setting) {
+        this.syncTime = setting.value;
+        console.log(`Loaded sync time from DB: ${this.syncTime}`);
+      }
+    } catch (err) {
+      console.warn('Could not load sync time from DB, using default:', err.message);
+    }
+  }
+
   /**
    * Start the scheduler service
    */
   async start() {
+    await this.loadSyncTime();
     // Parse the sync time (HH:MM format in Nepal Time)
     const [hours, minutes] = this.syncTime.split(':');
 
@@ -241,12 +266,22 @@ class SchedulerService {
         throw new Error('Invalid time format. Use HH:MM (24-hour format)');
       }
 
+      await sequelize.query(
+        `CREATE TABLE IF NOT EXISTS "Settings" (
+          "key" VARCHAR(255) NOT NULL PRIMARY KEY,
+          "value" VARCHAR(255) NOT NULL,
+          "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )`
+      );
+      await Setting.upsert({ key: SYNC_TIME_KEY, value: newSyncTime });
+
       // Store new configuration
       this.syncTime = newSyncTime;
 
       // Restart scheduler with new time
       this.stop();
-      this.start();
+      await this.start();
 
       console.log(`Sync time updated to ${newSyncTime}`);
       return { success: true, message: 'Sync time updated' };

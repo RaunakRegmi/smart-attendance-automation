@@ -1,24 +1,28 @@
 # Session Context
 
 ## Goal
-Complete soft-delete implementation: run the database migration successfully and verify the server starts.
+Fix duplicate validation messages in routine upload.
 
-## What Was Accomplished
-- Created `attendance_db` database in PostgreSQL (was missing)
-- Fixed migration `20260607000000-add-soft-delete.js` to handle already-existing columns/indexes (wrapped `addColumn` and `addIndex` in try/catch for "already exists" errors)
-- Manually recorded the migration in `sequelize_meta` since all structural changes (deletedAt columns, partial unique indexes, sheetId) were already applied by `sync({ alter: true })`
-- Created `.env` file in backend with DB credentials
-- Verified server starts on port 5000 (only pre-existing issue: Redis not running for BullMQ worker)
+## What was accomplished so far
+- Removed file upload from attendance sync (separate path)
+- Added format validation error messages in sheetsService.js sync
+- Updated sheets-add frontend to show sync errors as warning toasts
+- Updated routines-add frontend to show backend error messages
+- Changed sheet linking to NOT create the sheet record if initial sync fails (sheet.destroy() on failure)
+- Increased toast display duration from 4s to 6s
+- Investigating "2 validation (dublicate) message" issue in routine upload
 
-## Pending / Next Steps
-- Redis is not running (port 6379) — BullMQ sheet sync worker fails. Start Redis if needed: `redis-server` or `sudo service redis-server start`.
-- Verify all delete flows end-to-end (backend + frontend admin UI).
-- Update reports module to use `paranoid: false` on includes for historical accuracy (separate task).
-- Update chatbot `buildPayload()` to exclude soft-deleted records (may already work via `User.isActive` filter).
+## What's pending
+- User said "the 2 validation (dublicate) message in the upload routine fix" — need to understand what duplicate messages are appearing
+- Was investigating error middleware and error interceptor to trace how error messages flow from backend to frontend
 
-## Key Decisions
-- All soft-delete columns and partial unique indexes were already created by `sync({ alter: true })` when models started using `paranoid: true` and removed `unique: true`. The migration was only needed for `sequelize-cli` tracking — but since it failed on "already exists", we wrapped DDL ops in try/catch and force-recorded it.
+## Key context
+- Routine controller: `catch (error) { next(error); }` — errors go to Express global error handler
+- Error interceptor: skips 400 errors for toast, shows others
+- Need to check the global error handler in index.js to understand response format
 
-## Relevant Files
-- `AttendX/backend/src/migrations/20260607000000-add-soft-delete.js` — updated with try/catch for idempotent execution
-- `AttendX/backend/.env` — created with DB credentials
+## Files relevant to current task
+- `backend/src/controllers/routineController.js` — uploadRoutine uses next(error)
+- `backend/src/index.js` — global error handler
+- `admin/src/app/core/interceptors/error.interceptor.ts` — handles error display
+- `admin/src/app/core/services/routine.service.ts` — uploadRoutine API call

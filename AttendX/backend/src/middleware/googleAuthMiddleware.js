@@ -3,7 +3,7 @@ module.exports = (req, res, next) => {
   req.services = {
     googleAuth: {
       auth: require('../utils/googleSheetsIntegration').auth,
-      scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
+      scopes: ['https://www.googleapis.com/auth/spreadsheets']
     }
   };
   next();
