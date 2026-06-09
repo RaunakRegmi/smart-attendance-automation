@@ -162,7 +162,7 @@ async def collect_reply(user_message: str, session_id: str = "") -> str:
     """Non-streaming version: collect the full reply from the model."""
     coll = current_collection()
     if coll is None:
-        return "Error: knowledge base not built yet. Please refresh AI knowledge."
+        return "Error: Knowledge base not built. Refresh AI knowledge."
 
     context = retrieve_context(user_message)
     user_content = build_user_content(context, user_message)
@@ -245,13 +245,13 @@ STUDENT_SYSTEM_PROMPT_TPL = (
 
 async def stream_student_response(student_id: int, user_message: str, session_id: str = ""):
     if current_collection() is None:
-        yield f"data: {json.dumps('Error: Vector store not found. Please run python rag_indexer.py first.')}\n\n"
+        yield f"data: {json.dumps('Error: Vector store missing. Rebuild the knowledge base.')}\n\n"
         yield "data: [DONE]\n\n"
         return
 
     student_name, context = get_student_context(student_id, user_message)
     if not context:
-        yield f"data: {json.dumps('Student ID not found. Please check your ID and try again.')}\n\n"
+        yield f"data: {json.dumps('Student ID not found. Check your ID.')}\n\n"
         yield "data: [DONE]\n\n"
         return
 
@@ -330,7 +330,7 @@ async def student_verify(request: Request):
 
     meta = find_student_by_email(email)
     if not meta:
-        return JSONResponse({"error": "Student not found. Check your email and try again."}, status_code=404)
+        return JSONResponse({"error": "Student not found. Check your email."}, status_code=404)
 
     return JSONResponse({"name": meta.get("name", ""), "batch": meta.get("batch", ""), "sno": meta.get("sno")})
 
@@ -364,7 +364,7 @@ async def student_chat_by_email(request: Request):
         return JSONResponse({"error": "Email is required"}, status_code=400)
     if current_collection() is None:
         return JSONResponse(
-            {"reply": "The AI knowledge base hasn't been built yet. Please ask an administrator to refresh it."}
+            {"reply": "Knowledge base not built. Ask an admin to refresh it."}
         )
 
     meta = find_student_by_email(email)
@@ -408,7 +408,7 @@ async def reindex():
         rag_indexer.build_index()
         state["collection"] = get_collection()
         ready = state["collection"] is not None
-        return JSONResponse({"success": ready, "message": "Knowledge base rebuilt" if ready else "Reindex finished but no collection"})
+        return JSONResponse({"success": ready, "message": "Knowledge base rebuilt" if ready else "Reindex completed but collection empty"})
     except Exception as e:
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
@@ -433,7 +433,7 @@ async def ingest(request: Request):
         body = await request.json()
         students = body.get("students", [])
         if not isinstance(students, list) or not students:
-            return JSONResponse({"success": False, "error": "students[] is required"}, status_code=400)
+            return JSONResponse({"success": False, "error": "Student data is required"}, status_code=400)
 
         import csv_builder
         csv_builder.build_csvs(students)
@@ -445,7 +445,7 @@ async def ingest(request: Request):
         return JSONResponse({
             "success": ready,
             "students_indexed": len(students),
-            "message": "Knowledge base rebuilt from live data" if ready else "Reindex finished but no collection",
+            "message": "Knowledge base rebuilt from live data" if ready else "Reindex completed but collection empty",
         })
     except Exception as e:
         import traceback

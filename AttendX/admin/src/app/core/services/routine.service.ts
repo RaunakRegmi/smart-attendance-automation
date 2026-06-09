@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiService } from './api.service';
+import { ApiResponse } from '../models/api.models';
 import { Observable } from 'rxjs';
 
 export interface RoutineEntry {
@@ -39,6 +40,10 @@ export class RoutineService {
 
   uploadRoutine(file: File, batchId: string, sectionId: string): Observable<{ success: boolean; message?: string; data: { recordsCreated: number; batchAbbreviation: string; sectionName: string } }> {
     return this.api.upload('/routine/upload', file, { batchId, sectionId });
+  }
+
+  updateRoutine(id: number, data: Partial<{ dayOfWeek: string; subjectCode: string; subjectName: string; startTime: string; endTime: string; block: string; room: string; teacher: string }>): Observable<ApiResponse<RoutineEntry>> {
+    return this.api.put<RoutineEntry>(`/routine/${id}`, data);
   }
 
   deleteRoutine(sectionId: string): Observable<{ success: boolean; message?: string }> {

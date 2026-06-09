@@ -41,7 +41,7 @@ class ChatService {
 
     final reply = response['reply'] as String?;
     if (reply == null || reply.isEmpty) {
-      return "I didn't catch that. Could you rephrase the question?";
+      return "I didn't understand. Please rephrase.";
     }
     return reply;
   }

@@ -13,7 +13,7 @@ async function restoreBatch(req, res, next) {
     if (!batch) return res.status(404).json({ success: false, message: 'Batch not found' });
     if (!batch.deletedAt) return res.status(409).json({ success: false, message: 'Batch is not deleted' });
     await batch.restore();
-    res.json({ success: true, message: 'Batch restored successfully' });
+    res.json({ success: true, message: 'Batch restored' });
   } catch (error) { next(error); }
 }
 
@@ -26,7 +26,7 @@ async function restoreSection(req, res, next) {
     // Cascade restore routines
     await Routine.restore({ where: { sectionId: section.id } });
     await section.restore();
-    res.json({ success: true, message: 'Section and its routines restored successfully' });
+    res.json({ success: true, message: 'Section and routines restored' });
   } catch (error) { next(error); }
 }
 
@@ -36,7 +36,7 @@ async function restoreSubject(req, res, next) {
     if (!subject) return res.status(404).json({ success: false, message: 'Subject not found' });
     if (!subject.deletedAt) return res.status(409).json({ success: false, message: 'Subject is not deleted' });
     await subject.restore();
-    res.json({ success: true, message: 'Subject restored successfully' });
+    res.json({ success: true, message: 'Subject restored' });
   } catch (error) { next(error); }
 }
 
@@ -46,7 +46,7 @@ async function restoreLecturer(req, res, next) {
     if (!lecturer) return res.status(404).json({ success: false, message: 'Lecturer not found' });
     if (!lecturer.deletedAt) return res.status(409).json({ success: false, message: 'Lecturer is not deleted' });
     await lecturer.restore();
-    res.json({ success: true, message: 'Lecturer restored successfully' });
+    res.json({ success: true, message: 'Lecturer restored' });
   } catch (error) { next(error); }
 }
 
@@ -61,7 +61,7 @@ async function restoreStudent(req, res, next) {
       await User.update({ isActive: true }, { where: { id: student.userId } });
     }
     await student.restore();
-    res.json({ success: true, message: 'Student restored and login re-activated successfully' });
+    res.json({ success: true, message: 'Student restored and login reactivated' });
   } catch (error) { next(error); }
 }
 

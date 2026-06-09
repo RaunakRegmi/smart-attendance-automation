@@ -71,12 +71,12 @@ exports.deleteSubject = async (req, res, next) => {
     if (subject.lecturerId) {
       return res.status(409).json({
         success: false,
-        message: `Cannot delete subject "${subject.subjectCode}" — a lecturer is assigned to it. Remove the lecturer link first.`,
+        message: `Unlink lecturer from "${subject.subjectCode}" first`,
       });
     }
 
     await subject.destroy();
-    res.json({ success: true, message: 'Subject deleted successfully' });
+    res.json({ success: true, message: 'Subject deleted' });
   } catch (error) {
     next(error);
   }

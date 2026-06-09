@@ -9,7 +9,7 @@ module.exports = {
       const result = await sheetsService.linkSheet(url, batchId, sectionId);
       res.status(201).json(result);
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      res.status(400).json({ success: false, error: error.message });
     }
   },
 
@@ -19,7 +19,7 @@ module.exports = {
       const sheets = await sheetsService.getSheets({ batchId, sectionId, status, page, limit });
       res.json(sheets);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ success: false, error: error.message });
     }
   },
 
@@ -29,7 +29,7 @@ module.exports = {
       const result = await sheetsService.toggleSheetStatus(sheetId);
       res.json(result);
     } catch (error) {
-      res.status(404).json({ error: error.message });
+      res.status(404).json({ success: false, error: error.message });
     }
   },
 
@@ -39,7 +39,7 @@ module.exports = {
       res.json(result);
     } catch (error) {
       const status = error.message === 'Sheet not found' ? 404 : 500;
-      res.status(status).json({ error: error.message });
+      res.status(status).json({ success: false, error: error.message });
     }
   },
 
@@ -88,7 +88,7 @@ module.exports = {
 
       res.json({ message: 'Bulk manual sync jobs enqueued', jobs });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ success: false, error: error.message });
     }
   }
 };

@@ -58,7 +58,7 @@ exports.createStudent = async (req, res, next) => {
 
     const existing = await Student.findOne({ where: { email } });
     if (existing) {
-      return res.status(409).json({ success: false, message: 'Student with this email already exists' });
+      return res.status(409).json({ success: false, message: 'Email already registered' });
     }
 
     let userId = null;
@@ -120,7 +120,7 @@ exports.deleteStudent = async (req, res, next) => {
 
     // Block if already deleted
     if (student.deletedAt) {
-      return res.status(409).json({ success: false, message: 'Student is already deleted' });
+      return res.status(409).json({ success: false, message: 'Student already deleted' });
     }
 
     // Deactivate user account (soft-delete login)
@@ -130,7 +130,7 @@ exports.deleteStudent = async (req, res, next) => {
 
     // Soft-delete the student
     await student.destroy();
-    res.json({ success: true, message: 'Student deleted successfully' });
+    res.json({ success: true, message: 'Student deleted' });
   } catch (error) {
     next(error);
   }
@@ -185,7 +185,7 @@ exports.updateProfile = async (req, res, next) => {
       ],
     });
 
-    res.json({ success: true, message: 'Profile updated successfully', data: updatedStudent });
+    res.json({ success: true, message: 'Profile updated', data: updatedStudent });
   } catch (error) {
     next(error);
   }

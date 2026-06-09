@@ -57,8 +57,10 @@
 @if (deleteTarget()) {
   <app-confirm-dialog
     title="Delete Lecturer"
-    [message]="'Are you sure you want to delete ' + deleteTarget()!.name + '? Subjects linked to this lecturer must be reassigned first.'"
+    [message]="'Delete ' + deleteTarget()!.name + '? Reassign their subjects first.'"
     confirmLabel="Delete"
+    [loading]="deleting()"
+    loadingLabel="Deleting..."
     (confirm)="delete()"
     (cancel)="deleteTarget.set(null)"
   />

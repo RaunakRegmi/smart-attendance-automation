@@ -18,7 +18,7 @@ exports.createBatch = async (req, res, next) => {
     if (!abbrevRegex.test(abbreviation)) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Abbreviation must be uppercase alphanumeric (e.g., A25)' 
+        message: 'Use uppercase letters and numbers only (e.g., A25)' 
       });
     }
 
@@ -99,7 +99,7 @@ exports.updateBatch = async (req, res, next) => {
       if (!abbrevRegex.test(abbreviation)) {
         return res.status(400).json({ 
           success: false, 
-          message: 'Abbreviation must be uppercase alphanumeric (e.g., A25)' 
+          message: 'Use uppercase letters and numbers only (e.g., A25)' 
         });
       }
       updateData.abbreviation = abbreviation.toUpperCase();
@@ -126,7 +126,7 @@ exports.deleteBatch = async (req, res, next) => {
     if (sectionCount > 0) {
       return res.status(409).json({
         success: false,
-        message: `Cannot delete batch "${batch.name}" — ${sectionCount} section(s) exist under it. Remove all sections first.`,
+        message: `Delete sections under "${batch.name}" first`,
       });
     }
 
@@ -134,12 +134,12 @@ exports.deleteBatch = async (req, res, next) => {
     if (sheetCount > 0) {
       return res.status(409).json({
         success: false,
-        message: `Cannot delete batch "${batch.name}" — ${sheetCount} sheet(s) are linked to it. Remove all sheets first.`,
+        message: `Unlink sheets from "${batch.name}" first`,
       });
     }
 
     await batch.destroy();
-    res.json({ success: true, message: 'Batch deleted successfully' });
+    res.json({ success: true, message: 'Batch deleted' });
   } catch (error) {
     next(error);
   }

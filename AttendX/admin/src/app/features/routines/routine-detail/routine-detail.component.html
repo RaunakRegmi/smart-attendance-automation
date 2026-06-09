@@ -11,36 +11,120 @@
     @for (group of groupedEntries(); track group.day) {
       <div class="card routine-day">
         <h2 class="routine-day__title">{{ group.day }}</h2>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Start</th>
-              <th>End</th>
-              <th>Subject</th>
-              <th>Code</th>
-              <th>Lecturer</th>
-              <th>Block</th>
-              <th>Room</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (c of group.classes; track c.id) {
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
               <tr>
-                <td>{{ c.startTime }}</td>
-                <td>{{ c.endTime }}</td>
-                <td>{{ c.subjectName }}</td>
-                <td>{{ c.subjectCode }}</td>
-                <td>{{ c.teacher || '—' }}</td>
-                <td>{{ c.block || '—' }}</td>
-                <td>{{ c.room || '—' }}</td>
+                <th>Start</th>
+                <th>End</th>
+                <th>Subject</th>
+                <th>Code</th>
+                <th>Lecturer</th>
+                <th>Block</th>
+                <th>Room</th>
+                @if (editMode()) { <th></th> }
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (c of group.classes; track c.id) {
+                <tr>
+                  <td>{{ c.startTime }}</td>
+                  <td>{{ c.endTime }}</td>
+                  <td>{{ c.subjectName }}</td>
+                  <td>{{ c.subjectCode }}</td>
+                  <td>{{ c.teacher || '—' }}</td>
+                  <td>{{ c.block || '—' }}</td>
+                  <td>{{ c.room || '—' }}</td>
+                  @if (editMode()) {
+                    <td class="cell-actions">
+                      <button type="button" class="btn btn--ghost btn--sm" (click)="startEdit(c)">Edit</button>
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
     }
   </div>
 } @else {
   <div class="page-header"><h1>Routine Detail</h1></div>
   <p class="empty-state">No routine entries found for this section. <a routerLink="/routines">Back to list</a></p>
+}
+
+@if (editTarget(); as entry) {
+  <div class="modal-backdrop" (click)="cancelEdit()">
+    <div class="modal modal--edit" (click)="$event.stopPropagation()" [formGroup]="editForm">
+      <div class="modal__header">
+        <h2>Edit Routine Entry</h2>
+      </div>
+      <div class="modal__body edit-form">
+        <div class="form-row">
+          <div class="form-field">
+            <label for="ef-start">Start <span class="req">*</span></label>
+            <input id="ef-start" type="text" formControlName="startTime" placeholder="09:00" [class.invalid]="editForm.get('startTime')?.touched && editForm.get('startTime')?.invalid" />
+            @if (fieldError('startTime'); as msg) { <span class="field-error">{{ msg }}</span> }
+          </div>
+          <div class="form-field">
+            <label for="ef-end">End <span class="req">*</span></label>
+            <input id="ef-end" type="text" formControlName="endTime" placeholder="10:00" [class.invalid]="editForm.get('endTime')?.touched && editForm.get('endTime')?.invalid" />
+            @if (fieldError('endTime'); as msg) { <span class="field-error">{{ msg }}</span> }
+          </div>
+        </div>
+        <div class="form-field">
+          <label for="ef-subj-name">Subject <span class="req">*</span></label>
+          <input id="ef-subj-name" type="text" formControlName="subjectName" [class.invalid]="editForm.get('subjectName')?.touched && editForm.get('subjectName')?.invalid" />
+          @if (fieldError('subjectName'); as msg) { <span class="field-error">{{ msg }}</span> }
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="ef-subj-code">Code <span class="req">*</span></label>
+            <input id="ef-subj-code" type="text" formControlName="subjectCode" [class.invalid]="editForm.get('subjectCode')?.touched && editForm.get('subjectCode')?.invalid" />
+            @if (fieldError('subjectCode'); as msg) { <span class="field-error">{{ msg }}</span> }
+          </div>
+          <div class="form-field">
+            <label for="ef-teacher">Lecturer</label>
+            <input id="ef-teacher" type="text" formControlName="teacher" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="ef-day">Day <span class="req">*</span></label>
+            <select id="ef-day" formControlName="dayOfWeek" [class.invalid]="editForm.get('dayOfWeek')?.touched && editForm.get('dayOfWeek')?.invalid">
+              <option value="">Select day</option>
+              <option value="Monday">Monday</option>
+              <option value="Tuesday">Tuesday</option>
+              <option value="Wednesday">Wednesday</option>
+              <option value="Thursday">Thursday</option>
+              <option value="Friday">Friday</option>
+              <option value="Saturday">Saturday</option>
+              <option value="Sunday">Sunday</option>
+            </select>
+            @if (fieldError('dayOfWeek'); as msg) { <span class="field-error">{{ msg }}</span> }
+          </div>
+          <div class="form-field">
+            <label for="ef-block">Block</label>
+            <select id="ef-block" formControlName="block">
+              <option value="">None</option>
+              <option value="Block A">Block A</option>
+              <option value="Block B">Block B</option>
+              <option value="Block C">Block C</option>
+              <option value="Block D">Block D</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="ef-room">Room</label>
+            <input id="ef-room" type="text" formControlName="room" />
+          </div>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--secondary" (click)="cancelEdit()">Cancel</button>
+        <button type="button" class="btn btn--primary" (click)="saveEdit()" [disabled]="saving() || (editForm.invalid && editForm.touched)">
+          @if (saving()) { <span class="loading-spinner"></span> Save } @else { Save Changes }
+        </button>
+      </div>
+    </div>
+  </div>
 }

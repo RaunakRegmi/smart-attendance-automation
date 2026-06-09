@@ -16,7 +16,7 @@ const getTodaySchedule = async (req, res, next) => {
     if (!student) {
       return res.status(404).json({
         success: false,
-        message: 'Student profile not found for this user'
+        message: 'Student profile not found'
       });
     }
 
@@ -82,7 +82,7 @@ const getWeeklySchedule = async (req, res, next) => {
     if (!student) {
       return res.status(404).json({
         success: false,
-        message: 'Student profile not found for this user'
+        message: 'Student profile not found'
       });
     }
 
@@ -138,7 +138,7 @@ const getFullSchedule = async (req, res, next) => {
     if (!student) {
       return res.status(404).json({
         success: false,
-        message: 'Student profile not found for this user'
+        message: 'Student profile not found'
       });
     }
 

@@ -62,7 +62,7 @@ export class SchedulerPageComponent implements OnInit {
         this.busy.set(false);
       },
       error: (err) => {
-        this.toast.error(err.error?.message ?? err.error?.error ?? 'Invalid time format. Use HH:MM (24-hour)');
+        this.toast.error(err.error?.message ?? err.error?.error ?? 'Invalid time format');
         this.busy.set(false);
       },
     });
@@ -81,7 +81,7 @@ export class SchedulerPageComponent implements OnInit {
         this.busy.set(false);
       },
       error: (err) => {
-        this.toast.error(err.error?.message ?? err.error?.error ?? 'Invalid time format. Use HH:MM (24-hour)');
+        this.toast.error(err.error?.message ?? err.error?.error ?? 'Invalid time format');
         this.busy.set(false);
       },
     });

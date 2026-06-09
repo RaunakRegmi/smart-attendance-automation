@@ -423,3 +423,63 @@ select option {
     }
   }
 }
+
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-track {
+    position: relative;
+    width: 2.5rem;
+    height: 1.375rem;
+    background: $text-muted;
+    border-radius: 999px;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .toggle-thumb {
+    position: absolute;
+    top: 0.1875rem;
+    left: 0.1875rem;
+    width: 1rem;
+    height: 1rem;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  input:checked + .toggle-track {
+    background: $primary;
+  }
+
+  input:checked + .toggle-track .toggle-thumb {
+    transform: translateX(1.125rem);
+  }
+
+  input:disabled + .toggle-track {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.toggle-switch--disabled {
+    cursor: not-allowed;
+  }
+
+  .toggle-label {
+    font-size: 0.8125rem;
+    color: $text-secondary;
+  }
+}

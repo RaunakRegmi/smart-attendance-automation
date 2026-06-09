@@ -10,7 +10,7 @@ exports.login = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, message: 'Validation errors', errors: errors.array() });
+      return res.status(400).json({ success: false, message: 'Invalid input', errors: errors.array() });
     }
 
     const { email, password, rememberMe } = req.body;
@@ -23,7 +23,7 @@ exports.login = async (req, res, next) => {
 
     // Check if user is active
     if (!user.isActive) {
-      return res.status(401).json({ success: false, message: 'Account is deactivated' });
+      return res.status(401).json({ success: false, message: 'Account deactivated' });
     }
 
     // Validate password
@@ -68,7 +68,7 @@ exports.register = async (req, res, next) => {
     // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: 'User with this email already exists' });
+      return res.status(400).json({ success: false, message: 'Email already registered' });
     }
 
     // Create user with STUDENT role
@@ -103,7 +103,7 @@ exports.register = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: 'Student registered successfully',
+      message: 'Student registered',
       data: {
         user: userResponse,
         student
@@ -215,7 +215,7 @@ exports.updateProfile = async (req, res, next) => {
 
       res.json({
         success: true,
-        message: 'Profile updated successfully',
+        message: 'Profile updated',
         data: {
           user: userWithoutPassword
         }
@@ -231,7 +231,7 @@ exports.updatePassword = async (req, res, next) => {
     const { currentPassword, newPassword, confirmPassword } = req.body;
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      return res.status(400).json({ success: false, message: 'All password fields are required' });
+      return res.status(400).json({ success: false, message: 'All password fields required' });
     }
 
     if (newPassword !== confirmPassword) {
@@ -240,7 +240,7 @@ exports.updatePassword = async (req, res, next) => {
 
     // Password strength validation
     if (newPassword.length < 6) {
-      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long' });
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
     }
 
     // Find the user
@@ -252,7 +252,7 @@ exports.updatePassword = async (req, res, next) => {
     // Validate current password
     const isPasswordValid = await user.validatePassword(currentPassword);
     if (!isPasswordValid) {
-      return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+      return res.status(401).json({ success: false, message: 'Current password is wrong' });
     }
 
     // Update password
@@ -264,7 +264,7 @@ exports.updatePassword = async (req, res, next) => {
 
     res.json({
       success: true,
-      message: 'Password updated successfully',
+      message: 'Password updated',
       data: userResponse
     });
   } catch (error) {
@@ -276,7 +276,7 @@ exports.getAllUsers = async (req, res, next) => {
   try {
     // Only ADMIN can access this
     if (req.user.role !== 'ADMIN') {
-      return res.status(403).json({ success: false, message: 'Access denied. Admin only.' });
+      return res.status(403).json({ success: false, message: 'Admin access required' });
     }
 
     const users = await User.findAll({
@@ -311,7 +311,7 @@ exports.createUser = async (req, res, next) => {
     });
     const userResponse = user.get();
     delete userResponse.password;
-    res.status(201).json({ success: true, message: 'User created successfully', data: userResponse });
+    res.status(201).json({ success: true, message: 'User created', data: userResponse });
   } catch (error) {
     next(error);
   }
@@ -333,7 +333,7 @@ exports.updateUser = async (req, res, next) => {
     await user.update(updates);
     const userResponse = user.get();
     delete userResponse.password;
-    res.json({ success: true, message: 'User updated successfully', data: userResponse });
+    res.json({ success: true, message: 'User updated', data: userResponse });
   } catch (error) {
     next(error);
   }
@@ -348,7 +348,7 @@ exports.deleteUser = async (req, res, next) => {
     }
     // Soft-deactivate user instead of hard-delete
     await user.update({ isActive: false });
-    res.json({ success: true, message: 'User deactivated successfully' });
+    res.json({ success: true, message: 'User deactivated' });
   } catch (error) {
     next(error);
   }

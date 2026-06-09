@@ -22,6 +22,8 @@ export class SheetDetailComponent implements OnInit {
   readonly loading = signal(true);
   readonly sheet = signal<SheetRecord | null>(null);
   readonly previewOpen = signal(false);
+  readonly syncing = signal(false);
+  readonly toggling = signal(false);
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -53,26 +55,31 @@ export class SheetDetailComponent implements OnInit {
     return this.sanitizer.bypassSecurityTrustResourceUrl(u);
   }
 
-  toggle(): void {
+  toggle(event: Event): void {
+    event.preventDefault();
     const s = this.sheet();
-    if (!s) return;
+    if (!s || this.toggling()) return;
+    this.toggling.set(true);
     this.sheetsService.toggleStatus(s.id).subscribe({
       next: () => {
         this.toast.success('Status updated');
+        this.toggling.set(false);
         this.reload(s.id);
       },
-      error: () => {},
+      error: () => { this.toggling.set(false); },
     });
   }
 
   sync(): void {
     const s = this.sheet();
-    if (!s) return;
+    if (!s || this.syncing()) return;
+    this.syncing.set(true);
     this.sheetsService.syncSheet(s.id).subscribe({
       next: (res: unknown) => {
         this.toast.success((res as { message?: string })?.message ?? 'Sync enqueued');
+        this.syncing.set(false);
       },
-      error: () => {},
+      error: () => { this.syncing.set(false); },
     });
   }
 

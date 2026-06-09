@@ -158,7 +158,7 @@
   <div class="report-actions-toolbar">
     <span class="report-label">{{ activeSub().label }} Report</span>
     <div class="report-actions">
-      <button class="btn btn--ghost btn--sm" (click)="exportCSV()">Export CSV</button>
+      <button class="btn btn--ghost btn--sm" (click)="exportCSV()" [disabled]="exporting()">@if (exporting()) { Exporting… } @else { Export CSV }</button>
       <button class="btn btn--primary btn--sm" (click)="printReport()">🖨 Print / Save PDF</button>
     </div>
   </div>

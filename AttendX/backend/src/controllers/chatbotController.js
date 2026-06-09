@@ -78,7 +78,7 @@ exports.refresh = async (req, res) => {
     if (payloadStudents.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'No attendance data to send. Sync a sheet first.',
+        message: 'No attendance data. Sync a sheet first.',
       });
     }
 
@@ -144,7 +144,7 @@ exports.adminChat = async (req, res) => {
   try {
     const { message, session_id } = req.body || {};
     if (!message || typeof message !== 'string' || !message.trim()) {
-      return res.status(400).json({ success: false, message: 'message is required' });
+      return res.status(400).json({ success: false, message: 'Message is required' });
     }
     const payload = { message: message.trim() };
     if (session_id) payload.session_id = session_id;

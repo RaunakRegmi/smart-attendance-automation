@@ -58,9 +58,8 @@ export class AdminLayoutComponent {
     {
       title: 'Background jobs',
       items: [
-        { label: 'Sync jobs', route: '/jobs/sync', icon: 'sync' },
+        { label: 'Sync Operations', route: '/jobs/sync', icon: 'sync' },
         { label: 'Scheduler', route: '/jobs/scheduler', icon: 'scheduler' },
-        { label: 'Queue', route: '/jobs/queue', icon: 'queue' },
       ],
     },
   ];

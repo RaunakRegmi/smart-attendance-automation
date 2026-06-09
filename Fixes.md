@@ -16,13 +16,13 @@ Also, the icon for AI Assistant in admin portal is same as of Reports, so,use th
 
 - Need to imporve Knowledge Base.
 - Need to Fine tune AI to make it more better and also teh contex aware too
-- Optimizing the validation(error) message throught the system.
-- Use progress loader for all backend actions shown in frontend responsibly like as sheet link, otherdata fetch and all.
+<!-- - Optimizing the validation(error) message throught the system. -->
+<!-- - Use progress loader for all backend actions shown in frontend responsibly like as sheet link, otherdata fetch and all. -->
 - Add a Faculty Table and also the Add Faculty like as section. And use it while adding the student from add student page in the admin portal
 This Faculty is optional for students.
-- Need the Update Routine Feature Allowing the admin to update the set routine.
-- Change the Sync Job to the other professional relavent name.
-- Optimize the Job Queue to make it look pretty
+<!-- - Need the Update Routine Feature Allowing the admin to update the set routine. -->
+<!-- - Change the Sync Job to the other professional relavent name. -->
+<!-- - Optimize the Job Queue to make it look pretty -->
 - Allow the student to update their certain details from their portal
 - Correct and provide the accurate weekly report to the student in their own portal so that it is displayed in teh student's dashboard correctly
 - Add the clickable (cart based navigation to the student's portal like as clicking the Attendence % will route to teh attendance page, bla bla.)

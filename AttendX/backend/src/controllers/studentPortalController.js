@@ -276,7 +276,7 @@ exports.chat = async (req, res, next) => {
   try {
     const { message, session_id } = req.body || {};
     if (!message || typeof message !== 'string' || !message.trim()) {
-      return res.status(400).json({ success: false, message: 'message is required' });
+      return res.status(400).json({ success: false, message: 'Message is required' });
     }
 
     const student = await getAuthenticatedStudent(req.user.id);

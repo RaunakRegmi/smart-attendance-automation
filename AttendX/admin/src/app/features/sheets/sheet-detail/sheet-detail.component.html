@@ -19,13 +19,11 @@
         <dd>{{ sheet()!.Section?.name ?? sheet()!.sectionId }}</dd>
         <dt>Status</dt>
         <dd>
-          <span
-            class="badge"
-            [class.badge--active]="sheet()!.status === 'active'"
-            [class.badge--inactive]="sheet()!.status !== 'active'"
-          >
-            {{ sheet()!.status }}
-          </span>
+          <label class="toggle-switch" [class.toggle-switch--disabled]="toggling()" (click)="toggle($event)">
+            <input type="checkbox" [checked]="sheet()!.status === 'active'" [disabled]="toggling()" />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            <span class="toggle-label">{{ sheet()!.status === 'active' ? 'Active' : 'Inactive' }}</span>
+          </label>
         </dd>
         <dt>Last successful sync</dt>
         <dd>{{ sheet()!.lastSuccessfulSyncTime | date: 'medium' }}</dd>
@@ -34,8 +32,7 @@
       </dl>
       <div class="detail-actions">
         <a class="btn btn--secondary" [href]="sheetUrl(sheet()!)" target="_blank" rel="noopener">Open in Google</a>
-        <button type="button" class="btn btn--secondary" (click)="sync()">Enqueue sync</button>
-        <button type="button" class="btn btn--primary" (click)="toggle()">Toggle active / inactive</button>
+        <button type="button" class="btn btn--secondary" (click)="sync()" [disabled]="syncing()">@if (syncing()) { <span class="loading-spinner"></span> Syncing… } @else { Enqueue sync }</button>
         <button type="button" class="btn btn--secondary" (click)="previewOpen.set(!previewOpen())">
           {{ previewOpen() ? 'Hide' : 'Show' }} preview
         </button>

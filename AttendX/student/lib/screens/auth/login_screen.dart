@@ -55,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (msg.contains('Invalid credentials')) {
           _errorMessage = 'Invalid email or password';
         } else if (msg.contains('Failed host lookup') || msg.contains('Connection refused') || msg.contains('Network is unreachable')) {
-          _errorMessage = 'Cannot reach server. Is the backend running?';
+          _errorMessage = 'Cannot reach server. Check your connection.';
         } else {
           _errorMessage = 'Error: $msg';
         }

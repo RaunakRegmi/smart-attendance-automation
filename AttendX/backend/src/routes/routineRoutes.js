@@ -148,6 +148,41 @@ router.get('/list', routineController.listRoutines);
  *       200:
  *         description: Routine entries deleted
  */
+/**
+ * @swagger
+ * /api/routine/{id}:
+ *   put:
+ *     summary: Update a single routine entry
+ *     tags: [Routine]
+ *     description: Update fields of an existing routine entry by its ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               dayOfWeek: { type: string }
+ *               subjectCode: { type: string }
+ *               subjectName: { type: string }
+ *               startTime: { type: string }
+ *               endTime: { type: string }
+ *               block: { type: string }
+ *               room: { type: string }
+ *               teacher: { type: string }
+ *     responses:
+ *       200:
+ *         description: Routine entry updated
+ */
+router.put('/:id', routineController.updateRoutine);
+
 router.delete('/:sectionId', routineController.deleteRoutine);
 
 module.exports = router;

@@ -101,7 +101,7 @@ exports.deleteSection = async (req, res, next) => {
     if (studentCount > 0) {
       return res.status(409).json({
         success: false,
-        message: `Cannot delete section "${section.name}" — ${studentCount} student(s) are assigned to it. Remove all students first.`,
+        message: `Remove students from "${section.name}" first`,
       });
     }
 
@@ -109,7 +109,7 @@ exports.deleteSection = async (req, res, next) => {
     if (sheetCount > 0) {
       return res.status(409).json({
         success: false,
-        message: `Cannot delete section "${section.name}" — ${sheetCount} sheet(s) are linked to it. Remove all sheets first.`,
+        message: `Unlink sheets from "${section.name}" first`,
       });
     }
 
@@ -117,7 +117,7 @@ exports.deleteSection = async (req, res, next) => {
     await Routine.update({ deletedAt: new Date() }, { where: { sectionId: section.id } });
 
     await section.destroy();
-    res.json({ success: true, message: 'Section deleted successfully' });
+    res.json({ success: true, message: 'Section deleted' });
   } catch (error) {
     next(error);
   }

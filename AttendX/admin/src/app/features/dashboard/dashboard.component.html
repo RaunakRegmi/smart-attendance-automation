@@ -43,6 +43,10 @@
     }
   </div>
 
+  @if (!analytics() && !loading()) {
+    <div class="card"><div class="empty-state"><span class="loading-spinner"></span> Loading analytics...</div></div>
+  }
+
   @if (analytics(); as a) {
     <div class="analytics-hero card">
       <div class="analytics-hero__metric">

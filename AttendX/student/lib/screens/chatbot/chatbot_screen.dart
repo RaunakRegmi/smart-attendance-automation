@@ -140,7 +140,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       setState(() {
         _messages.removeWhere((m) => m.isTyping);
         _messages.add(ChatMessage.fromAssistant(
-          'Something went wrong. Please check your connection and try again.',
+          'Connection error. Please try again.',
         ));
         _isLoading = false;
       });

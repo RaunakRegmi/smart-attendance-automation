@@ -31,6 +31,8 @@ export class SheetsListComponent implements OnInit {
   readonly filterStatus = signal('');
   readonly deleteTarget = signal<SheetRecord | null>(null);
   readonly deleting = signal(false);
+  readonly syncingId = signal<string | null>(null);
+  readonly togglingId = signal<string | null>(null);
 
   readonly page = signal(1);
   readonly limit = signal(10);
@@ -86,30 +88,37 @@ export class SheetsListComponent implements OnInit {
     this.load();
   }
 
-  toggle(sheet: SheetRecord): void {
+  toggle(event: Event, sheet: SheetRecord): void {
+    event.preventDefault();
+    if (this.togglingId()) return;
+    this.togglingId.set(sheet.id);
     this.sheetsService.toggleStatus(sheet.id).subscribe({
       next: () => {
         this.toast.success('Status updated');
+        this.togglingId.set(null);
         this.load();
       },
-      error: () => {},
+      error: () => { this.togglingId.set(null); },
     });
   }
 
   syncOne(sheet: SheetRecord): void {
+    if (this.syncingId()) return;
+    this.syncingId.set(sheet.id);
     this.sheetsService.syncSheet(sheet.id).subscribe({
       next: (res: unknown) => {
         const msg = (res as { message?: string })?.message ?? 'Sync job enqueued';
         this.toast.success(msg);
+        this.syncingId.set(null);
       },
-      error: () => {},
+      error: () => { this.syncingId.set(null); },
     });
   }
 
   syncAll(): void {
     this.sheetsService.syncSheet().subscribe({
       next: (res: unknown) => {
-        const msg = (res as { message?: string })?.message ?? 'Sync jobs enqueued';
+        const msg = (res as { message?: string })?.message ?? 'Sync operations enqueued';
         this.toast.success(msg);
       },
       error: () => {},

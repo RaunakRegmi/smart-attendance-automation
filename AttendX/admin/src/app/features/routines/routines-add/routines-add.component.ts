@@ -87,6 +87,7 @@ export class RoutinesAddComponent implements OnInit {
         this.router.navigate(['/routines']);
       },
       error: () => {
+        this.toast.error('Upload failed');
         this.saving.set(false);
       },
     });

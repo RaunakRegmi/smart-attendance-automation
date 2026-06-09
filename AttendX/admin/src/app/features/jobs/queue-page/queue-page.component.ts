@@ -1,21 +1,22 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { DatePipe } from '@angular/common';
 import { SyncService } from '../../../core/services/sync.service';
-import { ToastService } from '../../../core/services/toast.service';
 import { QueueStatus } from '../../../core/models/api.models';
 
 @Component({
   selector: 'app-queue-page',
   standalone: true,
+  imports: [RouterLink, DatePipe],
   templateUrl: './queue-page.component.html',
   styleUrl: './queue-page.component.scss',
 })
 export class QueuePageComponent implements OnInit {
   private readonly syncService = inject(SyncService);
-  private readonly toast = inject(ToastService);
 
   readonly loading = signal(true);
   readonly queue = signal<QueueStatus | null>(null);
-  readonly raw = signal<string>('');
+  readonly lastRefreshed = signal<Date | null>(null);
 
   ngOnInit(): void {
     this.load();
@@ -26,11 +27,10 @@ export class QueuePageComponent implements OnInit {
     this.syncService.getQueueStatus().subscribe({
       next: (res) => {
         this.queue.set(res.queueStatus ?? null);
-        this.raw.set(JSON.stringify(res, null, 2));
+        this.lastRefreshed.set(new Date());
         this.loading.set(false);
       },
-      error: (err) => {
-        this.raw.set(err.error?.error ?? err.error?.message ?? String(err.message));
+      error: () => {
         this.loading.set(false);
       },
     });

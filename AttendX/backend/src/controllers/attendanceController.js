@@ -27,7 +27,7 @@ exports.uploadExcel = async (req, res, next) => {
 
       return res.status(400).json({
         success: false,
-        message: 'Sheet contains invalid date headers in row 7',
+        message: 'Invalid date headers in sheet',
         details: records.invalidDateHeaders.map(header => `
           - Column ${header.match(/column (\d+)/)[1]}: ${header.match(/'(.*?)'/)[1]}`).join('\n')
       });
@@ -239,7 +239,7 @@ exports.exportToExcelFile = async (req, res, next) => {
     if (date) where.date = date;
     const data = await Attendance.findAll({ where, include: [{ model: Student }, { model: Subject }] });
     if (data.length === 0) {
-      return res.status(404).json({ success: false, message: 'No records found to export' });
+      return res.status(404).json({ success: false, message: 'No records to export' });
     }
     const outputPath = path.join(__dirname, `../../exports/attendance_${Date.now()}.xlsx`);
     const dir = path.dirname(outputPath);
@@ -437,7 +437,7 @@ exports.addSheet = async (req, res, next) => {
   try {
     const { url, batchId, sectionId } = req.body;
     if (!url || !batchId || !sectionId) {
-      return res.status(400).json({ success: false, message: 'Missing required fields: url, batchId, sectionId' });
+      return res.status(400).json({ success: false, message: 'URL, batch, and section are required' });
     }
     
     // linkSheet now handles:

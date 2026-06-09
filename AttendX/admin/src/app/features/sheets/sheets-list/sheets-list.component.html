@@ -48,16 +48,17 @@
               <td>{{ sheet.Batch?.name ?? '—' }}</td>
               <td>{{ sheet.Section?.name ?? '—' }}</td>
               <td>
-                <span class="badge" [class.badge--active]="sheet.status === 'active'" [class.badge--inactive]="sheet.status !== 'active'">
-                  {{ sheet.status }}
-                </span>
+                <label class="toggle-switch" [class.toggle-switch--disabled]="togglingId() === sheet.id" (click)="toggle($event, sheet)">
+                  <input type="checkbox" [checked]="sheet.status === 'active'" [disabled]="togglingId() === sheet.id" />
+                  <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                  <span class="toggle-label">{{ sheet.status === 'active' ? 'Active' : 'Inactive' }}</span>
+                </label>
               </td>
               <td>{{ sheet.lastSuccessfulSyncTime | date: 'short' }}</td>
               <td class="actions">
                 <a class="btn btn--ghost btn--sm" [href]="sheetUrl(sheet)" target="_blank" rel="noopener">Open</a>
                 <a class="btn btn--ghost btn--sm" [routerLink]="['/sheets', sheet.id]">View / modify</a>
-                <button type="button" class="btn btn--ghost btn--sm" (click)="syncOne(sheet)">Sync</button>
-                <button type="button" class="btn btn--ghost btn--sm" (click)="toggle(sheet)">Toggle</button>
+                <button type="button" class="btn btn--ghost btn--sm" (click)="syncOne(sheet)" [disabled]="syncingId() === sheet.id">@if (syncingId() === sheet.id) { Syncing… } @else { Sync }</button>
                 <button type="button" class="btn btn--ghost btn--sm" (click)="confirmDelete(sheet)">Delete</button>
               </td>
             </tr>
@@ -82,8 +83,10 @@
 @if (deleteTarget()) {
   <app-confirm-dialog
     title="Delete Sheet"
-    [message]="'Are you sure you want to delete ' + sheetDisplayName(deleteTarget()!) + '? Attendance records linked to this sheet must be removed first.'"
+    [message]="'Delete ' + sheetDisplayName(deleteTarget()!) + '? Attendance records will be affected.'"
     confirmLabel="Delete"
+    [loading]="deleting()"
+    loadingLabel="Deleting..."
     (confirm)="deleteSheet()"
     (cancel)="deleteTarget.set(null)" />
 }

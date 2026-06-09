@@ -1,10 +1,11 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { SyncService } from '../../../core/services/sync.service';
 import { SheetsService } from '../../../core/services/sheets.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { SyncJob, SheetRecord } from '../../../core/models/api.models';
+import { SyncJob, SheetRecord, QueueStatus } from '../../../core/models/api.models';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 
 @Component({
@@ -15,6 +16,7 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
   styleUrl: './sync-jobs.component.scss',
 })
 export class SyncJobsComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
   private readonly syncService = inject(SyncService);
   private readonly sheetsService = inject(SheetsService);
   private readonly toast = inject(ToastService);
@@ -24,11 +26,16 @@ export class SyncJobsComponent implements OnInit {
   readonly jobs = signal<SyncJob[]>([]);
   readonly sheets = signal<SheetRecord[]>([]);
   readonly manualSheetId = signal('');
+  readonly syncing = signal(false);
 
   readonly page = signal(1);
   readonly limit = signal(10);
   readonly total = signal(0);
   readonly totalPages = signal(0);
+
+  readonly queueStatus = signal<QueueStatus | null>(null);
+  readonly lastRefreshed = signal('');
+  readonly activeFilter = signal('');
 
   readonly filters = this.fb.nonNullable.group({
     sheetId: [''],
@@ -36,10 +43,36 @@ export class SyncJobsComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    const status = this.route.snapshot.queryParams['status'];
+    if (status) {
+      this.filters.patchValue({ status });
+      this.activeFilter.set(status);
+    }
     this.sheetsService.getSheets({ limit: 200 }).subscribe({
       next: (res) => this.sheets.set(res.data),
       error: () => {},
     });
+    this.loadQueueStatus();
+    this.load();
+  }
+
+  loadQueueStatus(): void {
+    this.lastRefreshed.set(new Date().toLocaleTimeString());
+    this.syncService.getQueueStatus().subscribe({
+      next: (res) => this.queueStatus.set(res.queueStatus ?? null),
+      error: () => {},
+    });
+  }
+
+  filterByStatus(status: string): void {
+    if (this.activeFilter() === status) {
+      this.activeFilter.set('');
+      this.filters.patchValue({ status: '' });
+    } else {
+      this.activeFilter.set(status);
+      this.filters.patchValue({ status });
+    }
+    this.page.set(1);
     this.load();
   }
 
@@ -83,12 +116,16 @@ export class SyncJobsComponent implements OnInit {
       this.toast.warning('Select or paste a sheet UUID');
       return;
     }
+    if (this.syncing()) return;
+    this.syncing.set(true);
     this.syncService.manualSync(id).subscribe({
       next: (res) => {
         this.toast.success(res.message ?? 'Manual sync created');
+        this.syncing.set(false);
+        this.loadQueueStatus();
         this.load();
       },
-      error: () => {},
+      error: () => { this.syncing.set(false); },
     });
   }
 }

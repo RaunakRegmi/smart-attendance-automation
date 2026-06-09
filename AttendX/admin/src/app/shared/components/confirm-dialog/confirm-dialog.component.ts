@@ -14,7 +14,10 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         </div>
         <div class="modal__footer">
           <button type="button" class="btn btn--secondary" (click)="cancel.emit()">Cancel</button>
-          <button type="button" class="btn btn--danger" (click)="confirm.emit()">{{ confirmLabel }}</button>
+          <button type="button" class="btn btn--danger" (click)="confirm.emit()" [disabled]="loading">
+            @if (loading) { <span class="loading-spinner"></span> {{ loadingLabel }} }
+            @else { {{ confirmLabel }} }
+          </button>
         </div>
       </div>
     </div>
@@ -24,6 +27,8 @@ export class ConfirmDialogComponent {
   @Input() title = 'Confirm';
   @Input() message = 'Are you sure?';
   @Input() confirmLabel = 'Delete';
+  @Input() loading = false;
+  @Input() loadingLabel = 'Deleting...';
   @Output() confirm = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();
 }

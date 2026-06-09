@@ -99,11 +99,6 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/jobs/scheduler-page/scheduler-page.component').then((m) => m.SchedulerPageComponent),
       },
-      {
-        path: 'jobs/queue',
-        loadComponent: () =>
-          import('./features/jobs/queue-page/queue-page.component').then((m) => m.QueuePageComponent),
-      },
     ],
   },
   { path: '**', redirectTo: 'dashboard' },

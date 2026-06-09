@@ -11,7 +11,7 @@ const extractBatchAndSectionFromFilename = (filename) => {
   // Pattern: A25(L2)_Class_Schedule.xlsx
   const match = filename.match(/^([A-Z0-9]+)\(([^)]+)\)_/);
   if (!match) {
-    throw new Error('Invalid filename format. Expected format: "A25(L2)_Class_Schedule.xlsx" where A25 is batch abbreviation and L2 is section name.');
+    throw new Error('Invalid filename. Use format: "A25(L2)_Class_Schedule.xlsx"');
   }
   return {
     batchAbbreviation: match[1],
@@ -76,7 +76,7 @@ exports.uploadRoutine = async (req, res, next) => {
         subjectName: record.subjectName,
         startTime: record.startTime,
         endTime: record.endTime,
-        block: record.block,
+        block: normalizeBlock(record.block),
         room: record.room,
         teacher: record.teacher,
       });
@@ -88,7 +88,7 @@ exports.uploadRoutine = async (req, res, next) => {
 
     res.json({
       success: true,
-      message: `Routine uploaded successfully for batch "${batchAbbreviation}" section "${sectionName}"`,
+        message: `Routine uploaded for ${batchAbbreviation}/${sectionName}`,
       data: {
         batchAbbreviation,
         sectionName,
@@ -200,6 +200,97 @@ exports.listRoutines = async (req, res, next) => {
   }
 };
 
+const VALID_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const VALID_BLOCK_VALUES = ['Block A', 'Block B', 'Block C', 'Block D'];
+const SHORT_BLOCKS = ['A', 'B', 'C', 'D'];
+
+const normalizeBlock = (b) => {
+  if (!b) return null;
+  const idx = SHORT_BLOCKS.indexOf(b);
+  if (idx !== -1) return VALID_BLOCK_VALUES[idx];
+  return VALID_BLOCK_VALUES.includes(b) ? b : null;
+};
+
+const timeToMinutes = (t) => {
+  if (!t || typeof t !== 'string') return null;
+  const parts = t.split(':');
+  if (parts.length !== 2) return null;
+  const h = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  if (isNaN(h) || isNaN(m) || h < 0 || h > 23 || m < 0 || m > 59) return null;
+  return h * 60 + m;
+};
+
+exports.updateRoutine = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const routine = await Routine.findByPk(id);
+    if (!routine) {
+      return res.status(404).json({ success: false, message: 'Routine entry not found' });
+    }
+
+    const errors = [];
+
+    const dayOfWeek = req.body.dayOfWeek !== undefined ? req.body.dayOfWeek : routine.dayOfWeek;
+    const subjectCode = req.body.subjectCode !== undefined ? req.body.subjectCode : routine.subjectCode;
+    const subjectName = req.body.subjectName !== undefined ? req.body.subjectName : routine.subjectName;
+    const startTime = req.body.startTime !== undefined ? req.body.startTime : routine.startTime;
+    const endTime = req.body.endTime !== undefined ? req.body.endTime : routine.endTime;
+    const block = req.body.block !== undefined ? req.body.block : routine.block;
+    const room = req.body.room !== undefined ? req.body.room : routine.room;
+    const teacher = req.body.teacher !== undefined ? req.body.teacher : routine.teacher;
+
+    if (!dayOfWeek) errors.push('Day of week is required');
+    else if (!VALID_DAYS.includes(dayOfWeek)) errors.push('Day of week must be one of: ' + VALID_DAYS.join(', '));
+
+    if (!subjectCode) errors.push('Subject code is required');
+    if (!subjectName) errors.push('Subject name is required');
+
+    if (!startTime) errors.push('Start time is required');
+    else if (timeToMinutes(startTime) === null) errors.push('Start time must be in HH:MM format (e.g. 09:00)');
+
+    if (!endTime) errors.push('End time is required');
+    else if (timeToMinutes(endTime) === null) errors.push('End time must be in HH:MM format (e.g. 10:00)');
+
+    if (startTime && endTime && timeToMinutes(startTime) !== null && timeToMinutes(endTime) !== null) {
+      if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+        errors.push('End time must be later than start time');
+      }
+    }
+
+    if (block) {
+      const normalized = normalizeBlock(block);
+      if (!normalized) {
+        errors.push('Block must be one of: ' + VALID_BLOCK_VALUES.join(', '));
+      }
+    }
+
+    if (errors.length > 0) {
+      return res.status(400).json({ success: false, message: errors[0], errors });
+    }
+
+    const updates = {};
+    if (req.body.dayOfWeek !== undefined) updates.dayOfWeek = dayOfWeek;
+    if (req.body.subjectCode !== undefined) updates.subjectCode = subjectCode;
+    if (req.body.subjectName !== undefined) updates.subjectName = subjectName;
+    if (req.body.startTime !== undefined) updates.startTime = startTime;
+    if (req.body.endTime !== undefined) updates.endTime = endTime;
+    if (req.body.block !== undefined) updates.block = normalizeBlock(block) || null;
+    if (req.body.room !== undefined) updates.room = room;
+    if (req.body.teacher !== undefined) updates.teacher = teacher;
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ success: false, message: 'No valid fields to update' });
+    }
+
+    await routine.update(updates);
+    res.json({ success: true, message: 'Routine entry updated', data: routine });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.deleteRoutine = async (req, res, next) => {
   try {
     const { sectionId } = req.params;
@@ -215,14 +306,30 @@ exports.deleteRoutine = async (req, res, next) => {
     if (!section.deletedAt) {
       return res.status(409).json({
         success: false,
-        message: 'Cannot delete routines — the section must be deleted first. Delete the section to cascade-delete its routines.',
+        message: 'Delete the section first to remove its routines',
       });
     }
 
     // Soft-delete routines for this section (cascade cleanup)
     await Routine.update({ deletedAt: new Date() }, { where: { sectionId } });
-    res.json({ success: true, message: 'Routine entries deleted successfully' });
+    res.json({ success: true, message: 'Routine deleted' });
   } catch (error) {
     next(error);
   }
 };
+
+// One-time data migration: normalize short block values ("A" → "Block A")
+(async () => {
+  try {
+    const { Op } = require('sequelize');
+    const count = await Routine.count({ where: { block: { [Op.in]: SHORT_BLOCKS } } });
+    if (count > 0) {
+      for (const short of SHORT_BLOCKS) {
+        await Routine.update({ block: `Block ${short}` }, { where: { block: short } });
+      }
+      console.log(`Migrated ${count} routine entries: short block values → Block X format`);
+    }
+  } catch (e) {
+    // silent fail — migration is non-critical
+  }
+})();

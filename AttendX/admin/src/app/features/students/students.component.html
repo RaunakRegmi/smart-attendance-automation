@@ -82,7 +82,7 @@
       </div>
       <div class="modal__footer">
         <button type="button" class="btn btn--secondary" (click)="showUpload.set(false)">Cancel</button>
-        <button type="button" class="btn btn--primary" (click)="uploadExcel()">Upload</button>
+        <button type="button" class="btn btn--primary" (click)="uploadExcel()" [disabled]="uploading()">@if (uploading()) { <span class="loading-spinner"></span> Uploading… } @else { Upload }</button>
       </div>
     </div>
   </div>
@@ -90,8 +90,10 @@
 @if (deleteTarget()) {
   <app-confirm-dialog
     title="Delete Student"
-    [message]="'Are you sure you want to delete ' + deleteTarget()!.name + '? Attendance records will be preserved but the student will lose login access.'"
+    [message]="'Delete ' + deleteTarget()!.name + '? The student will lose login access.'"
     confirmLabel="Delete"
+    [loading]="deleting()"
+    loadingLabel="Deleting..."
     (confirm)="delete()"
     (cancel)="deleteTarget.set(null)"
   />

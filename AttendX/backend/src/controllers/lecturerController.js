@@ -67,12 +67,12 @@ exports.deleteLecturer = async (req, res, next) => {
     if (subjectCount > 0) {
       return res.status(409).json({
         success: false,
-        message: `Cannot delete lecturer "${lecturer.name}" — ${subjectCount} subject(s) are linked to them. Remove subject links first.`,
+        message: `Unlink subjects from "${lecturer.name}" first`,
       });
     }
 
     await lecturer.destroy();
-    res.json({ success: true, message: 'Lecturer deleted successfully' });
+    res.json({ success: true, message: 'Lecturer deleted' });
   } catch (error) {
     next(error);
   }

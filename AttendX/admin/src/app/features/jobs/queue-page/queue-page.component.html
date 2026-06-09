@@ -1,27 +1,73 @@
 <div class="page-header">
   <h1>Job queue</h1>
-  <p>BullMQ sheet sync queue summary from <code>GET /api/sync/queue-status</code>.</p>
+  <p>Real-time overview of background sheet sync jobs.</p>
 </div>
 
 <div class="toolbar">
-  <button type="button" class="btn btn--secondary" (click)="load()" [disabled]="loading()">Refresh</button>
+  <button type="button" class="btn btn--secondary" (click)="load()" [disabled]="loading()">
+    @if (loading()) { <span class="loading-spinner"></span> Refreshing… }
+    @else {
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Refresh
+    }
+  </button>
+  @if (lastRefreshed(); as ts) {
+    <span class="last-refreshed">Updated {{ ts | date: 'HH:mm:ss' }}</span>
+  }
 </div>
 
 @if (loading()) {
   <div class="card empty-state"><span class="loading-spinner"></span></div>
 } @else {
   @if (queue(); as q) {
-    <div class="stats-grid">
-      <div class="stat card"><span class="stat__label">Total</span><span class="stat__value">{{ q.totalJobs ?? 0 }}</span></div>
-      <div class="stat card"><span class="stat__label">Waiting</span><span class="stat__value">{{ q.waiting ?? 0 }}</span></div>
-      <div class="stat card"><span class="stat__label">Active</span><span class="stat__value">{{ q.active ?? 0 }}</span></div>
-      <div class="stat card"><span class="stat__label">Completed</span><span class="stat__value">{{ q.completed ?? 0 }}</span></div>
-      <div class="stat card"><span class="stat__label">Failed</span><span class="stat__value">{{ q.failed ?? 0 }}</span></div>
+    <div class="queue-metrics">
+      <div class="metric-card">
+        <div class="metric-card__icon metric-card__icon--total">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </div>
+        <div class="metric-card__body">
+          <span class="metric-card__value">{{ q.totalJobs ?? 0 }}</span>
+          <span class="metric-card__label">Total jobs</span>
+        </div>
+      </div>
+      <a class="metric-card metric-card--link" routerLink="/jobs/sync" [queryParams]="{ status: 'PENDING' }">
+        <div class="metric-card__icon metric-card__icon--waiting">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="metric-card__body">
+          <span class="metric-card__value">{{ q.waiting ?? 0 }}</span>
+          <span class="metric-card__label">Waiting</span>
+        </div>
+      </a>
+      <a class="metric-card metric-card--link" routerLink="/jobs/sync" [queryParams]="{ status: 'RUNNING' }">
+        <div class="metric-card__icon metric-card__icon--active">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <div class="metric-card__body">
+          <span class="metric-card__value">{{ q.active ?? 0 }}</span>
+          <span class="metric-card__label">Active</span>
+        </div>
+      </a>
+      <a class="metric-card metric-card--link" routerLink="/jobs/sync" [queryParams]="{ status: 'SUCCESS' }">
+        <div class="metric-card__icon metric-card__icon--completed">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="metric-card__body">
+          <span class="metric-card__value">{{ q.completed ?? 0 }}</span>
+          <span class="metric-card__label">Completed</span>
+        </div>
+      </a>
+      <a class="metric-card metric-card--link" routerLink="/jobs/sync" [queryParams]="{ status: 'FAILED' }">
+        <div class="metric-card__icon metric-card__icon--failed">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        </div>
+        <div class="metric-card__body">
+          <span class="metric-card__value">{{ q.failed ?? 0 }}</span>
+          <span class="metric-card__label">Failed</span>
+        </div>
+      </a>
     </div>
+  } @else {
+    <div class="card empty-state">No queue data available.</div>
   }
-
-  <div class="card raw-card">
-    <h2>Response</h2>
-    <pre>{{ raw() }}</pre>
-  </div>
 }

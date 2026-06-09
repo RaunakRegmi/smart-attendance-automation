@@ -64,8 +64,10 @@
 @if (deleteTarget()) {
   <app-confirm-dialog
     title="Delete Section"
-    [message]="'Are you sure you want to delete ' + deleteTarget()!.name + '? Students and sheets under this section must be removed first.'"
+    [message]="'Delete ' + deleteTarget()!.name + '? Remove all students and sheets first.'"
     confirmLabel="Delete"
+    [loading]="deleting()"
+    loadingLabel="Deleting..."
     (confirm)="delete()"
     (cancel)="deleteTarget.set(null)"
   />

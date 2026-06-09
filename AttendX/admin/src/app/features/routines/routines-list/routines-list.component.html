@@ -1,6 +1,6 @@
 <div class="page-header">
   <h1>Routines</h1>
-  <p>Uploaded class schedules grouped by section. Upload a new routine file to replace the existing one.</p>
+  <p>Uploaded class schedules grouped by section.</p>
 </div>
 
 <div class="toolbar">
@@ -31,6 +31,7 @@
               <td>{{ r.lastUploadedAt | date: 'medium' }}</td>
               <td class="actions">
                 <a class="btn btn--ghost btn--sm" [routerLink]="['/routines', r.sectionId]">View</a>
+                <a class="btn btn--ghost btn--sm" [routerLink]="['/routines', r.sectionId]" [queryParams]="{ edit: true }">Edit</a>
                 <button
                   type="button"
                   class="btn btn--ghost btn--sm btn--danger"
@@ -64,8 +65,10 @@
 @if (deleteTarget()) {
   <app-confirm-dialog
     title="Delete Routine"
-    [message]="'Delete all routine entries for ' + deleteTarget()!.section?.name + '? The associated section must be deleted first.'"
+    [message]="'Delete routine for ' + deleteTarget()!.section?.name + '? Delete the section first.'"
     confirmLabel="Delete"
+    [loading]="deleting()"
+    loadingLabel="Deleting..."
     (confirm)="deleteRoutine()"
     (cancel)="deleteTarget.set(null)"
   />

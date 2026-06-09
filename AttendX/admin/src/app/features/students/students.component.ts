@@ -44,6 +44,7 @@ export class StudentsComponent implements OnInit {
   readonly deleting = signal(false);
   readonly saving = signal(false);
   readonly uploadFile = signal<File | null>(null);
+  readonly uploading = signal(false);
 
   readonly form = this.fb.nonNullable.group({
     name: ['', Validators.required],
@@ -175,14 +176,17 @@ export class StudentsComponent implements OnInit {
       this.toast.warning('Select a file first');
       return;
     }
+    if (this.uploading()) return;
+    this.uploading.set(true);
     this.sheetsService.uploadAttendance(file).subscribe({
       next: (res) => {
         this.toast.success(res.message ?? 'Upload complete');
         this.showUpload.set(false);
         this.uploadFile.set(null);
+        this.uploading.set(false);
         this.load();
       },
-      error: () => {},
+      error: () => { this.uploading.set(false); },
     });
   }
 

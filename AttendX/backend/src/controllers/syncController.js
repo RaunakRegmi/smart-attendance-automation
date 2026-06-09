@@ -9,10 +9,10 @@ async function manualSync(req, res) {
   try {
     const { sheetId } = req.body;
     if (!sheetId) {
-      return res.status(400).json({ success: false, message: 'Missing sheetId in request body' });
+      return res.status(400).json({ success: false, message: 'sheetId is required' });
     }
     const syncJob = await schedulerService.manualSync(sheetId);
-    return res.json({ success: true, message: `Manual sync job ${syncJob.id} created`, syncJobId: syncJob.id });
+    return res.json({ success: true, message: 'Sync job created', syncJobId: syncJob.id });
   } catch (err) {
     console.error('Manual sync error:', err);
     return res.status(500).json({ success: false, message: err.message });
@@ -110,12 +110,12 @@ async function stopScheduler(req, res) {
 async function modifyScheduler(req, res) {
   const { newSyncTime } = req.body;
   if (!newSyncTime) {
-    return res.status(400).json({ success: false, message: 'Missing newSyncTime in request body' });
+    return res.status(400).json({ success: false, message: 'Sync time is required' });
   }
 
   try {
     await schedulerService.setSyncTime(newSyncTime);
-    return res.json({ success: true, message: 'Schedule modified successfully' });
+    return res.json({ success: true, message: 'Schedule updated' });
   } catch (error) {
     console.error('Schedule modification error:', error);
     return res.status(400).json({ success: false, message: error.message });

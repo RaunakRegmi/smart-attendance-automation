@@ -4,7 +4,7 @@ const errorHandler = (err, req, res, next) => {
   if (err.isJoi) {
     return res.status(400).json({
       success: false,
-      message: 'Validation Error',
+      message: 'Validation failed',
       errors: err.details.map(d => ({ field: d.path.join('.'), message: d.message })),
     });
   }
@@ -19,7 +19,7 @@ const errorHandler = (err, req, res, next) => {
 
   res.status(err.statusCode || 500).json({
     success: false,
-    message: err.message || 'Internal Server Error',
+    message: err.message || 'Something went wrong',
   });
 };
 

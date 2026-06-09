@@ -23,6 +23,7 @@ const passwordUpdateSchema = Joi.object({
   newPassword: Joi.string().min(6).required(),
   confirmPassword: Joi.string().required().valid(Joi.ref('newPassword')).messages({
     'any.only': 'Passwords do not match',
+    'any.required': 'Confirm your new password',
   }),
 });
 

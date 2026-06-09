@@ -82,6 +82,7 @@ export class ReportsComponent implements OnInit {
   readonly subjects = signal<Subject[]>([]);
   readonly searchResults = signal<Student[]>([]);
   readonly searchingStudent = signal(false);
+  readonly exporting = signal(false);
 
   readonly activeSubReports = computed(() => {
     const tab = this.tabs.find(t => t.id === this.activeTab());
@@ -274,6 +275,8 @@ export class ReportsComponent implements OnInit {
   exportCSV(): void {
     const data = this.reportData();
     if (!data) { this.toast.warning('No data to export'); return; }
+    if (this.exporting()) return;
+    this.exporting.set(true);
     let csv = '';
     const sub = this.activeSubReport();
 
@@ -322,6 +325,7 @@ export class ReportsComponent implements OnInit {
     a.download = `${sub}-report.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
+    this.exporting.set(false);
     this.toast.success('CSV exported');
   }
 
