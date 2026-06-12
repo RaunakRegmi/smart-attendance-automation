@@ -1,104 +1,69 @@
 sno,student_name,batch,attendance_percentage,risk_level,risk_score,intervention_needed,risk_factors
-463,Aayush Sharma,Atumn 2025,96.55,Low,15.0,False,None
-464,Binita Rijal,Atumn 2025,89.66,Low,15.0,False,None
-465,Chirag Gautam,Atumn 2025,79.31,Medium,40.0,False,None
-466,Dinesh Kunwar,Atumn 2025,82.76,Medium,40.0,False,None
-467,Elina Bista,Atumn 2025,82.76,Medium,40.0,False,None
-468,Firoj Ansari,Atumn 2025,79.31,Medium,40.0,False,None
-469,Gaurav Kafle,Atumn 2025,86.21,Low,15.0,False,None
-470,Hema Lama,Atumn 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
-471,Ishan Koirala,Atumn 2025,65.52,High,70.0,True,"Low overall attendance, High absence count"
-472,Juna Khadgi,Atumn 2025,93.1,Low,15.0,False,None
-473,Kamal Rokaya,Atumn 2025,79.31,Medium,40.0,False,None
-474,Lalita Budhathoki,Atumn 2025,86.21,Low,15.0,False,None
-475,Manoj Dong,Atumn 2025,96.55,Low,15.0,False,None
-476,Nirmala Karki,Atumn 2025,89.66,Low,15.0,False,None
-477,Omkar Pokharel,Atumn 2025,86.21,Low,15.0,False,None
-478,Pabitra Dhakal,Atumn 2025,93.1,Low,15.0,False,None
-479,Qasim Miya,Atumn 2025,93.1,Low,15.0,False,None
-480,Ramesh Suwal,Atumn 2025,89.66,Low,15.0,False,None
-481,Sanjay Khadka,Atumn 2025,96.55,Low,15.0,False,None
-482,Tara Ghale,Atumn 2025,75.86,Medium,40.0,False,None
-483,Ujjwal Basnet,Atumn 2025,68.97,High,70.0,True,Low overall attendance
-484,Bipin Sigdel,Atumn 2025,93.1,Low,15.0,False,None
-485,Chetana Thagunna,Atumn 2025,93.1,Low,15.0,False,None
-486,Dev Rai,Atumn 2025,89.66,Low,15.0,False,None
-487,Esha Karki,Atumn 2025,93.1,Low,15.0,False,None
-488,Ganesh Baral,Atumn 2025,82.76,Medium,40.0,False,None
-489,Hari Bogati,Atumn 2025,93.1,Low,15.0,False,None
-490,Indira Sapkota,Atumn 2025,72.41,High,70.0,True,Low overall attendance
-491,Jeevan Giri,Atumn 2025,82.76,Medium,40.0,False,None
-492,Kabita Chhetri,Atumn 2025,68.97,High,70.0,True,Low overall attendance
-493,Lokesh Karki,Atumn 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
-494,Mamata Shahi,Atumn 2025,55.17,Critical,90.0,True,"Low overall attendance, High absence count"
-501,Sushmita Neupane,Atumn 2025,89.66,Low,15.0,False,None
-497,Nawaraj Bista,Atumn 2025,96.55,Low,15.0,False,None
-498,Aaditya Dhakal,Atumn 2025,79.31,Medium,40.0,False,None
-500,Prakash Adhikari,Atumn 2025,96.55,Low,15.0,False,None
-502,Rohit Poudel,Atumn 2025,79.31,Medium,40.0,False,None
-503,Anjali Thapa,Atumn 2025,82.76,Medium,40.0,False,None
-504,Bibek Shrestha,Atumn 2025,82.76,Medium,40.0,False,None
-505,Rupendra Dhungana,Atumn 2025,79.31,Medium,40.0,False,None
-506,Nabin Gurung,Atumn 2025,86.21,Low,15.0,False,None
-507,Asmita KC,Atumn 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
-508,Rijan Acharya,Atumn 2025,65.52,High,70.0,True,"Low overall attendance, High absence count"
-509,Sneha Maharjan,Atumn 2025,93.1,Low,15.0,False,None
-510,Dipesh Bhandari,Atumn 2025,79.31,Medium,40.0,False,None
-511,Karuna Basyal,Atumn 2025,86.21,Low,15.0,False,None
-512,Niraj Ghimire,Atumn 2025,96.55,Low,15.0,False,None
-513,Samiksha Adhikari,Atumn 2025,89.66,Low,15.0,False,None
-514,Tek Bahadur Ale,Atumn 2025,86.21,Low,15.0,False,None
-515,Apeksha Regmi,Atumn 2025,93.1,Low,15.0,False,None
-516,Bijay Tamang,Atumn 2025,93.1,Low,15.0,False,None
-517,Nikita Panta,Atumn 2025,89.66,Low,15.0,False,None
-499,Raunak Regmi,Atumn 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
-518,Sujan Kharel,Atumn 2025,96.55,Low,15.0,False,None
-519,Puja Bhandari,Atumn 2025,75.86,Medium,40.0,False,None
-520,Rabin Chaudhary,Atumn 2025,68.97,High,70.0,True,Low overall attendance
-521,Melina Joshi,Atumn 2025,93.1,Low,15.0,False,None
-522,Sagar Bhattarai,Atumn 2025,93.1,Low,15.0,False,None
-523,Alisha Raut,Atumn 2025,89.66,Low,15.0,False,None
-524,Kritesh Pandey,Atumn 2025,93.1,Low,15.0,False,None
-525,Monika Kandel,Atumn 2025,82.76,Medium,40.0,False,None
-526,Nischal Aryal,Atumn 2025,93.1,Low,15.0,False,None
-527,Prerana Shah,Atumn 2025,72.41,High,70.0,True,Low overall attendance
-528,Ritik Lama,Atumn 2025,82.76,Medium,40.0,False,None
-529,Sunita Bhandari,Atumn 2025,68.97,High,70.0,True,Low overall attendance
-530,Yubraj Thapa,Atumn 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
-531,Aarati Sharma,Atumn 2025,55.17,Critical,90.0,True,"Low overall attendance, High absence count"
-532,Bishal Karki,Atumn 2025,96.55,Low,15.0,False,None
-538,Aarav Joshi,Summer 2025,96.55,Low,15.0,False,None
-539,Bhumi Adhikari,Summer 2025,89.66,Low,15.0,False,None
-540,Chetan Pariyar,Summer 2025,79.31,Medium,40.0,False,None
-541,Diya Kandel,Summer 2025,82.76,Medium,40.0,False,None
-542,Ekraj Thakuri,Summer 2025,82.76,Medium,40.0,False,None
-543,Falguni Shrestha,Summer 2025,79.31,Medium,40.0,False,None
-544,Gitesh Rana,Summer 2025,86.21,Low,15.0,False,None
-545,Harshita Poudyal,Summer 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
-546,Iresh Jha,Summer 2025,65.52,High,70.0,True,"Low overall attendance, High absence count"
-547,Jyotsna Dahal,Summer 2025,93.1,Low,15.0,False,None
-548,Kushal Dev,Summer 2025,79.31,Medium,40.0,False,None
-549,Luna Basyal,Summer 2025,86.21,Low,15.0,False,None
-550,Meksam Ale,Summer 2025,96.55,Low,15.0,False,None
-551,Nivaan Kharel,Summer 2025,89.66,Low,15.0,False,None
-552,Oshin Karki,Summer 2025,86.21,Low,15.0,False,None
-553,Pratiksha Ghimire,Summer 2025,93.1,Low,15.0,False,None
-554,Qurina Rai,Summer 2025,93.1,Low,15.0,False,None
-555,Rivaan Sapkota,Summer 2025,89.66,Low,15.0,False,None
-556,Sewanta Bohora,Summer 2025,96.55,Low,15.0,False,None
-557,Trisha Budhathoki,Summer 2025,75.86,Medium,40.0,False,None
-558,Utkarsh Bhandari,Summer 2025,68.97,High,70.0,True,Low overall attendance
-559,Vinesh Subedi,Summer 2025,93.1,Low,15.0,False,None
-560,Wilson Rokka,Summer 2025,93.1,Low,15.0,False,None
-561,Xenia Guragain,Summer 2025,89.66,Low,15.0,False,None
-562,Yugant Khatiwada,Summer 2025,93.1,Low,15.0,False,None
-563,Zenia Oli,Summer 2025,82.76,Medium,40.0,False,None
-564,Anugraha Koirala,Summer 2025,93.1,Low,15.0,False,None
-565,Bivek Khadka,Summer 2025,72.41,High,70.0,True,Low overall attendance
-566,Celine Maharjan,Summer 2025,82.76,Medium,40.0,False,None
-567,Dron Acharya,Summer 2025,68.97,High,70.0,True,Low overall attendance
-568,Eshan KC,Summer 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
-569,Fiona Lama,Summer 2025,55.17,Critical,90.0,True,"Low overall attendance, High absence count"
-570,Grishma Chaulagai,Summer 2025,96.55,Low,15.0,False,None
-536,Aarnav Dahal,Atumn 2025,0.0,Critical,90.0,True,"Low overall attendance, High absence count"
-537,Aaditya Joshi,Atumn 2025,0.0,Critical,90.0,True,"Low overall attendance, High absence count"
+3,Binita Rijal,Autumn 2025,89.66,Low,15.0,False,None
+4,Aaditya Dhakal,Autumn 2025,79.31,Medium,40.0,False,None
+5,Dinesh Kunwar,Autumn 2025,82.76,Medium,40.0,False,None
+6,Elina Bista,Autumn 2025,82.76,Medium,40.0,False,None
+7,Firoj Ansari,Autumn 2025,79.31,Medium,40.0,False,None
+8,Gaurav Kafle,Autumn 2025,86.21,Low,15.0,False,None
+9,Raunak Regmi,Autumn 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
+10,Ishan Koirala,Autumn 2025,65.52,High,70.0,True,"Low overall attendance, High absence count"
+11,Juna Khadgi,Autumn 2025,93.1,Low,15.0,False,None
+12,Kamal Rokaya,Autumn 2025,79.31,Medium,40.0,False,None
+13,Lalita Budhathoki,Autumn 2025,86.21,Low,15.0,False,None
+14,Manoj Dong,Autumn 2025,96.55,Low,15.0,False,None
+15,Nirmala Karki,Autumn 2025,89.66,Low,15.0,False,None
+16,Omkar Pokharel,Autumn 2025,86.21,Low,15.0,False,None
+17,Pabitra Dhakal,Autumn 2025,93.1,Low,15.0,False,None
+18,Qasim Miya,Autumn 2025,93.1,Low,15.0,False,None
+19,Ramesh Suwal,Autumn 2025,89.66,Low,15.0,False,None
+20,Sanjay Khadka,Autumn 2025,96.55,Low,15.0,False,None
+21,Tara Ghale,Autumn 2025,75.86,Medium,40.0,False,None
+22,Ujjwal Basnet,Autumn 2025,68.97,High,70.0,True,Low overall attendance
+23,Bipin Sigdel,Autumn 2025,93.1,Low,15.0,False,None
+24,Chetana Thagunna,Autumn 2025,93.1,Low,15.0,False,None
+25,Dev Rai,Autumn 2025,89.66,Low,15.0,False,None
+26,Esha Karki,Autumn 2025,93.1,Low,15.0,False,None
+27,Ganesh Baral,Autumn 2025,82.76,Medium,40.0,False,None
+28,Hari Bogati,Autumn 2025,93.1,Low,15.0,False,None
+29,Indira Sapkota,Autumn 2025,72.41,High,70.0,True,Low overall attendance
+30,Jeevan Giri,Autumn 2025,82.76,Medium,40.0,False,None
+31,Kabita Chhetri,Autumn 2025,68.97,High,70.0,True,Low overall attendance
+32,Lokesh Karki,Autumn 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
+33,Mamata Shahi,Autumn 2025,55.17,Critical,90.0,True,"Low overall attendance, High absence count"
+34,Nawaraj Bista,Autumn 2025,96.55,Low,15.0,False,None
+35,Aarnav Dahal,Autumn 2025,0.0,Critical,90.0,True,"Low overall attendance, High absence count"
+36,Aaditya Joshi,Autumn 2025,0.0,Critical,90.0,True,"Low overall attendance, High absence count"
+37,Prakash Adhikari,Autumn 2025,96.55,Low,15.0,False,None
+38,Sushmita Neupane,Autumn 2025,89.66,Low,15.0,False,None
+39,Rohit Poudel,Autumn 2025,79.31,Medium,40.0,False,None
+40,Anjali Thapa,Autumn 2025,82.76,Medium,40.0,False,None
+41,Bibek Shrestha,Autumn 2025,82.76,Medium,40.0,False,None
+42,Rupendra Dhungana,Autumn 2025,79.31,Medium,40.0,False,None
+43,Nabin Gurung,Autumn 2025,86.21,Low,15.0,False,None
+44,Asmita KC,Autumn 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
+45,Rijan Acharya,Autumn 2025,65.52,High,70.0,True,"Low overall attendance, High absence count"
+46,Sneha Maharjan,Autumn 2025,93.1,Low,15.0,False,None
+47,Dipesh Bhandari,Autumn 2025,79.31,Medium,40.0,False,None
+48,Karuna Basyal,Autumn 2025,86.21,Low,15.0,False,None
+49,Niraj Ghimire,Autumn 2025,96.55,Low,15.0,False,None
+50,Samiksha Adhikari,Autumn 2025,89.66,Low,15.0,False,None
+51,Tek Bahadur Ale,Autumn 2025,86.21,Low,15.0,False,None
+52,Apeksha Regmi,Autumn 2025,93.1,Low,15.0,False,None
+53,Bijay Tamang,Autumn 2025,93.1,Low,15.0,False,None
+54,Nikita Panta,Autumn 2025,89.66,Low,15.0,False,None
+55,Sujan Kharel,Autumn 2025,96.55,Low,15.0,False,None
+56,Puja Bhandari,Autumn 2025,75.86,Medium,40.0,False,None
+2,Aayush Sharma,Autumn 2025,96.55,Low,15.0,False,None
+57,Rabin Chaudhary,Autumn 2025,68.97,High,70.0,True,Low overall attendance
+58,Melina Joshi,Autumn 2025,93.1,Low,15.0,False,None
+59,Sagar Bhattarai,Autumn 2025,93.1,Low,15.0,False,None
+60,Alisha Raut,Autumn 2025,89.66,Low,15.0,False,None
+61,Kritesh Pandey,Autumn 2025,93.1,Low,15.0,False,None
+62,Monika Kandel,Autumn 2025,82.76,Medium,40.0,False,None
+63,Nischal Aryal,Autumn 2025,93.1,Low,15.0,False,None
+64,Prerana Shah,Autumn 2025,72.41,High,70.0,True,Low overall attendance
+65,Ritik Lama,Autumn 2025,82.76,Medium,40.0,False,None
+66,Sunita Bhandari,Autumn 2025,68.97,High,70.0,True,Low overall attendance
+67,Yubraj Thapa,Autumn 2025,58.62,Critical,90.0,True,"Low overall attendance, High absence count"
+68,Aarati Sharma,Autumn 2025,55.17,Critical,90.0,True,"Low overall attendance, High absence count"
+69,Bishal Karki,Autumn 2025,96.55,Low,15.0,False,None

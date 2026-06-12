@@ -1,63 +1,45 @@
-# Session Context — Saved Tue Jun 09 2026
+# Session Context
 
-## Current Goal
-Add update routine feature (completed), then discuss/implement account lockout on failed login attempts (pending decision).
+## Goal
+Set up Android development environment, connect physical device (Huawei P10), and run the Flutter app with backend connectivity.
 
-## What Was Accomplished
+## What was accomplished
+1. **Android SDK Installation**:
+   - Installed Android SDK platform tools, command-line tools, platform 34, and build tools via apt and sdkmanager
+   - Configured Flutter to use SDK at `~/Android`
+   - Added `JAVA_HOME` (OpenJDK 17) and `ANDROID_HOME` env vars
 
-### 1. Queue metrics moved into Sync Operations page
-- Queue status metric cards (Total, Waiting, Active, Completed, Failed) now display at the top of `/jobs/sync`
-- Clicking a card filters the job list on the same page (sets status filter + reloads)
-- Active filter card is highlighted with primary border
-- Route `/jobs/queue` removed (redirects removed, sidebar link removed)
-- Queue page component is now dead code (tree-shaken)
-- "Last updated" timestamp shown below metrics
+2. **Android Platform Files**:
+   - Regenerated missing `android/` directory for the Flutter project using `flutter create --platforms=android .`
+   - Fixed build errors: added core library desugaring for `flutter_local_notifications`
+   - Updated NDK version from default to `27.0.12077973` (required by plugins)
 
-### 2. "Sync jobs" → "Sync Operations" rename
-- Page heading, sidebar menu label, and toast message updated
+3. **Device Connection**:
+   - Connected Huawei P10 (MAR-LX2J) via USB with USB debugging enabled
+   - Authorized the device via RSA key prompt on the phone
+   - Flutter app builds and installs successfully on the physical device
 
-### 3. Update Routine feature
-- **Backend**: `PUT /api/routine/:id` endpoint with full validation
-  - Required fields: dayOfWeek, subjectCode, subjectName, startTime, endTime
-  - Validates HH:MM format for times
-  - Validates endTime > startTime
-  - Validates block is Block A-D (accepts short A-D too via normalizeBlock)
-  - Normalizes block to "Block X" format on save
-  - One-time migration converts existing short block values
-- **Frontend RoutineService**: Added `updateRoutine()` method
-- **Frontend Routine Detail page**:
-  - "Edit" button per row (visible only in edit mode via `?edit=true`)
-  - Modal with fields: Start/End (row), Subject, Code/Lecturer (row), Day/Block/Room (row)
-  - All validators with `*` required indicators and error messages
-  - Block is a dropdown with Block A-D options
-  - Chevron icon on all selects
-- **Routines List page**:
-  - Removed subtitle text
-  - Added separate "View" and "Edit" buttons — View goes to read-only, Edit goes with `?edit=true`
+4. **Backend Connectivity (ngrok)**:
+   - Installed ngrok (v3.39.7) and configured with auth token
+   - Started ngrok tunnel to local backend (port 5001)
+   - Public URL: `https://crowbar-unpledged-coming.ngrok-free.dev`
+   - Updated `api_client.dart` default base URL to use ngrok URL
+   - Added cleanup logic in `getBaseUrl()` to remove old `10.0.2.2` SharedPreferences values
 
-### 4. Sync Operations page compactified
-- Metric cards balanced size (36px icons, 1.375rem values)
-- Manual sync card is horizontal inline bar (no hint text)
-- Page fits without scrolling
-
-## Files Modified
-- `/AttendX/backend/src/controllers/routineController.js` — added updateRoutine with validation, normalizeBlock, one-time migration
-- `/AttendX/backend/src/routes/routineRoutes.js` — added `PUT /:id` route
-- `/AttendX/admin/src/app/core/services/routine.service.ts` — added updateRoutine, import ApiResponse
-- `/AttendX/admin/src/app/features/routines/routine-detail/routine-detail.component.ts` — edit mode, form with validators, edit/save/cancel
-- `/AttendX/admin/src/app/features/routines/routine-detail/routine-detail.component.html` — Edit button per row, edit modal with validation UI
-- `/AttendX/admin/src/app/features/routines/routine-detail/routine-detail.component.scss` — compact modal, form styles, error/required styles, select chevron
-- `/AttendX/admin/src/app/features/routines/routines-list/routines-list.component.html` — removed subtitle, added View + Edit buttons
-- `/AttendX/admin/src/app/features/jobs/sync-jobs/sync-jobs.component.ts` — queue status, activeFilter, lastRefreshed
-- `/AttendX/admin/src/app/features/jobs/sync-jobs/sync-jobs.component.html` — metric cards, timestamp, filter-by-card clicks
-- `/AttendX/admin/src/app/features/jobs/sync-jobs/sync-jobs.component.scss` — metric card styles, compact layout
-- `/AttendX/admin/src/app/layout/admin-layout/admin-layout.component.ts` — removed Queue menu, renamed Sync jobs
-- `/AttendX/admin/src/app/app.routes.ts` — removed queue-page route redirect
+5. **Dashboard Null Crash Fix** (`dashboard_provider.dart`):
+   - Set initial `_isLoading = true` so the first build shows loading spinner instead of crashing on null `data!`
 
 ## Pending / Next Steps
-- User asked about account lockout on failed login — confirmed it doesn't exist. Waiting for user decision on whether to implement.
+- Verify backend is running and accessible via ngrok URL
+- Test full login flow and dashboard data loading on the phone
+- The app currently shows "Could not connect to server" — may need to check if backend Docker container is running
 
 ## Key Decisions
-- Edit mode on routine detail is gated by `?edit=true` query param, allowing separate View and Edit entry points from the list page.
-- Block values stored as "Block X" (full name), with `normalizeBlock()` accepting both short ("A") and long ("Block A") formats for backward compatibility.
-- One-time migration runs on backend startup to convert existing short block values.
+- Used ngrok to expose local backend to physical device (since `10.0.2.2` only works on Android emulator)
+- Placed Android SDK in `~/Android` (user-writable) rather than system directories (requires sudo)
+- Used `SharedPreferences` cleanup logic to prevent stale emulator URLs from persisting
+
+## Files Modified
+- `AttendX/student/lib/services/api_client.dart` — Updated defaultBaseUrl to ngrok, added old URL cleanup
+- `AttendX/student/lib/services/dashboard_provider.dart` — Fixed initial loading state (`_isLoading = true`)
+- `AttendX/student/android/app/build.gradle.kts` — Added coreLibraryDesugaring, fixed ndkVersion

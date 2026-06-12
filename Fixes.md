@@ -30,3 +30,27 @@ This Faculty is optional for students.
 - Routine Page in student's portal contains more free space so how to cover it..
 - Remainder of Today's class in Student's Dashboard is still shown fter 9:00 as its already 10:00 It should update as per teh time
 - Our Major aim should be Helping Students in their journy and later Attendance could be our one of the feature not the main module meaning that we will be having such more modules in our system.
+
+
+In the Profile page: there is Attendance Summary which shows the different summary values of attendance of students. so clicking on each like as overall , Subjects, At Risk, RISK should navigate to the respective page displaying the details of values that describes each of these metrics so that user could be confirm that from where and based on what these values are calculated. aslo it will be trust worthy for them.
+
+<!-- There should be teh deicated buttons like as edit Personal Details page that allows students to update the follwoing details:
+gender, blood Group, Registration Number, Admission Date, Faculty, Gurdian Name, Gurdian Contact.
+And there should also be view personal details which will display all these along with Name, email and ID but these should not be editable.
+Also the Batch and Section for that student should also be shown in personal Details, which allows to view only to this not update. -->
+
+-----------------------------------------
+There should be dedicatd config that allows to move the students of particular Batch to shift to the semester like as:
+Semester 1,
+Semester 2,
+Training Semester,
+Semester 3,
+.
+.
+Semester 6
+Placement Year
+And based on this semester, the routine should be displayed to the students. So, the routine should also be linked with the Semester as same batch -same section Students could have different class routine based on the semester.
+-----------------------------------------
+
+
+<!-- Add the skeleton loader while api hits for all pages throught the system so that loading dynamic data looks the system smooth to the user as the page refresh with dynamic data provides very bad experience to the user currently. -->

@@ -22,6 +22,7 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
+  final GlobalKey<RoutineScreenState> _routineKey = GlobalKey();
 
   @override
   void initState() {
@@ -43,12 +44,12 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   // 5 screens total — order matches nav bar items below
-  final List<Widget> _screens = const [
-    DashboardScreen(),
-    RoutineScreen(),
-    AttendanceScreen(),
-    ChatbotScreen(), // ← NEW at index 3
-    ProfileScreen(),
+  late final List<Widget> _screens = [
+    const DashboardScreen(),
+    RoutineScreen(key: _routineKey),
+    const AttendanceScreen(),
+    const ChatbotScreen(),
+    const ProfileScreen(),
   ];
 
   @override
@@ -61,7 +62,14 @@ class _MainNavigationState extends State<MainNavigation> {
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
-          onTap: (i) => setState(() => _currentIndex = i),
+          onTap: (i) {
+            setState(() => _currentIndex = i);
+            if (i == 1) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _routineKey.currentState?.resetToToday();
+              });
+            }
+          },
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.dashboard_outlined),

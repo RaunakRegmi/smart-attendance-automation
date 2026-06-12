@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
 import '../../services/attendance_provider.dart';
+import '../../widgets/skeletons.dart';
 
 
 class AttendanceScreen extends StatefulWidget {
@@ -46,6 +47,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> with SingleTickerPr
       overall = summary.percentage;
       subjectsCount = summary.subjects.length;
       atRiskCount = summary.atRisk;
+    }
+
+    if (attProvider.isLoading && summary == null) {
+      return Scaffold(
+        backgroundColor: AppTheme.background,
+        body: SafeArea(child: attendanceSkeleton()),
+      );
     }
 
     return Scaffold(
@@ -138,16 +146,44 @@ class _AttendanceScreenState extends State<AttendanceScreen> with SingleTickerPr
                               Expanded(
                                 child: DropdownButtonFormField<String?>(
                                   value: _filterSubjectCode,
-                                  decoration: const InputDecoration(
+                                  isExpanded: true,
+                                  dropdownColor: const Color(0xFFF1F5F9),
+                                  borderRadius: BorderRadius.circular(12),
+                                  decoration: InputDecoration(
                                     labelText: 'Subject',
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                    border: OutlineInputBorder(),
+                                    prefixIcon: const Icon(Icons.book_outlined, size: 20),
+                                    filled: true,
+                                    fillColor: const Color(0xFFF1F5F9),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                   ),
                                   items: [
-                                    const DropdownMenuItem(value: null, child: Text('All Subjects')),
+                                    const DropdownMenuItem(
+                                      value: null,
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 4),
+                                        child: Text('All Subjects', style: TextStyle(fontSize: 14)),
+                                      ),
+                                    ),
                                     ...{...logs.map((l) => l['code'] as String? ?? '')}.where((c) => c.isNotEmpty)
-                                      .map((code) => DropdownMenuItem(value: code, child: Text(code))),
+                                      .map((code) => DropdownMenuItem(
+                                        value: code,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 4),
+                                          child: Text(code, style: const TextStyle(fontSize: 14)),
+                                        ),
+                                      )),
                                   ],
                                   onChanged: (v) => setState(() => _filterSubjectCode = v),
                                 ),
@@ -156,17 +192,57 @@ class _AttendanceScreenState extends State<AttendanceScreen> with SingleTickerPr
                               Expanded(
                                 child: DropdownButtonFormField<String?>(
                                   value: _filterStatus,
-                                  decoration: const InputDecoration(
+                                  isExpanded: true,
+                                  dropdownColor: const Color(0xFFF1F5F9),
+                                  borderRadius: BorderRadius.circular(12),
+                                  decoration: InputDecoration(
                                     labelText: 'Status',
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                    border: OutlineInputBorder(),
+                                    prefixIcon: const Icon(Icons.filter_list_outlined, size: 20),
+                                    filled: true,
+                                    fillColor: const Color(0xFFF1F5F9),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                   ),
                                   items: const [
-                                    DropdownMenuItem(value: null, child: Text('All')),
-                                    DropdownMenuItem(value: 'PRESENT', child: Text('Present')),
-                                    DropdownMenuItem(value: 'ABSENT', child: Text('Absent')),
-                                    DropdownMenuItem(value: 'LATE', child: Text('Late')),
+                                    DropdownMenuItem(
+                                      value: null,
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 4),
+                                        child: Text('All', style: TextStyle(fontSize: 14)),
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'PRESENT',
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 4),
+                                        child: Text('Present', style: TextStyle(fontSize: 14)),
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'ABSENT',
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 4),
+                                        child: Text('Absent', style: TextStyle(fontSize: 14)),
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'LATE',
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 4),
+                                        child: Text('Late', style: TextStyle(fontSize: 14)),
+                                      ),
+                                    ),
                                   ],
                                   onChanged: (v) => setState(() => _filterStatus = v),
                                 ),

@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
-import 'screens/auth/login_screen.dart';
-import 'screens/dashboard/main_navigation.dart';
-import 'services/auth_service.dart';
-import 'services/api_client.dart';
+import 'screens/splash/splash_screen.dart';
 import 'services/dashboard_provider.dart';
 import 'services/attendance_provider.dart';
 import 'services/schedule_provider.dart';
@@ -35,39 +32,8 @@ class AttendXApp extends StatelessWidget {
         title: 'AttendX',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: const _AuthGate(),
+        home: const SplashScreen(),
       ),
     );
   }
-}
-
-class _AuthGate extends StatefulWidget {
-  const _AuthGate();
-  @override
-  State<_AuthGate> createState() => _AuthGateState();
-}
-
-class _AuthGateState extends State<_AuthGate> {
-  @override
-  void initState() {
-    super.initState();
-    _checkSession();
-  }
-
-  Future<void> _checkSession() async {
-    final token = await ApiClient.getToken();
-    if (token == null || token.isEmpty) return;
-    try {
-      await AuthService.getProfile();
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const MainNavigation()),
-      );
-    } catch (_) {
-      await ApiClient.clearToken();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => const LoginScreen();
 }

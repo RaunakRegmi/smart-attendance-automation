@@ -51,7 +51,7 @@ exports.getStudents = async (req, res, next) => {
 
 exports.createStudent = async (req, res, next) => {
   try {
-    const { name, email, batchId, sectionId, password, ...profile } = req.body;
+    const { name, email, batchId, sectionId, password, facultyId, ...profile } = req.body;
     if (!name || !email) {
       return res.status(400).json({ success: false, message: 'Name and email are required' });
     }
@@ -75,6 +75,7 @@ exports.createStudent = async (req, res, next) => {
       email,
       batchId: batchId || null,
       sectionId: sectionId || null,
+      facultyId: facultyId || null,
       userId,
       ...profile,
     });
@@ -101,6 +102,7 @@ exports.updateStudent = async (req, res, next) => {
     const updateData = { ...req.body };
     if ('batchId' in updateData) updateData.batchId = updateData.batchId || null;
     if ('sectionId' in updateData) updateData.sectionId = updateData.sectionId || null;
+    if ('facultyId' in updateData) updateData.facultyId = updateData.facultyId || null;
     await student.update(updateData);
     const updated = await Student.findByPk(student.id, {
       include: [{ model: Batch }, { model: Section }],

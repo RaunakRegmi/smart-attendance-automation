@@ -32,9 +32,9 @@ exports.login = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    // Generate JWT token
+    // Generate JWT token with tokenVersion for invalidation on logout
     const token = jwt.sign(
-      { id: user.id, role: user.role },
+      { id: user.id, role: user.role, tokenVersion: user.tokenVersion },
       process.env.JWT_SECRET,
       { expiresIn: rememberMe ? '30d' : '24h' }
     );
@@ -63,7 +63,7 @@ exports.register = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Validation errors', errors: errors.array() });
     }
 
-    const { name, email, password, gender, bloodGroup, regNum, univId, admissionDate, dob, faculty, guardianName, guardianContact, batchId, sectionId } = req.body;
+    const { name, email, password, gender, bloodGroup, regNum, univId, admissionDate, dob, faculty, facultyId, guardianName, guardianContact, batchId, sectionId } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
@@ -89,7 +89,8 @@ exports.register = async (req, res, next) => {
       univId,
       admissionDate,
       dob,
-      faculty,
+      faculty: faculty,
+      facultyId: facultyId || null,
       guardianName,
       guardianContact,
       batchId,
@@ -146,7 +147,7 @@ exports.getMe = async (req, res, next) => {
 
 exports.updateProfile = async (req, res, next) => {
   try {
-    const { name, email, gender, bloodGroup, regNum, univId, admissionDate, dob, faculty, guardianName, guardianContact, batchId, sectionId } = req.body;
+    const { name, email, gender, bloodGroup, regNum, univId, admissionDate, dob, faculty, facultyId, guardianName, guardianContact, batchId, sectionId } = req.body;
 
     // Find the user
     const user = await User.findByPk(req.user.id);
@@ -181,6 +182,7 @@ exports.updateProfile = async (req, res, next) => {
         admissionDate,
         dob,
         faculty,
+        facultyId,
         guardianName,
         guardianContact,
         batchId,
@@ -349,6 +351,19 @@ exports.deleteUser = async (req, res, next) => {
     // Soft-deactivate user instead of hard-delete
     await user.update({ isActive: false });
     res.json({ success: true, message: 'User deactivated' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.logout = async (req, res, next) => {
+  try {
+    // Increment tokenVersion to invalidate all existing tokens for this user
+    const user = await User.findByPk(req.user.id);
+    if (user) {
+      await user.increment('tokenVersion');
+    }
+    res.json({ success: true, message: 'Logged out successfully' });
   } catch (error) {
     next(error);
   }

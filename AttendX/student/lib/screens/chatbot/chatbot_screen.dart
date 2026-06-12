@@ -65,6 +65,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       final hasText = _controller.text.trim().isNotEmpty;
       if (hasText != _hasText) setState(() => _hasText = hasText);
     });
+    _focusNode.addListener(() => setState(() {}));
     _initSession();
   }
 
@@ -404,14 +405,19 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
  
   Widget _buildInputBar() {
-    // FIX 8: only active when there is text and not loading
     final canSend = _hasText && !_isLoading;
- 
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-      decoration: const BoxDecoration(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 16),
+      decoration: BoxDecoration(
         color: AppTheme.surface,
-        border: Border(top: BorderSide(color: AppTheme.border)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -420,11 +426,14 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             child: Container(
               constraints: const BoxConstraints(maxHeight: 120),
               decoration: BoxDecoration(
-                color: AppTheme.background,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: AppTheme.border),
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: _focusNode.hasFocus
+                      ? AppTheme.primary.withOpacity(0.5)
+                      : AppTheme.border,
+                ),
               ),
-              // FIX 4 & 5: minLines/maxLines + null onSubmitted when loading
               child: TextField(
                 controller: _controller,
                 focusNode: _focusNode,
@@ -433,36 +442,51 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 textInputAction: TextInputAction.send,
                 onSubmitted: _isLoading ? null : _sendMessage,
                 style: const TextStyle(
-                    fontSize: 14, color: AppTheme.textPrimary),
-                decoration: const InputDecoration(
-                  hintText: 'Ask about attendance, schedule...',
+                    fontSize: 14, color: AppTheme.textPrimary, height: 1.5),
+                decoration: InputDecoration(
+                  hintText: 'Type your question...',
                   hintStyle: TextStyle(
-                      color: AppTheme.textSecondary, fontSize: 14),
+                      color: AppTheme.textSecondary.withOpacity(0.6),
+                      fontSize: 14),
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
                   contentPadding:
-                      EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: canSend
-                  ? AppTheme.primary
-                  : AppTheme.primary.withOpacity(0.4),
-              borderRadius: BorderRadius.circular(23),
+              gradient: canSend
+                  ? const LinearGradient(
+                      colors: [AppTheme.primary, Color(0xFF2D5F8A)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : null,
+              color: canSend ? null : AppTheme.primary.withOpacity(0.25),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: canSend
+                  ? [
+                      BoxShadow(
+                        color: AppTheme.primary.withOpacity(0.35),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
             ),
             child: Material(
               color: Colors.transparent,
-              borderRadius: BorderRadius.circular(23),
+              borderRadius: BorderRadius.circular(14),
               child: InkWell(
-                borderRadius: BorderRadius.circular(23),
+                borderRadius: BorderRadius.circular(14),
                 onTap: canSend ? () => _sendMessage(_controller.text) : null,
                 child: Center(
                   child: _isLoading

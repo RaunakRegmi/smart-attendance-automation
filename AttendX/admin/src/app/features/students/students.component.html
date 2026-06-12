@@ -62,7 +62,12 @@
           <div class="form-field"><label>Section</label>
             <select formControlName="sectionId"><option value="">Select</option>@for (s of modalSections(); track s.id) { <option [value]="s.id">{{ s.name }}</option> }</select>
           </div>
-          <div class="form-field"><label>Faculty</label><input formControlName="faculty" /></div>
+          <div class="form-field"><label>Faculty</label>
+            <select formControlName="facultyId"><option value="">Select</option>@for (f of faculties(); track f.id) { <option [value]="f.id">{{ f.name }}</option> }</select>
+          </div>
+          <div class="form-field"><label>Gender</label>
+            <select formControlName="gender"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option><option value="Others">Others</option></select>
+          </div>
         </div>
         <div class="modal__footer">
           <button type="button" class="btn btn--secondary" (click)="showModal.set(false)">Cancel</button>

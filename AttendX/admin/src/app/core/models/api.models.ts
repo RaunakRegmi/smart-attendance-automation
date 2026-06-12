@@ -39,6 +39,12 @@ export interface Batch {
   createdAt?: string;
 }
 
+export interface Faculty {
+  id: string;
+  name: string;
+  createdAt?: string;
+}
+
 export interface Section {
   id: string;
   name: string;
@@ -53,9 +59,18 @@ export interface Student {
   email: string;
   batchId?: string;
   sectionId?: string;
+  facultyId?: string;
   Batch?: Batch;
   Section?: Section;
+  Faculty?: Faculty;
   faculty?: string;
+  gender?: string;
+  bloodGroup?: string;
+  regNum?: string;
+  univId?: string;
+  admissionDate?: string;
+  guardianName?: string;
+  guardianContact?: string;
   createdAt?: string;
 }
 
@@ -85,12 +100,14 @@ export interface StudentProfile {
   admissionDate?: string;
   dob?: string;
   faculty?: string;
+  facultyId?: string;
   guardianName?: string;
   guardianContact?: string;
   batchId?: number;
   sectionId?: number;
   Batch?: Batch;
   Section?: Section;
+  Faculty?: Faculty;
   userId: number;
   createdAt?: string;
 }
@@ -142,6 +159,7 @@ export interface ReportStudent {
   email: string;
   regNum?: string;
   faculty?: string;
+  facultyId?: string;
   section?: string;
 }
 

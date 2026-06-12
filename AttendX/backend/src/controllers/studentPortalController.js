@@ -1,4 +1,9 @@
 const { Op } = require('sequelize');
+const moment = require('moment-timezone');
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
+const TIMEZONE = process.env.TIMEZONE || 'Asia/Kathmandu';
 const Student = require('../models/Student');
 const User = require('../models/User');
 const Attendance = require('../models/Attendance');
@@ -6,9 +11,30 @@ const Subject = require('../models/Subject');
 const Routine = require('../models/Routine');
 const Section = require('../models/Section');
 const Batch = require('../models/Batch');
+const Faculty = require('../models/Faculty');
 const Notification = require('../models/Notification');
 
 const CHATBOT_URL = process.env.CHATBOT_URL || 'http://host.docker.internal:8000';
+const SERVER_URL = process.env.SERVER_URL || `http://localhost:${process.env.PORT || 5000}`;
+
+const avatarsDir = path.join(__dirname, '../../uploads/avatars');
+if (!fs.existsSync(avatarsDir)) fs.mkdirSync(avatarsDir, { recursive: true });
+
+const photoUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, avatarsDir),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname) || '.jpg';
+      cb(null, `avatar_${Date.now()}${ext}`);
+    },
+  }),
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['.jpg', '.jpeg', '.png', '.webp'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, allowed.includes(ext));
+  },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+});
 
 const getAuthenticatedStudent = async (userId) => {
   const student = await Student.findOne({
@@ -16,6 +42,7 @@ const getAuthenticatedStudent = async (userId) => {
     include: [
       { model: Batch },
       { model: Section, include: [{ model: Batch }] },
+      { model: Faculty },
     ],
   });
   return student;
@@ -50,10 +77,11 @@ exports.getDashboard = async (req, res, next) => {
           name: student.name,
           email: student.email,
           studentId: student.univId || student.regNum || `STU-${student.id}`,
-          department: student.faculty || 'BCS Hons Artificial Intelligence with Computer Science',
+          department: student.Faculty?.name || student.faculty || 'BCS Hons Artificial Intelligence with Computer Science',
           batch: student.Batch?.name || student.Section?.Batch?.name || null,
           section: student.Section?.name || null,
           semester: student.Batch?.name || student.Section?.Batch?.name || '',
+          avatarUrl: student.avatarUrl || null,
         },
         attendance: {
           overallPercentage: attendancePercentage.overall,
@@ -210,21 +238,25 @@ const calculateAttendancePercentage = async (studentId) => {
   };
 };
 
-// Per-weekday attendance percentages for the last few weeks → used by the
+// Per-day attendance percentages for the current week (Sun–Fri) → used by the
 // dashboard's weekly-overview chart. Returns 6 heights for Sun..Fri (0-100).
 const getWeeklyAttendanceHeights = async (studentId) => {
-  const records = await Attendance.findAll({ where: { studentId } });
+  const now = moment.tz(TIMEZONE);
+  // Start of current week: Sunday 00:00 in Asia/Kathmandu
+  const startOfWeek = now.clone().startOf('week'); // moment uses locale: Sun=0
+  const startISO = startOfWeek.format('YYYY-MM-DD');
+
+  const records = await Attendance.findAll({
+    where: { studentId, date: { [Op.gte]: startISO } },
+  });
   if (records.length === 0) return [0, 0, 0, 0, 0, 0];
 
-  // Day name → bucket index used by the dashboard (SUN, MON, TUE, WED, THU, FRI)
-  const dayIndex = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 };
   const buckets = [{p:0,t:0},{p:0,t:0},{p:0,t:0},{p:0,t:0},{p:0,t:0},{p:0,t:0}];
   for (const r of records) {
-    const dow = new Date(r.date).getDay();
-    if (dayIndex[dow] === undefined) continue; // skip Saturday
-    const idx = dayIndex[dow];
-    buckets[idx].t += 1;
-    if (r.status === 'Present' || r.status === 'Late') buckets[idx].p += 1;
+    const dow = moment.tz(r.date, TIMEZONE).day(); // 0=Sun, 1=Mon, ..., 6=Sat
+    if (dow === 6) continue; // skip Saturday
+    buckets[dow].t += 1;
+    if (r.status === 'Present' || r.status === 'Late') buckets[dow].p += 1;
   }
   return buckets.map((b) => b.t > 0 ? Math.round((b.p / b.t) * 100) : 0);
 };
@@ -269,6 +301,115 @@ const getTodaySchedule = async (sectionId) => {
     };
   });
 };
+
+exports.getProfile = async (req, res, next) => {
+  try {
+    const student = await Student.findOne({
+      where: { userId: req.user.id },
+      include: [{ model: Batch }, { model: Section }, { model: Faculty }],
+    });
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student profile not found' });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        name: student.name,
+        email: student.email,
+        studentId: student.univId || student.regNum || `STU-${student.id}`,
+        gender: student.gender || '',
+        bloodGroup: student.bloodGroup || '',
+        regNum: student.regNum || '',
+        univId: student.univId || '',
+        admissionDate: student.admissionDate || '',
+        facultyId: student.facultyId || '',
+        faculty: student.Faculty?.name || student.faculty || '',
+        guardianName: student.guardianName || '',
+        guardianContact: student.guardianContact || '',
+        batch: student.Batch?.name || '',
+        section: student.Section?.name || '',
+        avatarUrl: student.avatarUrl || null,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateProfile = async (req, res, next) => {
+  try {
+    const student = await Student.findOne({ where: { userId: req.user.id } });
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student profile not found' });
+    }
+
+    const allowed = ['gender', 'bloodGroup', 'regNum', 'admissionDate', 'facultyId', 'guardianName', 'guardianContact'];
+    const updates = {};
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
+
+    const regNumPattern = /^[a-zA-Z0-9-]+$/;
+    const contactPattern = /^[0-9+\-]+$/;
+
+    if (updates.regNum) {
+      if (updates.regNum.length > 15) {
+        return res.status(400).json({ success: false, message: 'Registration number must be at most 15 characters' });
+      }
+      if (!regNumPattern.test(updates.regNum)) {
+        return res.status(400).json({ success: false, message: 'Only alphanumeric characters and hyphens allowed' });
+      }
+    }
+    if (updates.guardianName && updates.guardianName.length > 50) {
+      return res.status(400).json({ success: false, message: 'Guardian name must be at most 50 characters' });
+    }
+    if (updates.guardianContact) {
+      if (!contactPattern.test(updates.guardianContact)) {
+        return res.status(400).json({ success: false, message: 'Only numbers, + and - allowed' });
+      }
+    }
+    if (updates.gender && !['Male', 'Female', 'Others'].includes(updates.gender)) {
+      return res.status(400).json({ success: false, message: 'Gender must be Male, Female, or Others' });
+    }
+
+    await student.update(updates);
+
+    res.json({ success: true, message: 'Profile updated successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.uploadPhoto = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No image file provided' });
+    }
+
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+    const student = await Student.findOne({ where: { userId: req.user.id } });
+    if (student) {
+      // Remove old avatar file if it exists
+      if (student.avatarUrl) {
+        const oldPath = path.join(__dirname, '../../', student.avatarUrl);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+      await student.update({ avatarUrl });
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile photo updated',
+      data: { avatarUrl: `${SERVER_URL}${avatarUrl}` },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.photoUpload = photoUpload;
 
 // Secure chatbot proxy: JWT identifies the student, so they can only ever ask
 // about their own data. The chatbot is never exposed to the client directly.

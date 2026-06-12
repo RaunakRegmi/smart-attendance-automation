@@ -3,9 +3,10 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { StudentService } from '../../core/services/student.service';
 import { BatchService } from '../../core/services/batch.service';
 import { SectionService } from '../../core/services/section.service';
+import { FacultyService } from '../../core/services/faculty.service';
 import { SheetsService } from '../../core/services/sheets.service';
 import { ToastService } from '../../core/services/toast.service';
-import { Student, Batch, Section } from '../../core/models/api.models';
+import { Student, Batch, Section, Faculty } from '../../core/models/api.models';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 
@@ -19,6 +20,7 @@ export class StudentsComponent implements OnInit {
   private readonly studentService = inject(StudentService);
   private readonly batchService = inject(BatchService);
   private readonly sectionService = inject(SectionService);
+  private readonly facultyService = inject(FacultyService);
   private readonly sheetsService = inject(SheetsService);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
@@ -30,6 +32,7 @@ export class StudentsComponent implements OnInit {
   readonly batches = signal<Batch[]>([]);
   readonly sections = signal<Section[]>([]);
   readonly modalSections = signal<Section[]>([]);
+  readonly faculties = signal<Faculty[]>([]);
   readonly search = signal('');
   readonly filterBatchId = signal('');
   readonly filterSectionId = signal('');
@@ -51,11 +54,13 @@ export class StudentsComponent implements OnInit {
     email: ['', [Validators.required, Validators.email]],
     batchId: [''],
     sectionId: [''],
-    faculty: [''],
+    facultyId: [''],
+    gender: [''],
   });
 
   ngOnInit(): void {
     this.batchService.getAll().subscribe((r) => this.batches.set(r.data ?? []));
+    this.facultyService.getAllForDropdown().subscribe((r) => this.faculties.set(r.data ?? []));
     this.load();
   }
 
@@ -114,7 +119,8 @@ export class StudentsComponent implements OnInit {
       email: student.email,
       batchId: student.batchId ?? '',
       sectionId: student.sectionId ?? '',
-      faculty: student.faculty ?? '',
+      facultyId: student.facultyId ?? '',
+      gender: student.gender ?? '',
     });
     if (student.batchId) {
       this.sectionService.getAll(student.batchId).subscribe((r) => this.modalSections.set(r.data ?? []));

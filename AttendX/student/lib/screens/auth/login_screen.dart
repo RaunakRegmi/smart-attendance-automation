@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../theme/app_theme.dart';
 import '../dashboard/main_navigation.dart';
 import '../../services/auth_service.dart';
@@ -23,6 +24,22 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _errorMessage;
 
   @override
+  void initState() {
+    super.initState();
+    _loadSavedEmail();
+  }
+
+  Future<void> _loadSavedEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString('remembered_email');
+    if (saved != null && saved.isNotEmpty) {
+      _emailController.text = saved;
+      _rememberDevice = true;
+      if (mounted) setState(() {});
+    }
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -32,6 +49,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
     FocusScope.of(context).unfocus();
     setState(() {
       _isLoading = true;
@@ -44,6 +63,14 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text,
         rememberMe: _rememberDevice,
       );
+
+      final prefs = await SharedPreferences.getInstance();
+      if (_rememberDevice) {
+        await prefs.setString('remembered_email', _emailController.text.trim());
+      } else {
+        await prefs.remove('remembered_email');
+      }
+
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const MainNavigation()),
@@ -54,8 +81,12 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         if (msg.contains('Invalid credentials')) {
           _errorMessage = 'Invalid email or password';
-        } else if (msg.contains('Failed host lookup') || msg.contains('Connection refused') || msg.contains('Network is unreachable')) {
+        } else if (msg.contains('Cannot reach server') || msg.contains('Failed host lookup') || msg.contains('Connection refused') || msg.contains('Network is unreachable')) {
           _errorMessage = 'Cannot reach server. Check your connection.';
+        } else if (msg.contains('Server unreachable') || msg.contains('Connection timed out')) {
+          _errorMessage = 'Server unreachable. Please try again.';
+        } else if (msg.contains('Something went wrong')) {
+          _errorMessage = 'Something went wrong. Please try again.';
         } else {
           _errorMessage = 'Error: $msg';
         }
@@ -131,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  TextField(
+                  TextFormField(
                     controller: _emailController,
                     focusNode: _emailFocusNode,
                     keyboardType: TextInputType.emailAddress,
@@ -139,7 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     autocorrect: false,
                     enableSuggestions: true,
                     onTap: () => _emailFocusNode.requestFocus(),
-                    onSubmitted: (_) =>
+                    onFieldSubmitted: (_) =>
                         FocusScope.of(context).requestFocus(_passwordFocusNode),
                     style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
                     decoration: InputDecoration(
@@ -162,6 +193,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 20),
 
@@ -194,13 +231,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  TextField(
+                  TextFormField(
                     controller: _passwordController,
                     focusNode: _passwordFocusNode,
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.done,
                     onTap: () => _passwordFocusNode.requestFocus(),
-                    onSubmitted: (_) => _handleLogin(),
+                    onFieldSubmitted: (_) => _handleLogin(),
                     style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
                     decoration: InputDecoration(
                       hintText: '••••••••',
@@ -232,6 +269,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your password';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
 

@@ -29,6 +29,14 @@ class AuthService {
     await ApiClient.put('/api/auth/profile', body: data);
   }
 
+  static Future<Map<String, dynamic>> updateStudentProfile(Map<String, dynamic> data) async {
+    return ApiClient.put('/api/student/profile', body: data);
+  }
+
+  static Future<Map<String, dynamic>> uploadProfilePhoto(String filePath) async {
+    return ApiClient.uploadFile('/api/student/profile/photo', filePath, fieldName: 'photo');
+  }
+
   static Future<void> changePassword(String currentPassword, String newPassword, String confirmPassword) async {
     await ApiClient.put('/api/auth/password', body: {
       'currentPassword': currentPassword,
@@ -38,6 +46,11 @@ class AuthService {
   }
 
   static Future<void> logout() async {
+    try {
+      await ApiClient.post('/api/auth/logout', auth: true);
+    } catch (_) {
+      // Best-effort: even if the server is unreachable, still clear local state
+    }
     await ApiClient.clearToken();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_userKey);

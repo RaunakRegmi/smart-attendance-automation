@@ -5,6 +5,9 @@ import '../../theme/app_theme.dart';
 import '../../services/dashboard_provider.dart';
 import '../../services/notification_provider.dart';
 import '../../services/notification_scheduler.dart';
+import '../../services/api_client.dart';
+import '../report/report_screen.dart';
+import '../../widgets/skeletons.dart';
 
 
 // ═════════════════════════════════════════════════════════════
@@ -17,13 +20,24 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  String? _avatarUrl;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DashboardProvider>().loadDashboard();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await context.read<DashboardProvider>().loadDashboard();
       context.read<NotificationProvider>().loadNotifications();
+      _loadAvatar();
     });
+  }
+
+  Future<void> _loadAvatar() async {
+    final data = context.read<DashboardProvider>().data;
+    if (data?.avatarUrl != null) {
+      final full = await ApiClient.getFullImageUrl(data!.avatarUrl);
+      if (mounted && full.isNotEmpty) setState(() => _avatarUrl = full);
+    }
   }
 
   void _openNotifications(BuildContext context) {
@@ -99,6 +113,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     NotificationScheduler.testNow();
   }
 
+  String _getInitials(String fullName) {
+    if (fullName.isEmpty) return '?';
+    return fullName.split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join().toUpperCase();
+  }
+
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'GOOD MORNING';
@@ -115,7 +134,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (dashboard.isLoading && dashboard.data == null) {
       return Scaffold(
         backgroundColor: AppTheme.background,
-        body: const Center(child: CircularProgressIndicator()),
+        body: SafeArea(child: dashboardSkeleton()),
       );
     }
 
@@ -158,6 +177,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onRefresh: () async {
             await context.read<DashboardProvider>().loadDashboard();
             await context.read<NotificationProvider>().loadNotifications();
+            await _loadAvatar();
           },
           child: CustomScrollView(slivers: [
 
@@ -166,9 +186,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 Row(children: [
-                  Container(width: 36, height: 36,
-                    decoration: BoxDecoration(color: AppTheme.primary, borderRadius: BorderRadius.circular(8)),
-                    child: const Icon(Icons.school, color: Colors.white, size: 20)),
+                  _avatarUrl != null
+                      ? CircleAvatar(radius: 18, backgroundImage: NetworkImage(_avatarUrl!))
+                      : Container(width: 36, height: 36,
+                          decoration: BoxDecoration(color: AppTheme.primary, borderRadius: BorderRadius.circular(8)),
+                          child: Text(_getInitials(data.name),
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white))),
                   const SizedBox(width: 8),
                   const Text('AttendX', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary)),
                 ]),
@@ -281,65 +304,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 16),
 
                 // Weekly Overview
-                Container(padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.border)),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        const Text('Weekly Attendance', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
-                        Text('Daily attendance % (Sun – Fri)',
-                            style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
-                      ]),
-                      Builder(builder: (_) {
-                        final avg = data.weekHeights.isEmpty
-                            ? 0.0
-                            : data.weekHeights.reduce((a, b) => a + b) / data.weekHeights.length;
-                        final color = avg >= 80 ? AppTheme.success : avg >= 60 ? AppTheme.warning : AppTheme.error;
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                          child: Text('Avg ${avg.toStringAsFixed(0)}%',
-                              style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
-                        );
-                      }),
-                    ]),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      height: 120,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: List.generate(data.weekDays.length, (i) {
-                          // Heights are 0-100 (attendance %); scale to 6-80dp.
-                          final pct = data.weekHeights.length > i ? data.weekHeights[i] : 0.0;
-                          final h = pct == 0 ? 6.0 : 6.0 + (pct * 0.74);
-                          final tier = pct >= 80 ? AppTheme.primary : pct >= 60 ? AppTheme.warning : pct > 0 ? AppTheme.error : AppTheme.border;
-                          return Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              if (pct > 0)
-                                Text('${pct.toStringAsFixed(0)}', style: const TextStyle(fontSize: 9, color: AppTheme.textSecondary)),
-                              const SizedBox(height: 4),
-                              Container(
-                                width: 28,
-                                height: h,
-                                decoration: BoxDecoration(
-                                  color: i == now.weekday - 1 && pct > 0 ? AppTheme.primary : tier,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(data.weekDays[i],
-                                  style: TextStyle(
-                                      fontSize: 10,
-                                      color: i == now.weekday - 1 ? AppTheme.primary : AppTheme.textSecondary,
-                                      fontWeight: i == now.weekday - 1 ? FontWeight.w700 : FontWeight.w400)),
-                            ],
+                GestureDetector(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ReportScreen()),
+                  ),
+                  child: Container(padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.border)),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          const Text('Weekly Attendance', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                          Text('Daily attendance % (Sun – Fri)',
+                              style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                        ]),
+                        Builder(builder: (_) {
+                          final nonZero = data.weekHeights.where((h) => h > 0).toList();
+                          final avg = nonZero.isEmpty
+                              ? 0.0
+                              : nonZero.reduce((a, b) => a + b) / nonZero.length;
+                          final color = avg >= 80 ? AppTheme.success : avg >= 60 ? AppTheme.warning : AppTheme.error;
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                            child: Text('Avg ${avg.toStringAsFixed(0)}%',
+                                style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
                           );
                         }),
+                      ]),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 120,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: List.generate(data.weekDays.length, (i) {
+                            // Heights are 0-100 (attendance %); scale to 6-80dp.
+                            final pct = data.weekHeights.length > i ? data.weekHeights[i] : 0.0;
+                            final h = pct == 0 ? 6.0 : 6.0 + (pct * 0.74);
+                            final tier = pct >= 80 ? AppTheme.primary : pct >= 60 ? AppTheme.warning : pct > 0 ? AppTheme.error : AppTheme.border;
+                            // weekday: Mon=1..Sun=7 → chart idx: Sun=0..Fri=5
+                            final int todayIdx = now.weekday % 7;
+                            return Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                if (pct > 0)
+                                  Text('${pct.toStringAsFixed(0)}', style: const TextStyle(fontSize: 9, color: AppTheme.textSecondary)),
+                                const SizedBox(height: 4),
+                                Container(
+                                  width: 28,
+                                  height: h,
+                                  decoration: BoxDecoration(
+                                    color: i == todayIdx && pct > 0 ? AppTheme.primary : tier,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(data.weekDays[i],
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        color: i == todayIdx ? AppTheme.primary : AppTheme.textSecondary,
+                                        fontWeight: i == todayIdx ? FontWeight.w700 : FontWeight.w400)),
+                              ],
+                            );
+                          }),
+                        ),
                       ),
-                    ),
-                  ])),
+                    ])),
+                ),
                 const SizedBox(height: 20),
 
                 const SizedBox(height: 20),

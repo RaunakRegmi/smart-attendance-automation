@@ -20,7 +20,7 @@ const Student = sequelize.define('Student', {
     },
   },
   gender: {
-    type: DataTypes.STRING,
+    type: DataTypes.ENUM('Male', 'Female', 'Others'),
     allowNull: true,
   },
   bloodGroup: {
@@ -43,15 +43,23 @@ const Student = sequelize.define('Student', {
     type: DataTypes.DATEONLY,
     allowNull: true,
   },
-  faculty: {
-    type: DataTypes.STRING,
+  facultyId: {
+    type: DataTypes.UUID,
     allowNull: true,
+    references: {
+      model: 'faculties',
+      key: 'id',
+    },
   },
   guardianName: {
     type: DataTypes.STRING,
     allowNull: true,
   },
   guardianContact: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  avatarUrl: {
     type: DataTypes.STRING,
     allowNull: true,
   },

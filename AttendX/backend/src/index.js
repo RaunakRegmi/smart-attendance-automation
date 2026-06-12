@@ -19,6 +19,7 @@ const auditRoutes = require('./routes/auditRoutes');
 const syncRoutes = require('./routes/syncRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
 const lecturerRoutes = require('./routes/lecturerRoutes');
+const facultyRoutes = require('./routes/facultyRoutes');
 const reportsRoutes = require('./routes/reportsRoutes');
 const studentPortalRoutes = require('./routes/studentPortalRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
@@ -35,6 +36,7 @@ const Section = require('./models/Section');
 const Routine = require('./models/Routine');
 const Subject = require('./models/Subject');
 const Lecturer = require('./models/Lecturer');
+const Faculty = require('./models/Faculty');
 const Sheets = require('./models/Sheets');
 const AuditLog = require('./models/AuditLog');
 const Notification = require('./models/Notification');
@@ -76,10 +78,15 @@ const uploadDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
+const avatarsDir = path.join(uploadDir, 'avatars');
+if (!fs.existsSync(avatarsDir)) {
+  fs.mkdirSync(avatarsDir, { recursive: true });
+}
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
   swaggerOptions: {
@@ -117,6 +124,10 @@ Student.belongsTo(User, { foreignKey: 'userId' });
 Section.hasMany(Routine, { foreignKey: 'sectionId' });
 Routine.belongsTo(Section, { foreignKey: 'sectionId' });
 
+// Faculty associations
+Faculty.hasMany(Student, { foreignKey: 'facultyId' });
+Student.belongsTo(Faculty, { foreignKey: 'facultyId' });
+
 // Subject-Lecturer associations
 Lecturer.hasMany(Subject, { foreignKey: 'lecturerId' });
 Subject.belongsTo(Lecturer, { foreignKey: 'lecturerId' });
@@ -139,6 +150,7 @@ app.use('/api/sync', syncRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/lecturers', lecturerRoutes);
+app.use('/api/faculties', facultyRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/student', studentPortalRoutes);
 app.use('/api', notificationRoutes);

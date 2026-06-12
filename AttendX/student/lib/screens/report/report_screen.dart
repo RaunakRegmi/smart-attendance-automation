@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
 import '../../services/attendance_provider.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/skeletons.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -79,7 +80,7 @@ class _ReportScreenState extends State<ReportScreen> {
       body: RefreshIndicator(
         onRefresh: () => provider.loadSummary(),
         child: provider.isLoading && summary == null
-            ? const Center(child: CircularProgressIndicator())
+            ? reportSkeleton()
             : SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),

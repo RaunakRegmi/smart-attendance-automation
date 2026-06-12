@@ -367,4 +367,29 @@ router.put('/password', validateRequest(passwordUpdateSchema), authController.up
  */
 router.get('/users', authorizeRoles('ADMIN'), authController.getAllUsers);
 
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout and invalidate current token
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       403:
+ *         description: Invalid or expired token
+ */
+router.post('/logout', authController.logout);
+
 module.exports = router;

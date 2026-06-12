@@ -2,24 +2,48 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
 import '../../services/schedule_provider.dart';
+import '../../widgets/skeletons.dart';
 
 class RoutineScreen extends StatefulWidget {
   const RoutineScreen({super.key});
 
   @override
-  State<RoutineScreen> createState() => _RoutineScreenState();
+  State<RoutineScreen> createState() => RoutineScreenState();
 }
 
-class _RoutineScreenState extends State<RoutineScreen> {
-  int _selectedDayIndex = DateTime.now().weekday % 7;
+class RoutineScreenState extends State<RoutineScreen> {
+  int _selectedDayIndex = DateTime.now().weekday == DateTime.saturday ? 0 : DateTime.now().weekday % 7;
   final List<String> _days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI'];
+  final List<GlobalKey> _dayKeys = List.generate(6, (_) => GlobalKey());
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ScheduleProvider>().loadWeeklySchedule();
+      _scrollToSelectedDay();
     });
+  }
+
+  void resetToToday() {
+    setState(() {
+      _selectedDayIndex = DateTime.now().weekday == DateTime.saturday ? 0 : DateTime.now().weekday % 7;
+    });
+    context.read<ScheduleProvider>().loadWeeklySchedule();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToSelectedDay());
+  }
+
+  void _scrollToSelectedDay() {
+    if (_selectedDayIndex >= _dayKeys.length) return;
+    final ctx = _dayKeys[_selectedDayIndex].currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        alignment: 0.5,
+      );
+    }
   }
 
   @override
@@ -50,6 +74,13 @@ class _RoutineScreenState extends State<RoutineScreen> {
         return aTime.compareTo(bTime);
       });
 
+    if (scheduleProvider.isLoading && weeklySchedule.isEmpty) {
+      return Scaffold(
+        backgroundColor: AppTheme.background,
+        body: SafeArea(child: routineSkeleton()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
@@ -77,7 +108,11 @@ class _RoutineScreenState extends State<RoutineScreen> {
                         final isSelected = _selectedDayIndex == i;
                         final isToday = i == DateTime.now().weekday % 7;
                         return GestureDetector(
-                          onTap: () => setState(() => _selectedDayIndex = i),
+                          onTap: () {
+                            setState(() => _selectedDayIndex = i);
+                            WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToSelectedDay());
+                          },
+                          key: _dayKeys[i],
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             margin: const EdgeInsets.only(right: 10),
@@ -128,26 +163,37 @@ class _RoutineScreenState extends State<RoutineScreen> {
 
             // Class list
             Expanded(
-              child: todayClasses.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  resetToToday();
+                },
+                displacement: 40,
+                child: todayClasses.isEmpty
+                    ? ListView(
                         children: [
-                          Icon(Icons.event_available_outlined, size: 64, color: Colors.grey.shade300),
-                          const SizedBox(height: 12),
-                          Text('No classes on ${days[_selectedDayIndex]}',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade400)),
-                          const SizedBox(height: 4),
-                          Text('Enjoy your free day!', style: TextStyle(fontSize: 13, color: Colors.grey.shade400)),
+                          SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+                          Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.event_available_outlined, size: 64, color: Colors.grey.shade300),
+                                const SizedBox(height: 12),
+                                Text('No classes on ${days[_selectedDayIndex]}',
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade400)),
+                                const SizedBox(height: 4),
+                                Text('Enjoy your free day!', style: TextStyle(fontSize: 13, color: Colors.grey.shade400)),
+                              ],
+                            ),
+                          ),
                         ],
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        itemCount: todayClasses.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, i) => _ClassCard(todayClasses[i]),
                       ),
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      itemCount: todayClasses.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, i) => _ClassCard(todayClasses[i]),
-                    ),
+              ),
             ),
           ],
         ),

@@ -213,4 +213,76 @@ router.get('/attendance/logs', studentPortalController.getAttendanceLogs);
  */
 router.post('/chat', studentPortalController.chat);
 
+/**
+ * @swagger
+ * /api/student/profile:
+ *   get:
+ *     summary: Get student full profile details
+ *     tags: [Student Portal]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile details
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/profile', studentPortalController.getProfile);
+
+/**
+ * @swagger
+ * /api/student/profile:
+ *   put:
+ *     summary: Update editable student profile fields
+ *     tags: [Student Portal]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               gender: { type: string }
+ *               bloodGroup: { type: string }
+ *               regNum: { type: string }
+ *               admissionDate: { type: string }
+ *               faculty: { type: string }
+ *               guardianName: { type: string }
+ *               guardianContact: { type: string }
+ *     responses:
+ *       200:
+ *         description: Profile updated
+ *       401:
+ *         description: Unauthorized
+ */
+router.put('/profile', studentPortalController.updateProfile);
+
+/**
+ * @swagger
+ * /api/student/profile/photo:
+ *   post:
+ *     summary: Upload student profile photo
+ *     tags: [Student Portal]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               photo:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Photo uploaded
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/profile/photo', studentPortalController.photoUpload.single('photo'), studentPortalController.uploadPhoto);
+
 module.exports = router;

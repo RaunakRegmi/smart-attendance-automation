@@ -323,6 +323,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import '../../theme/app_theme.dart';
 import '../../services/dashboard_provider.dart';
 import '../../services/auth_service.dart';
@@ -330,6 +332,9 @@ import '../../services/api_client.dart';
 import '../../services/notification_scheduler.dart';
 import '../auth/login_screen.dart';
 import '../report/report_screen.dart';
+import 'personal_details_screen.dart';
+import '../../widgets/skeletons.dart';
+import 'edit_personal_details_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -342,6 +347,112 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _notifAttendance  = true;
   bool _notifClass       = true;
   int _leadMinutes       = 15;
+  String? _avatarUrl;
+  String? _cachedProviderAvatarUrl;
+
+  Future<void> _loadAvatar({String? fromUrl}) async {
+    final avatarUrl = fromUrl ?? context.read<DashboardProvider>().data?.avatarUrl;
+    if (avatarUrl == null || avatarUrl.isEmpty) return;
+    _cachedProviderAvatarUrl = avatarUrl;
+    final full = await ApiClient.getFullImageUrl(avatarUrl);
+    if (mounted && full.isNotEmpty) setState(() => _avatarUrl = full);
+  }
+
+  Future<void> _pickPhoto(ImageSource source) async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: source, maxWidth: 1024, maxHeight: 1024);
+    if (picked == null) return;
+
+    CroppedFile? cropped;
+    try {
+      cropped = await ImageCropper().cropImage(
+        sourcePath: picked.path,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Avatar',
+            toolbarColor: AppTheme.primary,
+            toolbarWidgetColor: Colors.white,
+            hideBottomControls: false,
+          ),
+          IOSUiSettings(title: 'Crop Avatar', aspectRatioLockEnabled: true),
+          WebUiSettings(context: context, presentStyle: WebPresentStyle.dialog),
+        ],
+      );
+    } catch (_) {
+      cropped = null;
+    }
+
+    final filePath = cropped?.path ?? picked.path;
+    if (!mounted) return;
+
+    // Show uploading indicator
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Uploading photo...'), duration: Duration(seconds: 1)),
+    );
+
+    try {
+      final res = await AuthService.uploadProfilePhoto(filePath);
+      final newUrl = res['data']?['avatarUrl'] as String?;
+      if (newUrl != null && mounted) {
+        final full = await ApiClient.getFullImageUrl(newUrl);
+        if (mounted) {
+          setState(() {
+            _avatarUrl = full;
+            _cachedProviderAvatarUrl = full;
+          });
+          context.read<DashboardProvider>().loadDashboard();
+        }
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Photo updated successfully'), backgroundColor: AppTheme.success),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload failed: $e'), backgroundColor: AppTheme.error),
+        );
+      }
+    }
+  }
+
+  void _showPhotoOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+        decoration: const BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(color: AppTheme.border, borderRadius: BorderRadius.circular(2))),
+          const Text('Update Profile Photo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+          const SizedBox(height: 20),
+          ListTile(
+            leading: Container(width: 44, height: 44, decoration: BoxDecoration(color: AppTheme.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.camera_alt, color: AppTheme.primary)),
+            title: const Text('Take Photo', style: TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: const Text('Use camera to capture'),
+            onTap: () { Navigator.pop(context); _pickPhoto(ImageSource.camera); },
+          ),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: Container(width: 44, height: 44, decoration: BoxDecoration(color: AppTheme.accent.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.photo_library, color: AppTheme.accent)),
+            title: const Text('Choose from Gallery', style: TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: const Text('Select an existing photo'),
+            onTap: () { Navigator.pop(context); _pickPhoto(ImageSource.gallery); },
+          ),
+          const SizedBox(height: 8),
+        ]),
+      ),
+    );
+  }
 
   // ── Open settings bottom sheet ────────────────────────────────
   void _openSettings() {
@@ -538,12 +649,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  String _p(String key) => (_profile?[key] as String? ?? '').trim();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DashboardProvider>().loadDashboard();
       _loadNotificationState();
+      _loadAvatar();
+      _loadProfile();
     });
   }
 
@@ -560,6 +675,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   int _scheduledCount = 0;
+  Map<String, dynamic>? _profile;
 
   Future<void> _toggleClassReminders(bool value) async {
     await NotificationScheduler.setEnabled(value);
@@ -580,6 +696,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  String _getInitials(String fullName) {
+    if (fullName.isEmpty) return '?';
+    return fullName.split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join().toUpperCase();
+  }
+
   Future<void> _handleLogout() async {
     await AuthService.logout();
     if (!mounted) return;
@@ -589,19 +710,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Future<void> _loadProfile() async {
+    try {
+      final res = await ApiClient.get('/api/student/profile');
+      if (mounted) setState(() => _profile = res['data'] as Map<String, dynamic>?);
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     final dashboard = context.watch<DashboardProvider>();
     final data = dashboard.data;
 
+    final providerAvatarUrl = data?.avatarUrl;
+    if (providerAvatarUrl != _cachedProviderAvatarUrl) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadAvatar(fromUrl: providerAvatarUrl);
+      });
+    }
+
     final name = data?.name ?? 'Student';
     final email = data?.email ?? 'email@university.edu';
     final studentId = data?.studentId ?? 'STU-000';
     final department = data?.department ?? 'Department';
-    final semester = data?.semester ?? 'Semester';
+    final semester = data?.semester ?? 'Semester 2';
     final overallPct = data?.overallPercentage ?? 0;
     final totalSubjects = data?.totalSubjects ?? 0;
     final atRiskCount = data?.atRiskCount ?? 0;
+
+    if (dashboard.isLoading && data == null) {
+      return Scaffold(
+        backgroundColor: AppTheme.background,
+        body: SafeArea(child: profileSkeleton()),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -628,17 +770,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ]),
                 const SizedBox(height: 20),
-                Stack(alignment: Alignment.bottomRight, children: [
-                  Container(width: 90, height: 90,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withOpacity(0.4), width: 3)),
-                    child: const Icon(Icons.person, size: 50, color: Colors.white)),
-                  Container(width: 28, height: 28,
-                    decoration: BoxDecoration(color: AppTheme.accent, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
-                    child: const Icon(Icons.edit, size: 13, color: Colors.white)),
-                ]),
+                GestureDetector(
+                  onTap: _showPhotoOptions,
+                  child: Stack(alignment: Alignment.bottomRight, children: [
+                    CircleAvatar(
+                      radius: 45,
+                      backgroundColor: Colors.white.withOpacity(0.2),
+                      backgroundImage: _avatarUrl != null ? NetworkImage(_avatarUrl!) : null,
+                      child: _avatarUrl == null
+                          ? Text(_getInitials(name),
+                              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white))
+                          : null,
+                    ),
+                    Container(width: 28, height: 28,
+                      decoration: BoxDecoration(color: AppTheme.accent, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+                      child: const Icon(Icons.edit, size: 13, color: Colors.white)),
+                  ]),
+                ),
                 const SizedBox(height: 14),
                 Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
                 const SizedBox(height: 4),
@@ -672,22 +820,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ]),
                 ]),
               )),
-            const SizedBox(height: 16),
 
-            // ── Student Info ─────────────────────────────────────
+
+            // ── Personal Details Section ────────────────────────
             Padding(padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
                 decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.border)),
                 child: Column(children: [
-                  _InfoTile(Icons.account_circle_outlined, 'Full Name',   name),
+                  _ActionTile(Icons.person_outline, 'View Personal Details',
+                      'Complete profile information',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const PersonalDetailsScreen()),
+                        );
+                      }),
                   _Divider(),
-                  _InfoTile(Icons.email_outlined,           'Email',       email),
-                  _Divider(),
-                  _InfoTile(Icons.badge_outlined,           'Student ID',  studentId),
-                  _Divider(),
-                  _InfoTile(Icons.business_outlined,        'Department',  department),
-                  _Divider(),
-                  _InfoTile(Icons.layers_outlined,          'Semester',    semester),
+                  _ActionTile(Icons.edit_outlined, 'Edit Personal Details',
+                      'Update gender, blood group, faculty & more',
+                      onTap: () async {
+                        final changed = await Navigator.of(context).push<bool>(
+                          MaterialPageRoute(builder: (_) => const EditPersonalDetailsScreen()),
+                        );
+                        if (changed == true) {
+                          context.read<DashboardProvider>().loadDashboard();
+                        }
+                      }),
                 ]),
               )),
             const SizedBox(height: 16),
@@ -819,14 +976,27 @@ class _SettingsSheet extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Remind me', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
-                  DropdownButton<int>(
-                    value: leadMinutes,
-                    underline: const SizedBox(),
-                    items: [5, 10, 15, 20, 30].map((m) => DropdownMenuItem(
-                      value: m,
-                      child: Text('$m min before', style: const TextStyle(fontSize: 13)),
-                    )).toList(),
-                    onChanged: (v) { if (v != null) onLeadMinutesChanged(v); },
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: DropdownButton<int>(
+                      value: leadMinutes,
+                      underline: const SizedBox(),
+                      isExpanded: false,
+                      dropdownColor: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(12),
+                      items: [5, 10, 15, 20, 30].map((m) => DropdownMenuItem(
+                        value: m,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Text('$m min before', style: const TextStyle(fontSize: 14)),
+                        ),
+                      )).toList(),
+                      onChanged: (v) { if (v != null) onLeadMinutesChanged(v); },
+                    ),
                   ),
                 ],
               ),
@@ -1026,22 +1196,7 @@ class _StatBox extends StatelessWidget {
     ])));
 }
 
-class _InfoTile extends StatelessWidget {
-  final IconData icon; final String label, value;
-  const _InfoTile(this.icon, this.label, this.value);
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-    child: Row(children: [
-      Icon(icon, size: 20, color: AppTheme.primary),
-      const SizedBox(width: 14),
-      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade400, fontWeight: FontWeight.w500)),
-        const SizedBox(height: 2),
-        Text(value, style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary, fontWeight: FontWeight.w500)),
-      ]),
-    ]));
-}
+
 
 class _ActionTile extends StatelessWidget {
   final IconData icon; final String title, subtitle; final VoidCallback onTap;

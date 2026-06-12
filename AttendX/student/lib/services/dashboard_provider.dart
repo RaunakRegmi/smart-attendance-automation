@@ -18,6 +18,7 @@ class DashboardData {
   final int unreadNotifications;
   final List<String> weekDays;
   final List<double> weekHeights;
+  final String? avatarUrl;
 
   DashboardData({
     required this.name,
@@ -36,6 +37,7 @@ class DashboardData {
     required this.unreadNotifications,
     required this.weekDays,
     required this.weekHeights,
+    this.avatarUrl,
   });
 
   factory DashboardData.fromJson(Map<String, dynamic> json) {
@@ -62,13 +64,14 @@ class DashboardData {
       unreadNotifications: notifs['unreadCount'] as int? ?? 0,
       weekDays: (overview['days'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
       weekHeights: (overview['heights'] as List<dynamic>?)?.map((e) => (e as num).toDouble()).toList() ?? [],
+      avatarUrl: student['avatarUrl'] as String?,
     );
   }
 }
 
 class DashboardProvider extends ChangeNotifier {
   DashboardData? _data;
-  bool _isLoading = false;
+  bool _isLoading = true;
   String? _error;
 
   DashboardData? get data => _data;
