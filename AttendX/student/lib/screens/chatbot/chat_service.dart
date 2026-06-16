@@ -51,7 +51,7 @@ class ChatService {
         'What is my attendance?',
         'Am I eligible for exams?',
         'Which subjects am I at risk in?',
-        'How am I doing this semester?',
+        'How am I doing overall?',
         'What is my rank in my batch?',
         'Give me tips to improve my attendance',
       ];

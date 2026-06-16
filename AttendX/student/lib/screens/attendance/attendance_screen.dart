@@ -4,7 +4,6 @@ import '../../theme/app_theme.dart';
 import '../../services/attendance_provider.dart';
 import '../../widgets/skeletons.dart';
 
-
 class AttendanceScreen extends StatefulWidget {
   const AttendanceScreen({super.key});
 
@@ -31,6 +30,137 @@ class _AttendanceScreenState extends State<AttendanceScreen> with SingleTickerPr
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Color _attColor(double pct) {
+    if (pct >= 80) return AppTheme.success;
+    if (pct >= 60) return AppTheme.warning;
+    return AppTheme.error;
+  }
+
+  void _showOverallDetail(double pct, int attended, int total, int absents, int lates, List<SubjectAttData> subjects) {
+    final color = _attColor(pct);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _AttendanceDetailSheet(
+        title: 'Overall Attendance',
+        color: color,
+        pct: pct,
+        children: [
+          _detailStatRow('Classes Attended', '$attended/$total', AppTheme.success, Icons.check_circle),
+          _detailStatRow('Absences', '$absents', AppTheme.error, Icons.cancel),
+          _detailStatRow('Late Arrivals', '$lates', AppTheme.warning, Icons.access_time),
+          const SizedBox(height: 12),
+          const Text('Subjects', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppTheme.textPrimary)),
+          const SizedBox(height: 8),
+          ...subjects.map((s) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Container(width: 10, height: 10, decoration: BoxDecoration(color: _attColor(s.percentage), shape: BoxShape.circle)),
+                const SizedBox(width: 8),
+                Expanded(child: Text(s.subject, style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary))),
+                Text('${s.percentage.toStringAsFixed(1)}%', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _attColor(s.percentage))),
+              ],
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+
+  void _showAtRiskDetail(List<SubjectAttData> subjects) {
+    final atRisk = subjects.where((s) => s.percentage < 80).toList();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _AttendanceDetailSheet(
+        title: 'Subjects at Risk',
+        color: AppTheme.error,
+        pct: null,
+        children: atRisk.isEmpty
+            ? [const Center(child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text('No subjects at risk!', style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.w600, fontSize: 16)),
+              ))]
+            : atRisk.map((s) => Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(s.subject, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                              Text(s.code, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                            ],
+                          ),
+                        ),
+                        Text('${s.percentage.toStringAsFixed(1)}%',
+                            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: _attColor(s.percentage))),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: (s.percentage / 100).clamp(0.0, 1.0),
+                        minHeight: 6,
+                        backgroundColor: AppTheme.border,
+                        color: _attColor(s.percentage),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 12,
+                      children: [
+                        _miniStat('Attended', s.attended),
+                        _miniStat('Absent', s.absents),
+                        _miniStat('Total', s.total),
+                      ],
+                    ),
+                  ],
+                ),
+              )).toList(),
+      ),
+    );
+  }
+
+  Widget _detailStatRow(String label, String value, Color color, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 10),
+          Expanded(child: Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary))),
+          Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
+        ],
+      ),
+    );
+  }
+
+  Widget _miniStat(String label, int value) {
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(text: '$value ', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppTheme.textPrimary)),
+          TextSpan(text: label, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+        ],
+      ),
+    );
   }
 
   @override
@@ -74,11 +204,28 @@ class _AttendanceScreenState extends State<AttendanceScreen> with SingleTickerPr
 
                   Row(
                     children: [
-                      _SummaryCard('Overall', '${overall.toStringAsFixed(1)}%', AppTheme.primary, Icons.pie_chart_outline),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: summary == null ? null : () => _showOverallDetail(
+                            overall, summary.attended, summary.total, summary.absents, summary.lates, summary.subjects,
+                          ),
+                          child: _SummaryCard('Overall', '${overall.toStringAsFixed(1)}%', _attColor(overall), Icons.pie_chart_outline),
+                        ),
+                      ),
                       const SizedBox(width: 10),
-                      _SummaryCard('Subjects', '$subjectsCount', AppTheme.accent, Icons.book_outlined),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _tabController.animateTo(0),
+                          child: _SummaryCard('Subjects', '$subjectsCount', AppTheme.accent, Icons.book_outlined),
+                        ),
+                      ),
                       const SizedBox(width: 10),
-                      _SummaryCard('At Risk', '$atRiskCount', AppTheme.error, Icons.warning_amber_outlined),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: summary == null ? null : () => _showAtRiskDetail(summary.subjects),
+                          child: _SummaryCard('At Risk', '$atRiskCount', AppTheme.error, Icons.warning_amber_outlined),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -247,6 +394,28 @@ class _AttendanceScreenState extends State<AttendanceScreen> with SingleTickerPr
                                   onChanged: (v) => setState(() => _filterStatus = v),
                                 ),
                               ),
+                              if (_filterSubjectCode != null || _filterStatus != null) ...[
+                                const SizedBox(width: 4),
+                                SizedBox(
+                                  height: 48,
+                                  width: 48,
+                                  child: IconButton(
+                                    onPressed: () => setState(() {
+                                      _filterSubjectCode = null;
+                                      _filterStatus = null;
+                                    }),
+                                    icon: const Icon(Icons.filter_alt_off_outlined),
+                                    color: AppTheme.error,
+                                    tooltip: 'Clear filters',
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: AppTheme.error.withOpacity(0.1),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ]),
                           ),
                           Expanded(
@@ -276,6 +445,90 @@ class _AttendanceScreenState extends State<AttendanceScreen> with SingleTickerPr
   }
 }
 
+class _AttendanceDetailSheet extends StatelessWidget {
+  final String title;
+  final Color color;
+  final double? pct;
+  final List<Widget> children;
+
+  const _AttendanceDetailSheet({
+    required this.title,
+    required this.color,
+    required this.pct,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.75,
+      decoration: const BoxDecoration(
+        color: AppTheme.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          // Handle bar
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40, height: 4,
+            decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+          ),
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            child: Row(
+              children: [
+                Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                  child: Icon(Icons.info_outline, color: color, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+              ],
+            ),
+          ),
+          if (pct != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [color, color.withOpacity(0.75)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Text('${pct!.toStringAsFixed(1)}%',
+                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white)),
+                  const SizedBox(width: 12),
+                  Text(pct! >= 80 ? 'On Track' : 'Needs Improvement',
+                      style: const TextStyle(fontSize: 13, color: Colors.white70)),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          // Divider
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Divider(color: AppTheme.border, height: 1),
+          ),
+          const SizedBox(height: 12),
+          // Scrollable content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(children: children),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SummaryCard extends StatelessWidget {
   final String label, value;
   final Color color;
@@ -284,23 +537,21 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color, size: 18),
-            const SizedBox(height: 8),
-            Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: color)),
-            Text(label, style: TextStyle(fontSize: 11, color: color.withOpacity(0.8), fontWeight: FontWeight.w500)),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(height: 8),
+          Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: color)),
+          Text(label, style: TextStyle(fontSize: 11, color: color.withOpacity(0.8), fontWeight: FontWeight.w500)),
+        ],
       ),
     );
   }
@@ -310,10 +561,16 @@ class _SubjectCard extends StatelessWidget {
   final SubjectAttData subject;
   const _SubjectCard(this.subject);
 
+  Color _attColor(double pct) {
+    if (pct >= 80) return AppTheme.success;
+    if (pct >= 60) return AppTheme.warning;
+    return AppTheme.error;
+  }
+
   @override
   Widget build(BuildContext context) {
     final pct = subject.percentage;
-    final color = pct >= 80 ? AppTheme.success : AppTheme.error;
+    final color = _attColor(pct);
     final neededMore = ((80 - pct) / 20 * subject.total).ceil();
 
     return Container(

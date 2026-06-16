@@ -8,10 +8,10 @@ class RoutineScreen extends StatefulWidget {
   const RoutineScreen({super.key});
 
   @override
-  State<RoutineScreen> createState() => RoutineScreenState();
+  State<RoutineScreen> createState() => _RoutineScreenState();
 }
 
-class RoutineScreenState extends State<RoutineScreen> {
+class _RoutineScreenState extends State<RoutineScreen> {
   int _selectedDayIndex = DateTime.now().weekday == DateTime.saturday ? 0 : DateTime.now().weekday % 7;
   final List<String> _days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI'];
   final List<GlobalKey> _dayKeys = List.generate(6, (_) => GlobalKey());
@@ -23,14 +23,6 @@ class RoutineScreenState extends State<RoutineScreen> {
       context.read<ScheduleProvider>().loadWeeklySchedule();
       _scrollToSelectedDay();
     });
-  }
-
-  void resetToToday() {
-    setState(() {
-      _selectedDayIndex = DateTime.now().weekday == DateTime.saturday ? 0 : DateTime.now().weekday % 7;
-    });
-    context.read<ScheduleProvider>().loadWeeklySchedule();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToSelectedDay());
   }
 
   void _scrollToSelectedDay() {
@@ -95,7 +87,7 @@ class RoutineScreenState extends State<RoutineScreen> {
                 children: [
                   const Text('Class Routine', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
                   const SizedBox(height: 4),
-                  Text('Semester schedule overview', style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
+                  Text('Schedule overview', style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
                   const SizedBox(height: 20),
 
                   // Day selector
@@ -165,7 +157,11 @@ class RoutineScreenState extends State<RoutineScreen> {
             Expanded(
               child: RefreshIndicator(
                 onRefresh: () async {
-                  resetToToday();
+                  setState(() {
+                    _selectedDayIndex = DateTime.now().weekday == DateTime.saturday ? 0 : DateTime.now().weekday % 7;
+                  });
+                  await context.read<ScheduleProvider>().loadWeeklySchedule();
+                  _scrollToSelectedDay();
                 },
                 displacement: 40,
                 child: todayClasses.isEmpty

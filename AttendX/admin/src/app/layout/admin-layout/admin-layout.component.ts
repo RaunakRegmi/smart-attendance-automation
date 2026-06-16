@@ -32,6 +32,7 @@ export class AdminLayoutComponent {
       items: [
         { label: 'Dashboard', route: '/dashboard', icon: 'dashboard' },
         { label: 'Batches', route: '/batches', icon: 'batch' },
+
         { label: 'Section', route: '/sections', icon: 'section' },
         { label: 'Student', route: '/students', icon: 'student' },
         { label: 'Subject', route: '/subjects', icon: 'subject' },

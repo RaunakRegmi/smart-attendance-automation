@@ -93,8 +93,8 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>ID</th>
             <th>Sheet</th>
+            <th>Sheet ID</th>
             <th>Status</th>
             <th>Type</th>
             <th>Scheduled</th>
@@ -104,8 +104,8 @@
         <tbody>
           @for (job of jobs(); track job.id ?? $index) {
             <tr>
-              <td>{{ job.id }}</td>
-              <td class="mono">{{ job.sheetId }}</td>
+            <td>{{ getSheetDisplay(job.sheetId) }}</td>
+            <td class="mono">{{ job.sheetId }}</td>
               <td>{{ job.status }}</td>
               <td>{{ job.syncType }}</td>
               <td>{{ job.scheduledTime | date: 'short' }}</td>

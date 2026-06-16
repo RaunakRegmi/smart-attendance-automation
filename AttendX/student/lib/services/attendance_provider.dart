@@ -70,13 +70,55 @@ class SubjectAttData {
   }
 }
 
+class WeeklyAttendanceSummary {
+  final double percentage;
+  final int attended;
+  final int total;
+  final int absents;
+  final int lates;
+  final List<SubjectAttData> subjects;
+  final int atRisk;
+  final List<String> days;
+  final List<double> heights;
+
+  WeeklyAttendanceSummary({
+    required this.percentage,
+    required this.attended,
+    required this.total,
+    required this.absents,
+    required this.lates,
+    required this.subjects,
+    required this.atRisk,
+    required this.days,
+    required this.heights,
+  });
+
+  factory WeeklyAttendanceSummary.fromJson(Map<String, dynamic> json) {
+    final overall = json['overall'] as Map<String, dynamic>;
+    final subs = (json['subjects'] as List<dynamic>?)?.map((e) => SubjectAttData.fromJson(e as Map<String, dynamic>)).toList() ?? [];
+    return WeeklyAttendanceSummary(
+      percentage: (overall['percentage'] as num?)?.toDouble() ?? 0,
+      attended: overall['attended'] as int? ?? 0,
+      total: overall['total'] as int? ?? 0,
+      absents: overall['absents'] as int? ?? 0,
+      lates: overall['lates'] as int? ?? 0,
+      subjects: subs,
+      atRisk: json['atRisk'] as int? ?? 0,
+      days: (json['days'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+      heights: (json['heights'] as List<dynamic>?)?.map((e) => (e as num).toDouble()).toList() ?? [],
+    );
+  }
+}
+
 class AttendanceProvider extends ChangeNotifier {
   AttendanceSummary? _summary;
+  WeeklyAttendanceSummary? _weeklySummary;
   List<dynamic> _logs = [];
   bool _isLoading = false;
   String? _error;
 
   AttendanceSummary? get summary => _summary;
+  WeeklyAttendanceSummary? get weeklySummary => _weeklySummary;
   List<dynamic> get logs => _logs;
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -89,6 +131,22 @@ class AttendanceProvider extends ChangeNotifier {
     try {
       final response = await ApiClient.get('/api/student/attendance/summary');
       _summary = AttendanceSummary.fromJson(response['data'] as Map<String, dynamic>);
+    } catch (e) {
+      _error = e.toString();
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> loadWeeklySummary() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await ApiClient.get('/api/student/attendance/weekly-summary');
+      _weeklySummary = WeeklyAttendanceSummary.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
       _error = e.toString();
     }

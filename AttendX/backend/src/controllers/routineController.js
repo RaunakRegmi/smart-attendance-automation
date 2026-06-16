@@ -62,7 +62,8 @@ exports.uploadRoutine = async (req, res, next) => {
     }
 
     // Replace existing routine entries for this section
-    await Routine.destroy({ where: { sectionId: section.id } });
+    const destroyWhere = { sectionId: section.id };
+    await Routine.destroy({ where: destroyWhere });
 
     // Parse the file (handles both Excel and CSV)
     const routineRecords = await parseRoutineFile(req.file.path);

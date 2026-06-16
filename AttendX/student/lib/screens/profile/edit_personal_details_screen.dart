@@ -19,6 +19,7 @@ class _EditPersonalDetailsScreenState
   final _genderCtrl = TextEditingController();
   final _bloodGroupCtrl = TextEditingController();
   final _regNumCtrl = TextEditingController();
+  final _univIdCtrl = TextEditingController();
   final _facultyIdCtrl = TextEditingController();
   final _guardianNameCtrl = TextEditingController();
   final _guardianContactCtrl = TextEditingController();
@@ -38,6 +39,7 @@ class _EditPersonalDetailsScreenState
     _genderCtrl.dispose();
     _bloodGroupCtrl.dispose();
     _regNumCtrl.dispose();
+    _univIdCtrl.dispose();
     _facultyIdCtrl.dispose();
     _guardianNameCtrl.dispose();
     _guardianContactCtrl.dispose();
@@ -57,6 +59,7 @@ class _EditPersonalDetailsScreenState
       _genderCtrl.text = data['gender'] as String? ?? '';
       _bloodGroupCtrl.text = data['bloodGroup'] as String? ?? '';
       _regNumCtrl.text = data['regNum'] as String? ?? '';
+      _univIdCtrl.text = data['univId'] as String? ?? '';
       _facultyIdCtrl.text = data['facultyId'] as String? ?? '';
       _guardianNameCtrl.text = data['guardianName'] as String? ?? '';
       _guardianContactCtrl.text = data['guardianContact'] as String? ?? '';
@@ -73,6 +76,7 @@ class _EditPersonalDetailsScreenState
         'gender': _genderCtrl.text.trim(),
         'bloodGroup': _bloodGroupCtrl.text.trim(),
         'regNum': _regNumCtrl.text.trim(),
+        'univId': _univIdCtrl.text.trim(),
         'facultyId': _facultyIdCtrl.text.trim(),
         'guardianName': _guardianNameCtrl.text.trim(),
         'guardianContact': _guardianContactCtrl.text.trim(),
@@ -179,6 +183,29 @@ class _EditPersonalDetailsScreenState
                               }
                               if (!RegExp(r'^[a-zA-Z0-9-]+$').hasMatch(v)) {
                                 return 'Only letters, numbers and hyphens';
+                              }
+                            }
+                            return null;
+                          },
+                        ),
+                        _buildTextField(
+                          'University ID',
+                          _univIdCtrl,
+                          hint: 'e.g. 23-ABCD-1234/BCS',
+                          icon: Icons.credit_card_outlined,
+                          maxLength: 30,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[a-zA-Z0-9\-\/]'),
+                            ),
+                          ],
+                          validator: (v) {
+                            if (v != null && v.isNotEmpty) {
+                              if (v.length > 30) {
+                                return 'Max 30 characters';
+                              }
+                              if (!RegExp(r'^[a-zA-Z0-9\-\/]+$').hasMatch(v)) {
+                                return 'Only letters, numbers, hyphens and slashes';
                               }
                             }
                             return null;

@@ -9,11 +9,20 @@ class SheetsPage {
       console.log(`Linked sheet: ${res.body.sheetName || url} → ID: ${res.body.id}`);
       return res.body;
     }
-    if (res.status === 409 || (res.body && res.body.message && res.body.message.includes('already'))) {
+    if (res.body && res.body.error && res.body.error.includes('already exists')) {
       console.log(`Sheet already linked: ${url}`);
       return res.body;
     }
     throw new Error(`Failed to link sheet ${url}: ${JSON.stringify(res.body)}`);
+  }
+
+  async syncSheet(sheetId) {
+    const res = await this.apiClient.post('/api/sheets/sync', { sheetId });
+    if (res.body && res.body.message) {
+      console.log(`Sync triggered for sheet ${sheetId}: ${res.body.message}`);
+      return res.body;
+    }
+    throw new Error(`Failed to sync sheet ${sheetId}: ${JSON.stringify(res.body)}`);
   }
 
   async getAllSheets() {

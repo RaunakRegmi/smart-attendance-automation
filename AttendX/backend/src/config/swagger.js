@@ -261,7 +261,6 @@ const options = {
             department: { type: 'string', example: 'Engineering' },
             batch: { type: 'string', example: 'November 2025', nullable: true },
             section: { type: 'string', example: 'L2', nullable: true },
-            semester: { type: 'string', example: 'November 2025' },
           },
         },
         SubjectAttendanceStat: {

@@ -36,7 +36,7 @@ const Sheets = sequelize.define('Sheets', {
   metadata: {
     type: DataTypes.JSONB,
     defaultValue: {},
-  }
+  },
 });
 
 // Associate with existing models

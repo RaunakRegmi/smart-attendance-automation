@@ -73,7 +73,7 @@
 //                       children: [
 //                         _HeaderChip(Icons.badge_outlined, user.studentId),
 //                         const SizedBox(width: 12),
-//                         _HeaderChip(Icons.school_outlined, user.semester),
+
 //                       ],
 //                     ),
 //                   ],
@@ -132,7 +132,7 @@
 //                       _Divider(),
 //                       _InfoTile(Icons.business_outlined, 'Department', user.department),
 //                       _Divider(),
-//                       _InfoTile(Icons.layers_outlined, 'Semester', user.semester),
+
 //                     ],
 //                   ),
 //                 ),
@@ -477,14 +477,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _toggleClassReminders(val);
             }
           },
-          scheduledCount       : _scheduledCount,
-          onTestReminder       : () => _sendTestReminder(),
-          leadMinutes          : _leadMinutes,
-          onLeadMinutesChanged : (v) async {
+          scheduledCount        : _scheduledCount,
+          onTestReminder        : () => _sendTestReminder(),
+          leadMinutes           : _leadMinutes,
+          onLeadMinutesChanged  : (v) async {
             await NotificationScheduler.setLeadMinutes(v);
             setState(() => _leadMinutes = v);
             setSheetState(() {});
           },
+
         ),
       ),
     );
@@ -733,7 +734,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final email = data?.email ?? 'email@university.edu';
     final studentId = data?.studentId ?? 'STU-000';
     final department = data?.department ?? 'Department';
-    final semester = data?.semester ?? 'Semester 2';
     final overallPct = data?.overallPercentage ?? 0;
     final totalSubjects = data?.totalSubjects ?? 0;
     final atRiskCount = data?.atRiskCount ?? 0;
@@ -794,8 +794,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 16),
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   _HeaderChip(Icons.badge_outlined, studentId),
-                  const SizedBox(width: 12),
-                  _HeaderChip(Icons.school_outlined, semester),
                 ]),
               ]),
             ),
@@ -962,7 +960,7 @@ class _SettingsSheet extends StatelessWidget {
             _ToggleTile(
               icon: Icons.schedule_outlined, color: AppTheme.primary,
               title: 'Class Reminders',
-              subtitle: 'Remind 15 minutes before class starts',
+              subtitle: 'Reminder set before $leadMinutes min',
               value: notifClass,
               onChanged: (v) => onChanged('notifClass', v)),
             if (notifClass) _ClassReminderStatus(
@@ -971,11 +969,11 @@ class _SettingsSheet extends StatelessWidget {
             ),
             if (notifClass) _Divider(),
             if (notifClass) Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Remind me', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                  const Text('Remind me before', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(

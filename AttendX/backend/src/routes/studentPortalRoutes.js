@@ -43,7 +43,7 @@ router.use(authorizeRoles('STUDENT'));
  *                         department: { type: string }
  *                         batch: { type: string }
  *                         section: { type: string }
- *                         semester: { type: string }
+
  *                     attendance:
  *                       type: object
  *                       properties:
@@ -124,6 +124,7 @@ router.get('/dashboard', studentPortalController.getDashboard);
  *         description: Student not found
  */
 router.get('/attendance/summary', studentPortalController.getAttendanceSummary);
+router.get('/attendance/weekly-summary', studentPortalController.getWeeklyAttendanceSummary);
 
 /**
  * @swagger

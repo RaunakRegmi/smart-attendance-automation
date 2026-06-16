@@ -68,6 +68,11 @@
           <div class="form-field"><label>Gender</label>
             <select formControlName="gender"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option><option value="Others">Others</option></select>
           </div>
+          <div class="form-field"><label>University ID</label>
+            <input formControlName="univId" placeholder="e.g. 23-ABCD-1234/BCS" />
+            @if (form.controls.univId.touched && form.controls.univId.errors?.['pattern']) { <span class="error">Only letters, numbers, hyphens and slashes</span> }
+            @if (form.controls.univId.touched && form.controls.univId.errors?.['maxlength']) { <span class="error">Max 30 characters</span> }
+          </div>
         </div>
         <div class="modal__footer">
           <button type="button" class="btn btn--secondary" (click)="showModal.set(false)">Cancel</button>

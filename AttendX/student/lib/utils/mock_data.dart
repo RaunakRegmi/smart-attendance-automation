@@ -8,7 +8,6 @@ class MockData {
     email: 'julian@university.edu',
     studentId: 'STU-2024-001',
     department: 'Computer Science',
-    semester: '5th Semester',
     attendancePercentage: 85,
   );
 

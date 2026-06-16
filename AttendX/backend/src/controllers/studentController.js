@@ -70,6 +70,16 @@ exports.createStudent = async (req, res, next) => {
       userId = user.id;
     }
 
+    const univIdPattern = /^[a-zA-Z0-9\-\/]+$/;
+    if (profile.univId) {
+      if (profile.univId.length > 30) {
+        return res.status(400).json({ success: false, message: 'University ID must be at most 30 characters' });
+      }
+      if (!univIdPattern.test(profile.univId)) {
+        return res.status(400).json({ success: false, message: 'Only letters, numbers, hyphens and slashes allowed' });
+      }
+    }
+
     const student = await Student.create({
       name,
       email,
@@ -99,10 +109,19 @@ exports.updateStudent = async (req, res, next) => {
     if (!student) {
       return res.status(404).json({ success: false, message: 'Student not found' });
     }
+    const univIdPattern = /^[a-zA-Z0-9\-\/]+$/;
     const updateData = { ...req.body };
     if ('batchId' in updateData) updateData.batchId = updateData.batchId || null;
     if ('sectionId' in updateData) updateData.sectionId = updateData.sectionId || null;
     if ('facultyId' in updateData) updateData.facultyId = updateData.facultyId || null;
+    if (updateData.univId) {
+      if (updateData.univId.length > 30) {
+        return res.status(400).json({ success: false, message: 'University ID must be at most 30 characters' });
+      }
+      if (!univIdPattern.test(updateData.univId)) {
+        return res.status(400).json({ success: false, message: 'Only letters, numbers, hyphens and slashes allowed' });
+      }
+    }
     await student.update(updateData);
     const updated = await Student.findByPk(student.id, {
       include: [{ model: Batch }, { model: Section }],

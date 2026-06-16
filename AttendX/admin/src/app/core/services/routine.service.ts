@@ -39,7 +39,8 @@ export class RoutineService {
   }
 
   uploadRoutine(file: File, batchId: string, sectionId: string): Observable<{ success: boolean; message?: string; data: { recordsCreated: number; batchAbbreviation: string; sectionName: string } }> {
-    return this.api.upload('/routine/upload', file, { batchId, sectionId });
+    const params: Record<string, string> = { batchId, sectionId };
+    return this.api.upload('/routine/upload', file, params);
   }
 
   updateRoutine(id: number, data: Partial<{ dayOfWeek: string; subjectCode: string; subjectName: string; startTime: string; endTime: string; block: string; room: string; teacher: string }>): Observable<ApiResponse<RoutineEntry>> {

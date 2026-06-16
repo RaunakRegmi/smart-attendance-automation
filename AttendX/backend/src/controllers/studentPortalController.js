@@ -12,6 +12,7 @@ const Routine = require('../models/Routine');
 const Section = require('../models/Section');
 const Batch = require('../models/Batch');
 const Faculty = require('../models/Faculty');
+
 const Notification = require('../models/Notification');
 
 const CHATBOT_URL = process.env.CHATBOT_URL || 'http://host.docker.internal:8000';
@@ -33,7 +34,7 @@ const photoUpload = multer({
     const ext = path.extname(file.originalname).toLowerCase();
     cb(null, allowed.includes(ext));
   },
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
 const getAuthenticatedStudent = async (userId) => {
@@ -58,6 +59,7 @@ exports.getDashboard = async (req, res, next) => {
     const attendancePercentage = await calculateAttendancePercentage(student.id);
     const recentLogs = await getRecentAttendanceLogs(student.id, 4);
     const todaySchedule = await getTodaySchedule(student.sectionId);
+    const tomorrowPreview = await getTomorrowFirstClass(student.sectionId);
     const unreadNotifications = await Notification.count({
       where: { [Op.or]: [{ targetUserId: req.user.id }, { targetUserId: null }], isRead: false }
     });
@@ -80,7 +82,7 @@ exports.getDashboard = async (req, res, next) => {
           department: student.Faculty?.name || student.faculty || 'BCS Hons Artificial Intelligence with Computer Science',
           batch: student.Batch?.name || student.Section?.Batch?.name || null,
           section: student.Section?.name || null,
-          semester: student.Batch?.name || student.Section?.Batch?.name || '',
+
           avatarUrl: student.avatarUrl || null,
         },
         attendance: {
@@ -92,8 +94,10 @@ exports.getDashboard = async (req, res, next) => {
         todaySchedule: {
           classes: todaySchedule,
           totalToday: todaySchedule.length,
-          nextClass: todaySchedule.length > 0 ? todaySchedule[0] : null,
+          nextClass: todaySchedule.find(c => c.status === 'UPCOMING') || null,
+          currentClass: todaySchedule.find(c => c.status === 'ONGOING') || null,
         },
+        tomorrowPreview,
         recentLogs: recentLogs.map(log => ({
           id: log.id,
           subject: log.Subject?.subjectName || 'Unknown',
@@ -142,6 +146,76 @@ exports.getAttendanceSummary = async (req, res, next) => {
         subjects: subjectStats,
         atRisk: subjectStats.filter(s => s.percentage < 80).length,
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getWeeklyAttendanceSummary = async (req, res, next) => {
+  try {
+    const student = await getAuthenticatedStudent(req.user.id);
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student profile not found' });
+    }
+
+    const now = moment.tz(TIMEZONE);
+    const startOfWeek = now.clone().startOf('week');
+    const endOfWeek = now.clone().endOf('week');
+
+    const where = { studentId: student.id, date: { [Op.gte]: startOfWeek.format('YYYY-MM-DD'), [Op.lte]: endOfWeek.format('YYYY-MM-DD') } };
+    const records = await Attendance.findAll({
+      where,
+      include: [{ model: Subject }],
+    });
+
+    const subjectMap = {};
+    records.forEach(rec => {
+      const code = rec.Subject.subjectCode;
+      if (!subjectMap[code]) {
+        subjectMap[code] = { subject: rec.Subject.subjectName, code, total: 0, attended: 0, absents: 0, lates: 0 };
+      }
+      subjectMap[code].total++;
+      if (rec.status === 'Present') subjectMap[code].attended++;
+      else if (rec.status === 'Absent') subjectMap[code].absents++;
+      else if (rec.status === 'Late') { subjectMap[code].lates++; subjectMap[code].attended++; }
+    });
+
+    const subjectStats = Object.values(subjectMap).map(s => ({
+      ...s,
+      percentage: s.total > 0 ? parseFloat(((s.attended / s.total) * 100).toFixed(1)) : 0,
+      isOnTrack: (s.total > 0 ? ((s.attended / s.total) * 100) : 0) >= 80,
+    }));
+
+    const totalAttended = subjectStats.reduce((sum, s) => sum + s.attended, 0);
+    const totalClasses = subjectStats.reduce((sum, s) => sum + s.total, 0);
+    const overallPercentage = totalClasses > 0 ? parseFloat(((totalAttended / totalClasses) * 100).toFixed(1)) : 0;
+
+    const dailyBuckets = [{p:0,t:0},{p:0,t:0},{p:0,t:0},{p:0,t:0},{p:0,t:0},{p:0,t:0}];
+    for (const r of records) {
+      const dow = moment.tz(r.date, TIMEZONE).day();
+      if (dow === 6) continue;
+      dailyBuckets[dow].t += 1;
+      if (r.status === 'Present' || r.status === 'Late') dailyBuckets[dow].p += 1;
+    }
+    const studentDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI'];
+    const dailyPercentages = dailyBuckets.map(b => b.t > 0 ? Math.round((b.p / b.t) * 100) : 0);
+
+    res.json({
+      success: true,
+      data: {
+        overall: {
+          percentage: overallPercentage,
+          attended: totalAttended,
+          total: totalClasses,
+          absents: subjectStats.reduce((sum, s) => sum + s.absents, 0),
+          lates: subjectStats.reduce((sum, s) => sum + s.lates, 0),
+        },
+        subjects: subjectStats,
+        atRisk: subjectStats.filter(s => s.percentage < 80).length,
+        days: studentDays,
+        heights: dailyPercentages,
+      },
     });
   } catch (error) {
     next(error);
@@ -199,9 +273,10 @@ exports.getAttendanceLogs = async (req, res, next) => {
 };
 
 const getSubjectAttendanceStats = async (studentId) => {
+  const where = { studentId };
   const records = await Attendance.findAll({
-    where: { studentId },
-    include: [{ model: Subject }]
+    where,
+    include: [{ model: Subject }],
   });
 
   const subjectMap = {};
@@ -224,7 +299,8 @@ const getSubjectAttendanceStats = async (studentId) => {
 };
 
 const calculateAttendancePercentage = async (studentId) => {
-  const records = await Attendance.findAll({ where: { studentId } });
+  const where = { studentId };
+  const records = await Attendance.findAll({ where });
   const total = records.length;
   const present = records.filter(r => r.status === 'Present').length;
   const late = records.filter(r => r.status === 'Late').length;
@@ -238,23 +314,19 @@ const calculateAttendancePercentage = async (studentId) => {
   };
 };
 
-// Per-day attendance percentages for the current week (Sun–Fri) → used by the
-// dashboard's weekly-overview chart. Returns 6 heights for Sun..Fri (0-100).
 const getWeeklyAttendanceHeights = async (studentId) => {
   const now = moment.tz(TIMEZONE);
-  // Start of current week: Sunday 00:00 in Asia/Kathmandu
-  const startOfWeek = now.clone().startOf('week'); // moment uses locale: Sun=0
+  const startOfWeek = now.clone().startOf('week');
   const startISO = startOfWeek.format('YYYY-MM-DD');
 
-  const records = await Attendance.findAll({
-    where: { studentId, date: { [Op.gte]: startISO } },
-  });
+  const where = { studentId, date: { [Op.gte]: startISO } };
+  const records = await Attendance.findAll({ where });
   if (records.length === 0) return [0, 0, 0, 0, 0, 0];
 
   const buckets = [{p:0,t:0},{p:0,t:0},{p:0,t:0},{p:0,t:0},{p:0,t:0},{p:0,t:0}];
   for (const r of records) {
-    const dow = moment.tz(r.date, TIMEZONE).day(); // 0=Sun, 1=Mon, ..., 6=Sat
-    if (dow === 6) continue; // skip Saturday
+    const dow = moment.tz(r.date, TIMEZONE).day();
+    if (dow === 6) continue;
     buckets[dow].t += 1;
     if (r.status === 'Present' || r.status === 'Late') buckets[dow].p += 1;
   }
@@ -262,8 +334,9 @@ const getWeeklyAttendanceHeights = async (studentId) => {
 };
 
 const getRecentAttendanceLogs = async (studentId, limit = 4) => {
+  const where = { studentId };
   return Attendance.findAll({
-    where: { studentId },
+    where,
     include: [{ model: Subject, attributes: ['id', 'subjectCode', 'subjectName'] }],
     order: [['date', 'DESC'], ['createdAt', 'DESC']],
     limit,
@@ -278,8 +351,9 @@ const getTodaySchedule = async (sectionId) => {
   const dayOfWeek = dayNames[now.getDay()];
   const currentTime = now.toTimeString().split(' ')[0];
 
+  const where = { sectionId, dayOfWeek };
   const routines = await Routine.findAll({
-    where: { sectionId, dayOfWeek },
+    where,
     order: [['startTime', 'ASC']],
   });
 
@@ -300,6 +374,33 @@ const getTodaySchedule = async (sectionId) => {
       status,
     };
   });
+};
+
+const getTomorrowFirstClass = async (sectionId) => {
+  if (!sectionId) return null;
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const tomorrowDay = dayNames[tomorrow.getDay()];
+
+  const where = { sectionId, dayOfWeek: tomorrowDay };
+  const routine = await Routine.findOne({
+    where,
+    order: [['startTime', 'ASC']],
+  });
+
+  if (!routine) return null;
+
+  return {
+    subject: routine.subjectName,
+    subjectCode: routine.subjectCode,
+    startTime: routine.startTime,
+    endTime: routine.endTime,
+    room: routine.room,
+    teacher: routine.teacher || '',
+    dayName: tomorrowDay,
+  };
 };
 
 exports.getProfile = async (req, res, next) => {
@@ -344,15 +445,24 @@ exports.updateProfile = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Student profile not found' });
     }
 
-    const allowed = ['gender', 'bloodGroup', 'regNum', 'admissionDate', 'facultyId', 'guardianName', 'guardianContact'];
+    const allowed = ['gender', 'bloodGroup', 'regNum', 'univId', 'admissionDate', 'facultyId', 'guardianName', 'guardianContact'];
     const updates = {};
     for (const key of allowed) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
 
     const regNumPattern = /^[a-zA-Z0-9-]+$/;
+    const univIdPattern = /^[a-zA-Z0-9\-\/]+$/;
     const contactPattern = /^[0-9+\-]+$/;
 
+    if (updates.univId) {
+      if (updates.univId.length > 30) {
+        return res.status(400).json({ success: false, message: 'University ID must be at most 30 characters' });
+      }
+      if (!univIdPattern.test(updates.univId)) {
+        return res.status(400).json({ success: false, message: 'Only letters, numbers, hyphens and slashes allowed' });
+      }
+    }
     if (updates.regNum) {
       if (updates.regNum.length > 15) {
         return res.status(400).json({ success: false, message: 'Registration number must be at most 15 characters' });
@@ -391,7 +501,6 @@ exports.uploadPhoto = async (req, res, next) => {
 
     const student = await Student.findOne({ where: { userId: req.user.id } });
     if (student) {
-      // Remove old avatar file if it exists
       if (student.avatarUrl) {
         const oldPath = path.join(__dirname, '../../', student.avatarUrl);
         if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
@@ -411,8 +520,6 @@ exports.uploadPhoto = async (req, res, next) => {
 
 exports.photoUpload = photoUpload;
 
-// Secure chatbot proxy: JWT identifies the student, so they can only ever ask
-// about their own data. The chatbot is never exposed to the client directly.
 exports.chat = async (req, res, next) => {
   try {
     const { message, session_id } = req.body || {};
@@ -432,16 +539,22 @@ exports.chat = async (req, res, next) => {
     const payload = { message: message.trim(), email };
     if (session_id) payload.session_id = session_id;
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
+
     const resp = await fetch(`${CHATBOT_URL}/student/chat-by-email`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
+      signal: controller.signal,
     }).catch((err) => {
+      if (err.name === 'AbortError') throw new Error('Chatbot service timed out');
       throw new Error(`Chatbot service unreachable: ${err.message}`);
-    });
+    }).finally(() => clearTimeout(timeoutId));
 
     if (!resp.ok) {
-      return res.status(502).json({ success: false, message: `Chatbot returned ${resp.status}` });
+      const body = await resp.json().catch(() => ({}));
+      return res.status(502).json({ success: false, message: body.error || `Chatbot returned ${resp.status}` });
     }
 
     const body = await resp.json();
@@ -452,6 +565,6 @@ exports.chat = async (req, res, next) => {
     });
   } catch (err) {
     console.error('student chat failed:', err);
-    res.status(503).json({ success: false, message: 'Chatbot service unreachable' });
+    res.status(503).json({ success: false, message: err.message || 'Chatbot service unreachable' });
   }
 };

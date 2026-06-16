@@ -55,7 +55,13 @@ export class SheetsAddComponent implements OnInit {
       return;
     }
     this.saving.set(true);
-    this.sheetsService.linkSheet(this.form.getRawValue()).subscribe({
+    const raw = this.form.getRawValue();
+    const payload = {
+      url: raw.url,
+      batchId: raw.batchId,
+      sectionId: raw.sectionId,
+    };
+    this.sheetsService.linkSheet(payload).subscribe({
       next: (res) => {
         if (res.syncStatus === 'FAILED') {
           this.toast.warning(res.syncError || 'Sheet linked but initial sync failed — check the sheet format.');

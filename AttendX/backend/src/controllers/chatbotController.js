@@ -10,6 +10,7 @@
 const Student = require('../models/Student');
 const Attendance = require('../models/Attendance');
 const Subject = require('../models/Subject');
+
 const Batch = require('../models/Batch');
 const Section = require('../models/Section');
 const User = require('../models/User');
@@ -27,7 +28,9 @@ async function buildPayload() {
   });
 
   const allAttendance = await Attendance.findAll({
-    include: [{ model: Subject, attributes: ['id', 'subjectCode', 'subjectName'] }],
+    include: [
+      { model: Subject, attributes: ['id', 'subjectCode', 'subjectName'] },
+    ],
   });
 
   // Group attendance per student → per subject

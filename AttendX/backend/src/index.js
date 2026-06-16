@@ -20,6 +20,7 @@ const syncRoutes = require('./routes/syncRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
 const lecturerRoutes = require('./routes/lecturerRoutes');
 const facultyRoutes = require('./routes/facultyRoutes');
+
 const reportsRoutes = require('./routes/reportsRoutes');
 const studentPortalRoutes = require('./routes/studentPortalRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
@@ -38,6 +39,8 @@ const Subject = require('./models/Subject');
 const Lecturer = require('./models/Lecturer');
 const Faculty = require('./models/Faculty');
 const Sheets = require('./models/Sheets');
+
+const Attendance = require('./models/Attendance');
 const AuditLog = require('./models/AuditLog');
 const Notification = require('./models/Notification');
 const Setting = require('./models/Setting');

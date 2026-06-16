@@ -23,8 +23,8 @@ This Faculty is optional for students.
 <!-- - Need the Update Routine Feature Allowing the admin to update the set routine. -->
 <!-- - Change the Sync Job to the other professional relavent name. -->
 <!-- - Optimize the Job Queue to make it look pretty -->
-- Allow the student to update their certain details from their portal
-- Correct and provide the accurate weekly report to the student in their own portal so that it is displayed in teh student's dashboard correctly
+<!-- - Allow the student to update their certain details from their portal
+- Correct and provide the accurate weekly report to the student in their own portal so that it is displayed in teh student's dashboard correctly -->
 - Add the clickable (cart based navigation to the student's portal like as clicking the Attendence % will route to teh attendance page, bla bla.)
 - Confirm the keywords like as Critical Risk, or Extra Ordinary or anything that will describe the different attendance categories like as        severity below 30% Extra Ordinary for 95+ attendance and all from the student service
 - Routine Page in student's portal contains more free space so how to cover it..
@@ -54,3 +54,6 @@ And based on this semester, the routine should be displayed to the students. So,
 
 
 <!-- Add the skeleton loader while api hits for all pages throught the system so that loading dynamic data looks the system smooth to the user as the page refresh with dynamic data provides very bad experience to the user currently. -->
+
+<!-- 
+I had the _dayAtGlance card in the students dashboard screen. which is there for providing the alert for the students with classes that are scheduled as per teh day of week and alert for each schedule appears as per the day of week as of current and current time. alert is displayed from 15 min - start time to 15 min + start time for each class scheduled that day (current day) and, but currently the system uses the same class schedule and time i.e. of Friday, Intro to AI and DSA for all . but i want this populates as per teh scheduled Routine displayed in the routine page of the same portal and time also as per that class's time.  -->

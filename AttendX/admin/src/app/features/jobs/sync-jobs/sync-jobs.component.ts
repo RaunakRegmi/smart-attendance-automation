@@ -99,6 +99,14 @@ export class SyncJobsComponent implements OnInit {
       });
   }
 
+  getSheetDisplay(sheetId: string | undefined): string {
+    if (!sheetId) return '-';
+    const sheet = this.sheets().find((s) => s.id === sheetId);
+    if (!sheet) return sheetId.slice(0, 8) + '…';
+    const batchName = sheet.Batch?.name ?? '';
+    return batchName ? `${sheet.sheetName} (${batchName})` : sheet.sheetName;
+  }
+
   onPageChange(p: number): void {
     this.page.set(p);
     this.load();

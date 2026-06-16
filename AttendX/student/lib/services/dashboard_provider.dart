@@ -6,7 +6,6 @@ class DashboardData {
   final String email;
   final String studentId;
   final String department;
-  final String semester;
   final double overallPercentage;
   final int totalSubjects;
   final int atRiskCount;
@@ -14,6 +13,8 @@ class DashboardData {
   final List<dynamic> todayClasses;
   final int totalToday;
   final Map<String, dynamic>? nextClass;
+  final Map<String, dynamic>? currentClass;
+  final Map<String, dynamic>? tomorrowPreview;
   final List<dynamic> recentLogs;
   final int unreadNotifications;
   final List<String> weekDays;
@@ -25,7 +26,6 @@ class DashboardData {
     required this.email,
     required this.studentId,
     required this.department,
-    required this.semester,
     required this.overallPercentage,
     required this.totalSubjects,
     required this.atRiskCount,
@@ -33,6 +33,8 @@ class DashboardData {
     required this.todayClasses,
     required this.totalToday,
     required this.nextClass,
+    required this.currentClass,
+    this.tomorrowPreview,
     required this.recentLogs,
     required this.unreadNotifications,
     required this.weekDays,
@@ -52,7 +54,6 @@ class DashboardData {
       email: student['email'] as String? ?? '',
       studentId: student['studentId'] as String? ?? '',
       department: student['department'] as String? ?? '',
-      semester: student['semester'] as String? ?? '',
       overallPercentage: (attendance['overallPercentage'] as num?)?.toDouble() ?? 0,
       totalSubjects: attendance['totalSubjects'] as int? ?? 0,
       atRiskCount: attendance['atRiskCount'] as int? ?? 0,
@@ -60,6 +61,8 @@ class DashboardData {
       todayClasses: schedule['classes'] as List<dynamic>? ?? [],
       totalToday: schedule['totalToday'] as int? ?? 0,
       nextClass: schedule['nextClass'] as Map<String, dynamic>?,
+      currentClass: schedule['currentClass'] as Map<String, dynamic>?,
+      tomorrowPreview: json['tomorrowPreview'] as Map<String, dynamic>?,
       recentLogs: json['recentLogs'] as List<dynamic>? ?? [],
       unreadNotifications: notifs['unreadCount'] as int? ?? 0,
       weekDays: (overview['days'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],

@@ -38,6 +38,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../theme/app_theme.dart';
 import '../../models/message.dart';
+import '../../services/api_client.dart';
 import 'chat_service.dart';
  
 class ChatbotScreen extends StatefulWidget {
@@ -136,15 +137,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         _isLoading = false;
       });
       _saveMessages();
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       setState(() {
         _messages.removeWhere((m) => m.isTyping);
-        _messages.add(ChatMessage.fromAssistant(
-          'Connection error. Please try again.',
-        ));
+        final msg = e is ApiException ? e.message : 'Connection error. Please try again.';
+        _messages.add(ChatMessage.fromAssistant(msg));
         _isLoading = false;
       });
+      debugPrint('Chatbot error: $e');
     }
     _scrollToBottom();
   }
@@ -408,101 +409,109 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     final canSend = _hasText && !_isLoading;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 16),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, -6),
           ),
         ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Expanded(
-            child: Container(
-              constraints: const BoxConstraints(maxHeight: 120),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: _focusNode.hasFocus
-                      ? AppTheme.primary.withOpacity(0.5)
-                      : AppTheme.border,
-                ),
-              ),
-              child: TextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                minLines: 1,
-                maxLines: 5,
-                textInputAction: TextInputAction.send,
-                onSubmitted: _isLoading ? null : _sendMessage,
-                style: const TextStyle(
-                    fontSize: 14, color: AppTheme.textPrimary, height: 1.5),
-                decoration: InputDecoration(
-                  hintText: 'Type your question...',
-                  hintStyle: TextStyle(
-                      color: AppTheme.textSecondary.withOpacity(0.6),
-                      fontSize: 14),
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                ),
-              ),
+      child: SafeArea(
+        top: false,
+        child: Container(
+          constraints: const BoxConstraints(maxHeight: 120),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: _focusNode.hasFocus
+                  ? AppTheme.primary.withOpacity(0.5)
+                  : AppTheme.border,
+              width: _focusNode.hasFocus ? 1.5 : 1,
             ),
           ),
-          const SizedBox(width: 8),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              gradient: canSend
-                  ? const LinearGradient(
-                      colors: [AppTheme.primary, Color(0xFF2D5F8A)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                  : null,
-              color: canSend ? null : AppTheme.primary.withOpacity(0.25),
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: canSend
-                  ? [
-                      BoxShadow(
-                        color: AppTheme.primary.withOpacity(0.35),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(14),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(14),
-                onTap: canSend ? () => _sendMessage(_controller.text) : null,
-                child: Center(
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              const SizedBox(width: 6),
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  minLines: 1,
+                  maxLines: 5,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: _isLoading ? null : _sendMessage,
+                  style: const TextStyle(
+                      fontSize: 15, color: AppTheme.textPrimary, height: 1.5),
+                  decoration: InputDecoration(
+                    hintText: 'Ask me anything about your classes...',
+                    hintStyle: TextStyle(
+                        color: AppTheme.textSecondary.withOpacity(0.5),
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding:
+                        const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(right: 5, bottom: 5),
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  gradient: canSend
+                      ? const LinearGradient(
+                          colors: [AppTheme.primary, Color(0xFF2D5F8A)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         )
-                      : const Icon(Icons.send_rounded,
-                          color: Colors.white, size: 20),
+                      : null,
+                  color: canSend ? null : const Color(0xFFCBD5E1),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: canSend
+                      ? [
+                          BoxShadow(
+                            color: AppTheme.primary.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: canSend ? () => _sendMessage(_controller.text) : null,
+                    child: Center(
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2),
+                            )
+                          : Icon(
+                              Icons.arrow_upward_rounded,
+                              color: canSend ? Colors.white : Colors.white54,
+                              size: 20,
+                            ),
+                    ),
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: 2),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

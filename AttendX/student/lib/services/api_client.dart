@@ -62,7 +62,7 @@ class ApiClient {
 
   static Future<Map<String, dynamic>> _http(Future<http.Response> request) async {
     try {
-      final response = await request.timeout(const Duration(seconds: 15));
+      final response = await request.timeout(const Duration(seconds: 30));
       return _handleResponse(response);
     } on SocketException {
       throw ApiException(statusCode: 0, message: 'Cannot reach server. Check your connection.');

@@ -198,7 +198,8 @@ def build_csvs(students: list) -> None:
             code = sub.get("code") or ""
             if not code:
                 continue
-            entry = course_map.setdefault(code, {
+            key = code
+            entry = course_map.setdefault(key, {
                 "course_code": code,
                 "course_name": sub.get("name") or code,
                 "_present": 0,
@@ -220,12 +221,12 @@ def build_csvs(students: list) -> None:
                 if pct < 75:
                     entry["_below_75"] += 1
     course_rows = []
-    for code, e in course_map.items():
+    for key, e in course_map.items():
         total_records = e["_present"] + e["_absent"] + e["_late"]
         avg_pct = round((e["_present"] + e["_late"]) / total_records * 100, 2) if total_records else 0.0
         tier = "Strong" if avg_pct >= 85 else ("Healthy" if avg_pct >= 75 else ("Concerning" if avg_pct >= 60 else "Critical"))
         course_rows.append({
-            "course_code": code,
+            "course_code": e["course_code"],
             "course_name": e["course_name"],
             "avg_attendance_pct": avg_pct,
             "performance_tier": tier,

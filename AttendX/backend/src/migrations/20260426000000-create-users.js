@@ -29,6 +29,11 @@ module.exports = {
         allowNull: false,
         defaultValue: true,
       },
+      tokenVersion: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,

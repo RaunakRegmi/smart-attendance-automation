@@ -22,13 +22,23 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
-  final GlobalKey<RoutineScreenState> _routineKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
     // Fetch weekly routine and schedule daily class notifications once logged in.
     WidgetsBinding.instance.addPostFrameCallback((_) => _scheduleClassReminders());
+  }
+
+  Widget _buildPage() {
+    switch (_currentIndex) {
+      case 0: return const DashboardScreen();
+      case 1: return const RoutineScreen();
+      case 2: return const AttendanceScreen();
+      case 3: return const ChatbotScreen();
+      case 4: return const ProfileScreen();
+      default: return const DashboardScreen();
+    }
   }
 
   Future<void> _scheduleClassReminders() async {
@@ -43,33 +53,17 @@ class _MainNavigationState extends State<MainNavigation> {
     }
   }
 
-  // 5 screens total — order matches nav bar items below
-  late final List<Widget> _screens = [
-    const DashboardScreen(),
-    RoutineScreen(key: _routineKey),
-    const AttendanceScreen(),
-    const ChatbotScreen(),
-    const ProfileScreen(),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      body: _buildPage(),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: AppTheme.border, width: 1)),
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
-          onTap: (i) {
-            setState(() => _currentIndex = i);
-            if (i == 1) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _routineKey.currentState?.resetToToday();
-              });
-            }
-          },
+          onTap: (i) => setState(() => _currentIndex = i),
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.dashboard_outlined),

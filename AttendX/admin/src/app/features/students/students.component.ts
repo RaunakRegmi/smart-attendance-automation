@@ -56,6 +56,7 @@ export class StudentsComponent implements OnInit {
     sectionId: [''],
     facultyId: [''],
     gender: [''],
+    univId: ['', [Validators.maxLength(30), Validators.pattern(/^[a-zA-Z0-9\-\/]*$/)]],
   });
 
   ngOnInit(): void {
@@ -121,6 +122,7 @@ export class StudentsComponent implements OnInit {
       sectionId: student.sectionId ?? '',
       facultyId: student.facultyId ?? '',
       gender: student.gender ?? '',
+      univId: student.univId ?? '',
     });
     if (student.batchId) {
       this.sectionService.getAll(student.batchId).subscribe((r) => this.modalSections.set(r.data ?? []));

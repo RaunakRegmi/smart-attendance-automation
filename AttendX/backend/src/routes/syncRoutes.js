@@ -4,6 +4,8 @@ const authMiddleware = require('../middleware/authMiddleware');
 const authorizeRoles = require('../middleware/authorizeRoles');
 const schedulerService = require('../services/schedulerService');
 const sheetSyncQueue = require('../queues/sheetSyncQueue');
+const { Op } = require('sequelize');
+const SyncJob = require('../models/SyncJob');
 
 const router = express.Router();
 
@@ -287,15 +289,14 @@ router.post('/modify', authMiddleware, syncController.modifyScheduler);
  */
 router.get('/queue-status', authMiddleware, async (req, res) => {
   try {
-    const queueJobs = await sheetSyncQueue.getJobs(['waiting', 'active', 'completed', 'failed']);
-    const queueStatus = {
-      totalJobs: queueJobs.length,
-      waiting: queueJobs.filter(job => job.state === 'waiting').length,
-      active: queueJobs.filter(job => job.state === 'active').length,
-      completed: queueJobs.filter(job => job.state === 'completed').length,
-      failed: queueJobs.filter(job => job.state === 'failed').length,
-    };
-    res.json({ success: true, queueStatus });
+    const [totalJobs, waiting, active, completed, failed] = await Promise.all([
+      SyncJob.count(),
+      SyncJob.count({ where: { status: 'PENDING' } }),
+      SyncJob.count({ where: { status: 'RUNNING' } }),
+      SyncJob.count({ where: { status: { [Op.in]: ['SUCCESS', 'SKIPPED'] } } }),
+      SyncJob.count({ where: { status: 'FAILED' } }),
+    ]);
+    res.json({ success: true, queueStatus: { totalJobs, waiting, active, completed, failed } });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

@@ -1,9 +1,3 @@
-// lib/screens/report/report_screen.dart
-//
-// Personal academic report for the logged-in student. Pulls data from
-// /api/student/attendance/summary and presents it as an overview, risk
-// status, and per-subject breakdown.
-
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -13,7 +7,8 @@ import '../../services/auth_service.dart';
 import '../../widgets/skeletons.dart';
 
 class ReportScreen extends StatefulWidget {
-  const ReportScreen({super.key});
+  final bool isWeekly;
+  const ReportScreen({super.key, this.isWeekly = false});
 
   @override
   State<ReportScreen> createState() => _ReportScreenState();
@@ -28,7 +23,12 @@ class _ReportScreenState extends State<ReportScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AttendanceProvider>().loadSummary();
+      final provider = context.read<AttendanceProvider>();
+      if (widget.isWeekly) {
+        provider.loadWeeklySummary();
+      } else {
+        provider.loadSummary();
+      }
       _loadProfile();
     });
   }
@@ -45,41 +45,31 @@ class _ReportScreenState extends State<ReportScreen> {
     });
   }
 
-  String _statusForPct(double pct) {
-    if (pct >= 90) return 'Excellent';
-    if (pct >= 75) return 'On Track';
-    if (pct >= 60) return 'At Risk';
-    return 'Critical';
-  }
-
-  Color _statusColor(double pct) {
-    if (pct >= 90) return AppTheme.success;
-    if (pct >= 75) return AppTheme.primary;
+  Color _attColor(double pct) {
+    if (pct >= 80) return AppTheme.success;
     if (pct >= 60) return AppTheme.warning;
     return AppTheme.error;
-  }
-
-  String _riskAdvice(double pct) {
-    if (pct >= 90) return 'You are in great standing. Keep it up!';
-    if (pct >= 75) return 'You meet the attendance requirement. Stay consistent to stay on track.';
-    if (pct >= 60) return 'Your attendance is below the 75% threshold. Attend every class going forward.';
-    return 'Urgent: your attendance is critically low. Speak with your academic advisor immediately.';
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AttendanceProvider>();
-    final summary = provider.summary;
+    final weekly = provider.weeklySummary;
+    final overall = provider.summary;
+    final isLoading = provider.isLoading;
+
+    final summary = widget.isWeekly ? weekly : overall;
+    final isLoadingAll = isLoading && summary == null;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('My Report'),
+        title: Text(widget.isWeekly ? 'Weekly Report' : 'My Report'),
         elevation: 0,
       ),
       body: RefreshIndicator(
-        onRefresh: () => provider.loadSummary(),
-        child: provider.isLoading && summary == null
+        onRefresh: () => widget.isWeekly ? provider.loadWeeklySummary() : provider.loadSummary(),
+        child: isLoadingAll
             ? reportSkeleton()
             : SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -87,11 +77,13 @@ class _ReportScreenState extends State<ReportScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _header(summary?.percentage ?? 0),
+                    if (widget.isWeekly && weekly != null)
+                      _weeklyBarChart(weekly),
+                    _header(summary),
                     const SizedBox(height: 16),
                     _overviewGrid(summary),
                     const SizedBox(height: 20),
-                    _adviceCard(summary?.percentage ?? 0),
+                    _adviceCard(summary),
                     const SizedBox(height: 20),
                     const Text(
                       'Subject Breakdown',
@@ -119,13 +111,112 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  Widget _header(double pct) {
-    final color = _statusColor(pct);
+  Widget _weeklyBarChart(dynamic s) {
+    final days = (s is WeeklyAttendanceSummary) ? s.days : <String>[];
+    final heights = (s is WeeklyAttendanceSummary) ? s.heights : <double>[];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Daily Attendance %',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: List.generate(days.length, (i) {
+              final h = heights.length > i ? heights[i] : 0.0;
+              final color = _attColor(h);
+              final maxBarH = 70.0;
+              final barH = h == 0 ? 4.0 : 4.0 + (h / 100 * maxBarH);
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text('${h.toStringAsFixed(0)}',
+                          style: TextStyle(fontSize: 9, color: AppTheme.textSecondary)),
+                      const SizedBox(height: 2),
+                      Container(
+                        width: 20,
+                        height: barH.clamp(4.0, maxBarH),
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(days[i],
+                          style: TextStyle(fontSize: 9, color: AppTheme.textSecondary)),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  double _pct(dynamic s) {
+    if (s == null) return 0;
+    if (s is AttendanceSummary) return s.percentage;
+    if (s is WeeklyAttendanceSummary) return s.percentage;
+    return 0;
+  }
+
+  int _attended(dynamic s) {
+    if (s == null) return 0;
+    if (s is AttendanceSummary) return s.attended;
+    if (s is WeeklyAttendanceSummary) return s.attended;
+    return 0;
+  }
+
+  int _total(dynamic s) {
+    if (s == null) return 0;
+    if (s is AttendanceSummary) return s.total;
+    if (s is WeeklyAttendanceSummary) return s.total;
+    return 0;
+  }
+
+  int _absents(dynamic s) {
+    if (s == null) return 0;
+    if (s is AttendanceSummary) return s.absents;
+    if (s is WeeklyAttendanceSummary) return s.absents;
+    return 0;
+  }
+
+  int _atRisk(dynamic s) {
+    if (s == null) return 0;
+    if (s is AttendanceSummary) return s.atRisk;
+    if (s is WeeklyAttendanceSummary) return s.atRisk;
+    return 0;
+  }
+
+  List<SubjectAttData> _subjects(dynamic s) {
+    if (s == null) return [];
+    if (s is AttendanceSummary) return s.subjects;
+    if (s is WeeklyAttendanceSummary) return s.subjects;
+    return [];
+  }
+
+  Widget _header(dynamic s) {
+    final pct = _pct(s);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color, color.withOpacity(0.75)],
+          colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.75)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -147,47 +238,33 @@ class _ReportScreenState extends State<ReportScreen> {
                   ),
                 ),
                 if (_email.isNotEmpty)
-                  Text(
-                    _email,
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
+                  Text(_email, style: const TextStyle(color: Colors.white70, fontSize: 12)),
                 if (_batch.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      _batch,
-                      style: const TextStyle(color: Colors.white70, fontSize: 12),
-                    ),
+                    child: Text(_batch, style: const TextStyle(color: Colors.white70, fontSize: 12)),
                   ),
                 const SizedBox(height: 14),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    _statusForPct(pct),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    pct >= 90 ? 'Excellent' : pct >= 80 ? 'On Track' : pct >= 60 ? 'At Risk' : 'Critical',
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Overall Attendance',
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
-                ),
+                const Text('Overall Attendance',
+                    style: TextStyle(color: Colors.white70, fontSize: 12)),
               ],
             ),
           ),
           const SizedBox(width: 16),
           SizedBox(
-            width: 110,
-            height: 110,
+            width: 110, height: 110,
             child: CustomPaint(
               painter: _RingPainter(
                 progress: (pct / 100).clamp(0.0, 1.0),
@@ -198,19 +275,9 @@ class _ReportScreenState extends State<ReportScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      pct.toStringAsFixed(1),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        height: 1,
-                      ),
-                    ),
-                    const Text(
-                      '%',
-                      style: TextStyle(color: Colors.white70, fontSize: 11),
-                    ),
+                    Text(pct.toStringAsFixed(1),
+                        style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800, height: 1)),
+                    const Text('%', style: TextStyle(color: Colors.white70, fontSize: 11)),
                   ],
                 ),
               ),
@@ -221,11 +288,11 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  Widget _overviewGrid(AttendanceSummary? s) {
-    final attended = s?.attended ?? 0;
-    final total = s?.total ?? 0;
-    final absents = s?.absents ?? 0;
-    final atRisk = s?.atRisk ?? 0;
+  Widget _overviewGrid(dynamic s) {
+    final attended = _attended(s);
+    final total = _total(s);
+    final absents = _absents(s);
+    final atRisk = _atRisk(s);
 
     return Row(
       children: [
@@ -250,19 +317,25 @@ class _ReportScreenState extends State<ReportScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label,
-              style: const TextStyle(
-                  fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
+              style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
           const SizedBox(height: 6),
           Text(value,
-              style: TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.w800, color: color)),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: color)),
         ],
       ),
     );
   }
 
-  Widget _adviceCard(double pct) {
-    final color = _statusColor(pct);
+  Widget _adviceCard(dynamic s) {
+    final pct = _pct(s);
+    final color = _attColor(pct);
+    final advice = pct >= 90
+        ? 'You are in excellent standing. Keep up the great work!'
+        : pct >= 80
+            ? 'You meet the attendance requirement. Stay consistent to remain on track.'
+            : pct >= 60
+                ? 'Your attendance is below 80%. Attend every class going forward to improve.'
+                : 'Urgent: your attendance is critically low. Speak with your academic advisor immediately.';
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -276,22 +349,17 @@ class _ReportScreenState extends State<ReportScreen> {
           Icon(Icons.lightbulb_outline, color: color, size: 22),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              _riskAdvice(pct),
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppTheme.textPrimary,
-                height: 1.5,
-              ),
-            ),
+            child: Text(advice,
+                style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary, height: 1.5)),
           ),
         ],
       ),
     );
   }
 
-  List<Widget> _subjectCards(AttendanceSummary? s) {
-    if (s == null || s.subjects.isEmpty) {
+  List<Widget> _subjectCards(dynamic s) {
+    final subs = _subjects(s);
+    if (subs.isEmpty) {
       return [
         Container(
           padding: const EdgeInsets.all(16),
@@ -308,10 +376,9 @@ class _ReportScreenState extends State<ReportScreen> {
       ];
     }
 
-    return s.subjects.map((sub) {
-      final color = sub.percentage >= 75 ? AppTheme.success : AppTheme.warning;
-      final critical = sub.percentage < 60;
-      final c = critical ? AppTheme.error : color;
+    return subs.map((sub) {
+      final pct = sub.percentage;
+      final color = _attColor(pct);
       return Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
@@ -330,37 +397,28 @@ class _ReportScreenState extends State<ReportScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(sub.subject,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 14)),
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
                       if (sub.code.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 2),
                           child: Text(sub.code,
-                              style: const TextStyle(
-                                  fontSize: 11,
-                                  color: AppTheme.textSecondary)),
+                              style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
                         ),
                     ],
                   ),
                 ),
-                Text(
-                  '${sub.percentage.toStringAsFixed(1)}%',
-                  style: TextStyle(
-                    color: c,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                  ),
-                ),
+                Text('${pct.toStringAsFixed(1)}%',
+                    style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 16)),
               ],
             ),
             const SizedBox(height: 10),
             ClipRRect(
               borderRadius: BorderRadius.circular(6),
               child: LinearProgressIndicator(
-                value: (sub.percentage / 100).clamp(0.0, 1.0),
+                value: (pct / 100).clamp(0.0, 1.0),
                 minHeight: 6,
                 backgroundColor: AppTheme.border,
-                color: c,
+                color: color,
               ),
             ),
             const SizedBox(height: 8),
@@ -386,15 +444,11 @@ class _ReportScreenState extends State<ReportScreen> {
         children: [
           TextSpan(
             text: '$value ',
-            style: const TextStyle(
-                color: AppTheme.textPrimary,
-                fontWeight: FontWeight.w700,
-                fontSize: 12),
+            style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w700, fontSize: 12),
           ),
           TextSpan(
             text: label,
-            style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 12),
+            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
           ),
         ],
       ),
@@ -443,7 +497,5 @@ class _RingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _RingPainter old) =>
-      old.progress != progress ||
-      old.trackColor != trackColor ||
-      old.progressColor != progressColor;
+      old.progress != progress || old.trackColor != trackColor || old.progressColor != progressColor;
 }
