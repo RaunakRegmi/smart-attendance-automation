@@ -1,0 +1,97 @@
+sno,batch,student_name,email,total_present,total_absent,total_late,total_present_with_late,total_classes,attendance_percentage,status
+4,Autumn 2025,Dinesh Kunwar,dinesh_kunwar_a25@sunway.edu.np,108,23,0,108,131,82.44,Satisfactory
+5,Autumn 2025,Elina Bista,elina_bista_a25@sunway.edu.np,114,17,0,114,131,87.02,Satisfactory
+6,Autumn 2025,Firoj Ansari,firoj_ansari_a25@sunway.edu.np,107,24,0,107,131,81.68,Satisfactory
+7,Autumn 2025,Gaurav Kafle,gaurav_kafle_a25@sunway.edu.np,115,16,0,115,131,87.79,Satisfactory
+8,Autumn 2025,Raunak Regmi,raunak_regmi_a25@sunway.edu.np,77,54,0,77,131,58.78,Critical
+9,Autumn 2025,Ishan Koirala,ishan_koirala_a25@sunway.edu.np,91,40,0,91,131,69.47,At Risk
+10,Autumn 2025,Juna Khadgi,juna_khadgi_a25@sunway.edu.np,126,5,0,126,131,96.18,Excellent
+11,Autumn 2025,Kamal Rokaya,kamal_rokaya_a25@sunway.edu.np,110,21,0,110,131,83.97,Satisfactory
+12,Autumn 2025,Lalita Budhathoki,lalita_budhathoki_a25@sunway.edu.np,115,16,0,115,131,87.79,Satisfactory
+13,Autumn 2025,Manoj Dong,manoj_dong_a25@sunway.edu.np,130,1,0,130,131,99.24,Excellent
+14,Autumn 2025,Nirmala Karki,nirmala_karki_a25@sunway.edu.np,119,12,0,119,131,90.84,Excellent
+15,Autumn 2025,Omkar Pokharel,omkar_pokharel_a25@sunway.edu.np,118,13,0,118,131,90.08,Excellent
+16,Autumn 2025,Pabitra Dhakal,pabitra_dhakal_a25@sunway.edu.np,126,5,0,126,131,96.18,Excellent
+17,Autumn 2025,Qasim Miya,qasim_miya_a25@sunway.edu.np,126,5,0,126,131,96.18,Excellent
+18,Autumn 2025,Ramesh Suwal,ramesh_suwal_a25@sunway.edu.np,122,9,0,122,131,93.13,Excellent
+19,Autumn 2025,Sanjay Khadka,sanjay_khadka_a25@sunway.edu.np,130,1,0,130,131,99.24,Excellent
+20,Autumn 2025,Tara Ghale,tara_ghale_a25@sunway.edu.np,106,25,0,106,131,80.92,Satisfactory
+21,Autumn 2025,Ujjwal Basnet,ujjwal_basnet_a25@sunway.edu.np,89,42,0,89,131,67.94,At Risk
+22,Autumn 2025,Bipin Sigdel,bipin_sigdel_a25@sunway.edu.np,126,5,0,126,131,96.18,Excellent
+23,Autumn 2025,Chetana Thagunna,chetana_thagunna_a25@sunway.edu.np,126,5,0,126,131,96.18,Excellent
+24,Autumn 2025,Dev Rai,dev_rai_a25@sunway.edu.np,122,9,0,122,131,93.13,Excellent
+25,Autumn 2025,Esha Karki,esha_karki_a25@sunway.edu.np,126,5,0,126,131,96.18,Excellent
+26,Autumn 2025,Ganesh Baral,ganesh_baral_a25@sunway.edu.np,111,20,0,111,131,84.73,Satisfactory
+27,Autumn 2025,Hari Bogati,hari_bogati_a25@sunway.edu.np,123,8,0,123,131,93.89,Excellent
+28,Autumn 2025,Indira Sapkota,indira_sapkota_a25@sunway.edu.np,93,38,0,93,131,70.99,At Risk
+29,Autumn 2025,Jeevan Giri,jeevan_giri_a25@sunway.edu.np,111,20,0,111,131,84.73,Satisfactory
+30,Autumn 2025,Kabita Chhetri,kabita_chhetri_a25@sunway.edu.np,98,33,0,98,131,74.81,At Risk
+31,Autumn 2025,Lokesh Karki,lokesh_karki_a25@sunway.edu.np,83,48,0,83,131,63.36,At Risk
+32,Autumn 2025,Mamata Shahi,mamata_shahi_a25@sunway.edu.np,82,49,0,82,131,62.6,At Risk
+33,Autumn 2025,Nawaraj Bista,nawaraj_bista_a25@sunway.edu.np,130,1,0,130,131,99.24,Excellent
+1,Autumn 2025,Aayush Sharma,aayush_sharma_a25@sunway.edu.np,130,1,0,130,131,99.24,Excellent
+2,Autumn 2025,Binita Rijal,binita_rijal_a25@sunway.edu.np,119,12,0,119,131,90.84,Excellent
+34,Autumn 2025,Prakash Adhikari,prakash_adhikari_a25@sunway.edu.np,136,0,0,136,136,100.0,Excellent
+35,Autumn 2025,Sushmita Neupane,sushmita_neupane_a25@sunway.edu.np,124,12,0,124,136,91.18,Excellent
+36,Autumn 2025,Rohit Poudel,rohit_poudel_a25@sunway.edu.np,116,20,0,116,136,85.29,Satisfactory
+37,Autumn 2025,Anjali Thapa,anjali_thapa_a25@sunway.edu.np,112,24,0,112,136,82.35,Satisfactory
+38,Autumn 2025,Bibek Shrestha,bibek_shrestha_a25@sunway.edu.np,120,16,0,120,136,88.24,Satisfactory
+39,Autumn 2025,Rupendra Dhungana,rupendra_dhungana_a25@sunway.edu.np,112,24,0,112,136,82.35,Satisfactory
+40,Autumn 2025,Nabin Gurung,nabin_gurung_a25@sunway.edu.np,120,16,0,120,136,88.24,Satisfactory
+41,Autumn 2025,Asmita KC,asmita_kc_a25@sunway.edu.np,80,56,0,80,136,58.82,Critical
+42,Autumn 2025,Rijan Acharya,rijan_acharya_a25@sunway.edu.np,96,40,0,96,136,70.59,At Risk
+43,Autumn 2025,Sneha Maharjan,sneha_maharjan_a25@sunway.edu.np,132,4,0,132,136,97.06,Excellent
+44,Autumn 2025,Dipesh Bhandari,dipesh_bhandari_a25@sunway.edu.np,116,20,0,116,136,85.29,Satisfactory
+45,Autumn 2025,Karuna Basyal,karuna_basyal_a25@sunway.edu.np,120,16,0,120,136,88.24,Satisfactory
+46,Autumn 2025,Niraj Ghimire,niraj_ghimire_a25@sunway.edu.np,136,0,0,136,136,100.0,Excellent
+47,Autumn 2025,Samiksha Adhikari,samiksha_adhikari_a25@sunway.edu.np,124,12,0,124,136,91.18,Excellent
+48,Autumn 2025,Tek Bahadur Ale,tek_bahadur_ale_a25@sunway.edu.np,124,12,0,124,136,91.18,Excellent
+49,Autumn 2025,Apeksha Regmi,apeksha_regmi_a25@sunway.edu.np,132,4,0,132,136,97.06,Excellent
+50,Autumn 2025,Bijay Tamang,bijay_tamang_a25@sunway.edu.np,132,4,0,132,136,97.06,Excellent
+51,Autumn 2025,Nikita Panta,nikita_panta_a25@sunway.edu.np,128,8,0,128,136,94.12,Excellent
+52,Autumn 2025,Sujan Kharel,sujan_kharel_a25@sunway.edu.np,136,0,0,136,136,100.0,Excellent
+53,Autumn 2025,Puja Bhandari,puja_bhandari_a25@sunway.edu.np,112,24,0,112,136,82.35,Satisfactory
+54,Autumn 2025,Rabin Chaudhary,rabin_chaudhary_a25@sunway.edu.np,92,44,0,92,136,67.65,At Risk
+55,Autumn 2025,Melina Joshi,melina_joshi_a25@sunway.edu.np,132,4,0,132,136,97.06,Excellent
+3,Autumn 2025,Aaditya Dhakal,aaditya_dhakal_a25@sunway.edu.np,108,23,0,108,131,82.44,Satisfactory
+56,Autumn 2025,Sagar Bhattarai,sagar_bhattarai_a25@sunway.edu.np,132,4,0,132,136,97.06,Excellent
+57,Autumn 2025,Alisha Raut,alisha_raut_a25@sunway.edu.np,128,8,0,128,136,94.12,Excellent
+58,Autumn 2025,Kritesh Pandey,kritesh_pandey_a25@sunway.edu.np,132,4,0,132,136,97.06,Excellent
+59,Autumn 2025,Monika Kandel,monika_kandel_a25@sunway.edu.np,116,20,0,116,136,85.29,Satisfactory
+60,Autumn 2025,Nischal Aryal,nischal_aryal_a25@sunway.edu.np,128,8,0,128,136,94.12,Excellent
+61,Autumn 2025,Prerana Shah,prerana_shah_a25@sunway.edu.np,96,40,0,96,136,70.59,At Risk
+62,Autumn 2025,Ritik Lama,ritik_lama_a25@sunway.edu.np,116,20,0,116,136,85.29,Satisfactory
+63,Autumn 2025,Sunita Bhandari,sunita_bhandari_a25@sunway.edu.np,104,32,0,104,136,76.47,Satisfactory
+64,Autumn 2025,Yubraj Thapa,yubraj_thapa_a25@sunway.edu.np,88,48,0,88,136,64.71,At Risk
+65,Autumn 2025,Aarati Sharma,aarati_sharma_a25@sunway.edu.np,88,48,0,88,136,64.71,At Risk
+66,Autumn 2025,Bishal Karki,bishal_karki_a25@sunway.edu.np,136,0,0,136,136,100.0,Excellent
+67,Summer 2025,Ishan Parajuli,ishan_parajuli_s26@sunway.edu.np,28,6,0,28,34,82.35,Satisfactory
+68,Summer 2025,Suman Tamang,suman_tamang_s26@sunway.edu.np,25,9,0,25,34,73.53,At Risk
+69,Summer 2025,Qasim Gautam,qasim_gautam_s26@sunway.edu.np,23,11,0,23,34,67.65,At Risk
+70,Summer 2025,Pooja Bista,pooja_bista_s26@sunway.edu.np,25,9,0,25,34,73.53,At Risk
+71,Summer 2025,Elina Tamrakar,elina_tamrakar_s26@sunway.edu.np,22,12,0,22,34,64.71,At Risk
+72,Summer 2025,Bijay Rai,bijay_rai_s26@sunway.edu.np,23,11,0,23,34,67.65,At Risk
+73,Summer 2025,Sunita Neupane,sunita_neupane_s26@sunway.edu.np,25,9,0,25,34,73.53,At Risk
+74,Summer 2025,Sita Thakuri,sita_thakuri_s26@sunway.edu.np,20,14,0,20,34,58.82,Critical
+75,Summer 2025,Hom Maharjan,hom_maharjan_s26@sunway.edu.np,18,16,0,18,34,52.94,Critical
+76,Summer 2025,Ramesh Singh,ramesh_singh_s26@sunway.edu.np,27,7,0,27,34,79.41,Satisfactory
+77,Summer 2025,Padam Ojha,padam_ojha_s26@sunway.edu.np,26,8,0,26,34,76.47,Satisfactory
+78,Summer 2025,Anjana Dangi,anjana_dangi_s26@sunway.edu.np,27,7,0,27,34,79.41,Satisfactory
+79,Summer 2025,Dev Devkota,dev_devkota_s26@sunway.edu.np,28,6,0,28,34,82.35,Satisfactory
+80,Summer 2025,Mina Kunwar,mina_kunwar_s26@sunway.edu.np,25,9,0,25,34,73.53,At Risk
+81,Summer 2025,Raunak Kafle,raunak_kafle_s26@sunway.edu.np,28,6,0,28,34,82.35,Satisfactory
+82,Summer 2025,Tara Thagunna,tara_thagunna_s26@sunway.edu.np,27,7,0,27,34,79.41,Satisfactory
+83,Summer 2025,Bipin Sigdel,bipin_sigdel_s26@sunway.edu.np,28,6,0,28,34,82.35,Satisfactory
+84,Summer 2025,Omkar Ghale,omkar_ghale_s26@sunway.edu.np,26,8,0,26,34,76.47,Satisfactory
+85,Summer 2025,Ishan Sharma,ishan_sharma_s26@sunway.edu.np,28,6,0,28,34,82.35,Satisfactory
+86,Summer 2025,Ganesh Gurung,ganesh_gurung_s26@sunway.edu.np,24,10,0,24,34,70.59,At Risk
+87,Summer 2025,Tulsi Bista,tulsi_bista_s26@sunway.edu.np,20,14,0,20,34,58.82,Critical
+88,Summer 2025,Nirmala Poudel,nirmala_poudel_s26@sunway.edu.np,27,7,0,27,34,79.41,Satisfactory
+89,Summer 2025,Ujjwal Devkota,ujjwal_devkota_s26@sunway.edu.np,26,8,0,26,34,76.47,Satisfactory
+90,Summer 2025,Hom Sarki,hom_sarki_s26@sunway.edu.np,26,8,0,26,34,76.47,Satisfactory
+91,Summer 2025,Ujjwal Upreti,ujjwal_upreti_s26@sunway.edu.np,27,7,0,27,34,79.41,Satisfactory
+92,Summer 2025,Jeevan Budhathoki,jeevan_budhathoki_s26@sunway.edu.np,24,10,0,24,34,70.59,At Risk
+93,Summer 2025,Anjana Gurung,anjana_gurung_s26@sunway.edu.np,27,7,0,27,34,79.41,Satisfactory
+94,Summer 2025,Laxmi Sigdel,laxmi_sigdel_s26@sunway.edu.np,20,14,0,20,34,58.82,Critical
+95,Summer 2025,Celine Maharjan,celine_maharjan_s26@sunway.edu.np,25,9,0,25,34,73.53,At Risk
+96,Summer 2025,Dron Acharya,drone_adhikari_s25@sunway.edu.np,22,12,0,22,34,64.71,At Risk

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Academic Assistant</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f0f4f8;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: #1a3a5c;
+      color: #fff;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-icon {
+      width: 36px; height: 36px;
+      background: #2e6da4;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .header h1 { font-size: 17px; font-weight: 600; }
+    .header p  { font-size: 12px; opacity: 0.65; margin-top: 2px; }
+    .student-badge {
+      background: #2e6da4;
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      display: none;
+    }
+
+    /* ── Login overlay ── */
+    #login-screen {
+      position: fixed; inset: 0;
+      background: rgba(15, 30, 50, 0.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+      backdrop-filter: blur(3px);
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 36px 32px;
+      width: 340px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .login-card .login-icon {
+      font-size: 40px;
+      text-align: center;
+    }
+    .login-card h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a3a5c;
+      text-align: center;
+    }
+    .login-card p {
+      font-size: 13px;
+      color: #64748b;
+      text-align: center;
+      margin-top: -8px;
+    }
+    .login-card input {
+      width: 100%;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .15s;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+    .login-card input:focus { border-color: #2e6da4; }
+    .login-card input::placeholder { letter-spacing: 0; color: #94a3b8; }
+    .login-error {
+      font-size: 12px;
+      color: #dc2626;
+      text-align: center;
+      min-height: 16px;
+    }
+    .login-btn {
+      background: #1a3a5c;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 11px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .login-btn:hover    { background: #2e6da4; }
+    .login-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+
+    /* ── Chat area ── */
+    .chat-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message {
+      max-width: 78%;
+      padding: 11px 15px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .message.user {
+      background: #1a3a5c;
+      color: #fff;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .message.ai {
+      background: #fff;
+      color: #1a1a1a;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    /* ── Typing dots ── */
+    .typing {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 14px 16px;
+    }
+    .dot {
+      width: 7px; height: 7px;
+      background: #94a3b8;
+      border-radius: 50%;
+      animation: bounce 1.3s infinite ease-in-out;
+    }
+    .dot:nth-child(2) { animation-delay: .18s; }
+    .dot:nth-child(3) { animation-delay: .36s; }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30%           { transform: translateY(-7px); }
+    }
+
+    /* ── Suggestion chips ── */
+    .chips {
+      flex-shrink: 0;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 6px 16px 10px;
+    }
+    .chip {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 20px;
+      padding: 5px 13px;
+      font-size: 12px;
+      color: #334155;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+      user-select: none;
+    }
+    .chip:hover { background: #e8f0fb; border-color: #2e6da4; color: #1a3a5c; }
+
+    /* ── Input bar ── */
+    .input-bar {
+      flex-shrink: 0;
+      background: #fff;
+      border-top: 1px solid #e2e8f0;
+      padding: 12px 16px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+    textarea {
+      flex: 1;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 9px 13px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: none;
+      line-height: 1.45;
+      max-height: 120px;
+      overflow-y: auto;
+      outline: none;
+      transition: border-color .15s;
+    }
+    textarea:focus { border-color: #2e6da4; }
+    button#send-btn {
+      background: #1a3a5c;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 9px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+      flex-shrink: 0;
+      height: 40px;
+    }
+    button#send-btn:hover    { background: #2e6da4; }
+    button#send-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+  <!-- Login Screen -->
+  <div id="login-screen">
+    <div class="login-card">
+      <div class="login-icon">🎓</div>
+      <h2>Student Portal</h2>
+      <p>Enter your college email to view your academic summary</p>
+      <input type="email" id="student-id-input" placeholder="e.g. name@sunway.edu.np" />
+      <div class="login-error" id="login-error"></div>
+      <button class="login-btn" id="login-btn" onclick="verifyStudent()">Continue</button>
+    </div>
+  </div>
+
+  <div class="header">
+    <div class="header-left">
+      <div class="header-icon">🎓</div>
+      <div>
+        <h1>My Academic Assistant</h1>
+        <p id="header-sub">Ask about your attendance, performance, and more</p>
+      </div>
+    </div>
+    <div class="student-badge" id="student-badge"></div>
+  </div>
+
+  <div class="chat-scroll" id="chat"></div>
+
+  <div class="chips" id="chips">
+    <span class="chip" onclick="send('What is my attendance percentage?')">My attendance</span>
+    <span class="chip" onclick="send('Am I at risk of failing due to attendance?')">Am I at risk?</span>
+    <span class="chip" onclick="send('What is my engagement score?')">My engagement</span>
+    <span class="chip" onclick="send('How is my attendance trend recently?')">My trend</span>
+    <span class="chip" onclick="send('What is my rank in the batch?')">My rank</span>
+  </div>
+
+  <div class="input-bar">
+    <textarea id="input" rows="1" placeholder="Ask anything about your attendance or performance…"></textarea>
+    <button id="send-btn" onclick="submitMessage()">Send</button>
+  </div>
+
+  <script>
+    const chatEl   = document.getElementById('chat');
+    const inputEl  = document.getElementById('input');
+    const sendBtn  = document.getElementById('send-btn');
+
+    let studentId   = null;
+    let studentName = '';
+
+    // ── Login ──
+    document.getElementById('student-id-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') verifyStudent();
+    });
+
+    async function verifyStudent() {
+      const raw = document.getElementById('student-id-input').value.trim();
+      const errEl = document.getElementById('login-error');
+      const btn   = document.getElementById('login-btn');
+
+      if (!raw) { errEl.textContent = 'Please enter your college email.'; return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Verifying…';
+      errEl.textContent = '';
+
+      try {
+        const resp = await fetch('/student/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: raw }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          errEl.textContent = data.error || 'Student not found. Check your email.';
+          btn.disabled = false;
+          btn.textContent = 'Continue';
+          return;
+        }
+
+        studentId   = data.sno;
+        studentName = data.name;
+
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('student-badge').textContent  = studentName;
+        document.getElementById('student-badge').style.display = 'block';
+        document.getElementById('header-sub').textContent = `${data.batch}  •  ID: ${studentId}`;
+
+        appendMessage(`Hi ${studentName}! I'm your personal academic assistant. Ask me anything about your attendance, engagement score, risk level, or batch ranking.`, 'ai');
+        inputEl.focus();
+
+      } catch {
+        errEl.textContent = 'Connection error. Make sure the server is running.';
+        btn.disabled = false;
+        btn.textContent = 'Continue';
+      }
+    }
+
+    // ── Chat ──
+    inputEl.addEventListener('input', () => {
+      inputEl.style.height = 'auto';
+      inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+    });
+
+    inputEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitMessage(); }
+    });
+
+    function send(text) {
+      inputEl.value = text;
+      submitMessage();
+    }
+
+    function appendMessage(text, role) {
+      const el = document.createElement('div');
+      el.className = `message ${role}`;
+      el.textContent = text;
+      chatEl.appendChild(el);
+      chatEl.scrollTop = chatEl.scrollHeight;
+      return el;
+    }
+
+    function addTyping() {
+      const el = document.createElement('div');
+      el.className = 'message ai typing';
+      el.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+      chatEl.appendChild(el);
+      chatEl.scrollTop = chatEl.scrollHeight;
+      return el;
+    }
+
+    async function submitMessage() {
+      const text = inputEl.value.trim();
+      if (!text || sendBtn.disabled || !studentId) return;
+
+      inputEl.value = '';
+      inputEl.style.height = 'auto';
+      sendBtn.disabled = true;
+
+      appendMessage(text, 'user');
+      const typingEl = addTyping();
+
+      try {
+        const resp = await fetch('/student/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ student_id: studentId, message: text }),
+        });
+
+        typingEl.remove();
+        const aiEl = appendMessage('', 'ai');
+
+        const reader  = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let   buffer  = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const payload = line.slice(6).trim();
+            if (payload === '[DONE]') break;
+            try {
+              aiEl.textContent += JSON.parse(payload);
+              chatEl.scrollTop = chatEl.scrollHeight;
+            } catch { /* ignore malformed chunks */ }
+          }
+        }
+
+        if (!aiEl.textContent.trim()) {
+          aiEl.textContent = 'No response. Is Ollama running?';
+        }
+
+      } catch {
+        typingEl.remove();
+        appendMessage('Connection error. Make sure the server and Ollama are running.', 'ai');
+      }
+
+      sendBtn.disabled = false;
+      inputEl.focus();
+    }
+  </script>
+</body>
+</html>

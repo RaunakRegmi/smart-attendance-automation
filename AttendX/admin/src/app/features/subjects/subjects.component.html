@@ -1,0 +1,65 @@
+<div class="page-header"><h1>Subjects</h1><p>Manage subjects</p></div>
+<div class="toolbar">
+  <div class="search-input"><input placeholder="Search..." (input)="search.set($any($event.target).value); page.set(1); load()" /></div>
+  <button class="btn btn--primary" (click)="openCreate()">+ Add Subject</button>
+</div>
+<div class="card">
+  @if (loading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
+  @else {
+    <table class="data-table">
+      <thead><tr><th>Code</th><th>Title</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (s of subjects(); track s.id) {
+          <tr>
+            <td>{{ s.subjectCode }}</td>
+            <td>{{ s.subjectName }}</td>
+            <td class="actions">
+              <button class="btn btn--ghost btn--sm" (click)="openEdit(s)">Edit</button>
+              <button class="btn btn--ghost btn--sm" (click)="deleteTarget.set(s)">Delete</button>
+            </td>
+          </tr>
+        } @empty { <tr><td colspan="3" class="empty-state">No subjects</td></tr> }
+      </tbody>
+    </table>
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [total]="total()"
+      [limit]="limit()"
+      (pageChange)="page.set($event); load()"
+      (limitChange)="limit.set($event); page.set(1); load()"
+    />
+  }
+</div>
+@if (showModal()) {
+  <div class="modal-backdrop" (click)="showModal.set(false)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header"><h2>{{ editing() ? 'Update' : 'Create' }} Subject</h2></div>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="modal__body">
+          <div class="form-field"><label>Code</label><input formControlName="subjectCode" [readonly]="!!editing()" />
+            @if (form.controls.subjectCode.touched && form.controls.subjectCode.errors?.['required']) { <span class="error">Code is required</span> }
+          </div>
+          <div class="form-field"><label>Title</label><input formControlName="subjectName" />
+            @if (form.controls.subjectName.touched && form.controls.subjectName.errors?.['required']) { <span class="error">Title is required</span> }
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn btn--secondary" (click)="showModal.set(false)">Cancel</button>
+          <button type="submit" class="btn btn--primary" [disabled]="saving() || form.invalid">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+@if (deleteTarget()) {
+  <app-confirm-dialog
+    title="Delete Subject"
+    [message]="'Delete ' + deleteTarget()!.subjectCode + '? Unlink the lecturer first.'"
+    confirmLabel="Delete"
+    [loading]="deleting()"
+    loadingLabel="Deleting..."
+    (confirm)="delete()"
+    (cancel)="deleteTarget.set(null)"
+  />
+}

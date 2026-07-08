@@ -1,0 +1,68 @@
+<div class="page-header">
+  <h1>Upload Routine</h1>
+  <p>Upload an Excel or CSV file with the class schedule for a batch and section.</p>
+  <button type="button" class="btn btn--primary btn--sm" style="margin-top: 0.5rem;" (click)="downloadRoutineSample()">Download sample routine format</button>
+</div>
+
+<p class="back-link"><a routerLink="/routines">← All routines</a></p>
+
+<div class="card card--form">
+  <div class="form-field">
+    <label for="batch">Batch</label>
+    <select id="batch" [value]="selectedBatchId()" (change)="onBatchChange($any($event.target).value)">
+      <option value="">Select batch</option>
+      @for (b of batches(); track b.id) {
+        <option [value]="b.id">{{ b.name }}</option>
+      }
+    </select>
+  </div>
+  <div class="form-field">
+    <label for="section">Section</label>
+    <select id="section" [value]="selectedSectionId()" (change)="selectedSectionId.set($any($event.target).value)">
+      <option value="">Select section</option>
+      @for (s of sections(); track s.id) {
+        <option [value]="s.id">{{ s.name }}</option>
+      }
+    </select>
+  </div>
+  <div
+    class="drop-zone"
+    [class.drop-zone--active]="dragOver()"
+    [class.drop-zone--has-file]="!!selectedFile()"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave()"
+    (drop)="onDrop($event)"
+  >
+    @if (selectedFile(); as file) {
+      <div class="drop-zone__file">
+        <span class="drop-zone__icon">📄</span>
+        <span class="drop-zone__name">{{ file.name }}</span>
+        <span class="drop-zone__size">({{ (file.size / 1024).toFixed(1) }} KB)</span>
+        <button type="button" class="btn btn--ghost btn--sm" (click)="clearFile()">Remove</button>
+      </div>
+    } @else {
+      <div class="drop-zone__empty">
+        <span class="drop-zone__icon">📁</span>
+        <p>Drag & drop a file here, or <label class="drop-zone__label" for="file-input">browse</label></p>
+        <p class="drop-zone__hint">Supported: .xlsx, .xls, .csv</p>
+      </div>
+    }
+    <input id="file-input" type="file" accept=".xlsx,.xls,.csv" (change)="onFileSelect($event)" hidden />
+  </div>
+
+  <div class="form-actions">
+    <a routerLink="/routines" class="btn btn--secondary">Cancel</a>
+    <button
+      type="button"
+      class="btn btn--primary"
+      [disabled]="saving() || !selectedFile() || !selectedBatchId() || !selectedSectionId()"
+      (click)="upload()"
+    >
+      @if (saving()) {
+        <span class="loading-spinner"></span> Uploading...
+      } @else {
+        Upload routine
+      }
+    </button>
+  </div>
+</div>

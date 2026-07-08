@@ -1,0 +1,67 @@
+<div class="page-header"><h1>Lecturers</h1><p>Manage lecturer records</p></div>
+<div class="toolbar">
+  <div class="search-input"><input placeholder="Search..." (input)="search.set($any($event.target).value); page.set(1); load()" /></div>
+  <button class="btn btn--primary" (click)="openCreate()">+ Add Lecturer</button>
+</div>
+<div class="card">
+  @if (loading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
+  @else {
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Email</th><th>Contact</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (l of lecturers(); track l.id) {
+          <tr>
+            <td>{{ l.name }}</td>
+            <td>{{ l.email || '-' }}</td>
+            <td>{{ l.contact || '-' }}</td>
+            <td class="actions">
+              <button class="btn btn--ghost btn--sm" (click)="openEdit(l)">Edit</button>
+              <button class="btn btn--ghost btn--sm" (click)="deleteTarget.set(l)">Delete</button>
+            </td>
+          </tr>
+        } @empty { <tr><td colspan="4" class="empty-state">No lecturers</td></tr> }
+      </tbody>
+    </table>
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [total]="total()"
+      [limit]="limit()"
+      (pageChange)="page.set($event); load()"
+      (limitChange)="limit.set($event); page.set(1); load()"
+    />
+  }
+</div>
+@if (showModal()) {
+  <div class="modal-backdrop" (click)="showModal.set(false)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header"><h2>{{ editing() ? 'Update' : 'Add' }} Lecturer</h2></div>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="modal__body">
+          <div class="form-field"><label>Name</label><input formControlName="name" />
+            @if (form.controls.name.touched && form.controls.name.errors?.['required']) { <span class="error">Name is required</span> }
+          </div>
+          <div class="form-field"><label>Email</label><input formControlName="email" type="email" />
+            @if (form.controls.email.touched && form.controls.email.errors?.['email']) { <span class="error">Invalid email format</span> }
+          </div>
+          <div class="form-field"><label>Contact</label><input formControlName="contact" /></div>
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn btn--secondary" (click)="showModal.set(false)">Cancel</button>
+          <button type="submit" class="btn btn--primary" [disabled]="saving() || form.invalid">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+@if (deleteTarget()) {
+  <app-confirm-dialog
+    title="Delete Lecturer"
+    [message]="'Delete ' + deleteTarget()!.name + '? Reassign their subjects first.'"
+    confirmLabel="Delete"
+    [loading]="deleting()"
+    loadingLabel="Deleting..."
+    (confirm)="delete()"
+    (cancel)="deleteTarget.set(null)"
+  />
+}

@@ -1,0 +1,74 @@
+<div class="page-header"><h1>Sections</h1><p>Manage sections by batch</p></div>
+<div class="toolbar">
+  <div class="search-input"><input type="search" placeholder="Search sections..." (input)="search.set($any($event.target).value); page.set(1); load()" /></div>
+  <select (change)="filterBatchId.set($any($event.target).value); page.set(1); load()">
+    <option value="">All Batches</option>
+    @for (b of batches(); track b.id) { <option [value]="b.id">{{ b.name }}</option> }
+  </select>
+  <button type="button" class="btn btn--primary" (click)="openCreate()">+ Create Section</button>
+</div>
+<div class="card">
+  @if (loading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
+  @else {
+    <table class="data-table">
+      <thead><tr><th>Section</th><th>Batch</th><th>Created</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (s of sections(); track s.id) {
+          <tr>
+            <td>{{ s.name }}</td>
+            <td>{{ s.Batch?.name }}</td>
+            <td>{{ s.createdAt | date: 'medium' }}</td>
+            <td class="actions">
+              <button class="btn btn--ghost btn--sm" (click)="openEdit(s)">Edit</button>
+              <button class="btn btn--ghost btn--sm" (click)="confirmDelete(s)">Delete</button>
+            </td>
+          </tr>
+        } @empty { <tr><td colspan="4" class="empty-state">No sections</td></tr> }
+      </tbody>
+    </table>
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [total]="total()"
+      [limit]="limit()"
+      (pageChange)="page.set($event); load()"
+      (limitChange)="limit.set($event); page.set(1); load()"
+    />
+  }
+</div>
+@if (showModal()) {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header"><h2>{{ editing() ? 'Update' : 'Create' }} Section</h2></div>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="modal__body">
+          <div class="form-field"><label>Name</label><input formControlName="name" />
+            @if (form.controls.name.touched && form.controls.name.errors?.['required']) { <span class="error">Name is required</span> }
+          </div>
+          <div class="form-field">
+            <label>Batch</label>
+            <select formControlName="batchId"><option value="">Select batch</option>
+              @for (b of batches(); track b.id) { <option [value]="b.id">{{ b.name }}</option> }
+            </select>
+            @if (form.controls.batchId.touched && form.controls.batchId.errors?.['required']) { <span class="error">Batch is required</span> }
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn btn--secondary" (click)="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn--primary" [disabled]="saving() || form.invalid">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+@if (deleteTarget()) {
+  <app-confirm-dialog
+    title="Delete Section"
+    [message]="'Delete ' + deleteTarget()!.name + '? Remove all students and sheets first.'"
+    confirmLabel="Delete"
+    [loading]="deleting()"
+    loadingLabel="Deleting..."
+    (confirm)="delete()"
+    (cancel)="deleteTarget.set(null)"
+  />
+}

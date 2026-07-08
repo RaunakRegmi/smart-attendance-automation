@@ -1,0 +1,51 @@
+@if (loading()) {
+  <div class="empty-state"><span class="loading-spinner"></span></div>
+} @else if (sheet()) {
+  <div class="page-header">
+    <h1>{{ sheet()!.sheetName }}</h1>
+    <p>Sheet details and actions</p>
+  </div>
+  <p class="back-link"><a routerLink="/sheets">← All sheets</a></p>
+
+  <div class="detail-grid">
+    <div class="card detail-card">
+      <h2>Information</h2>
+      <dl class="detail-list">
+        <dt>Google ID</dt>
+        <dd>{{ sheet()!.sheetId }}</dd>
+        <dt>Batch</dt>
+        <dd>{{ sheet()!.Batch?.name ?? sheet()!.batchId }}</dd>
+        <dt>Section</dt>
+        <dd>{{ sheet()!.Section?.name ?? sheet()!.sectionId }}</dd>
+        <dt>Status</dt>
+        <dd>
+          <label class="toggle-switch" [class.toggle-switch--disabled]="toggling()" (click)="toggle($event)">
+            <input type="checkbox" [checked]="sheet()!.status === 'active'" [disabled]="toggling()" />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            <span class="toggle-label">{{ sheet()!.status === 'active' ? 'Active' : 'Inactive' }}</span>
+          </label>
+        </dd>
+        <dt>Last successful sync</dt>
+        <dd>{{ sheet()!.lastSuccessfulSyncTime | date: 'medium' }}</dd>
+        <dt>Last attempted sync</dt>
+        <dd>{{ sheet()!.lastAttemptedSyncTime | date: 'medium' }}</dd>
+      </dl>
+      <div class="detail-actions">
+        <a class="btn btn--secondary" [href]="sheetUrl(sheet()!)" target="_blank" rel="noopener">Open in Google</a>
+        <button type="button" class="btn btn--secondary" (click)="sync()" [disabled]="syncing()">@if (syncing()) { <span class="loading-spinner"></span> Syncing… } @else { Enqueue sync }</button>
+        <button type="button" class="btn btn--secondary" (click)="previewOpen.set(!previewOpen())">
+          {{ previewOpen() ? 'Hide' : 'Show' }} preview
+        </button>
+      </div>
+    </div>
+    @if (previewOpen()) {
+      <div class="card preview-card">
+        <h2>Preview</h2>
+        <iframe [src]="previewUrl(sheet()!)" title="Sheet preview"></iframe>
+      </div>
+    }
+  </div>
+} @else {
+  <div class="page-header"><h1>Sheet</h1></div>
+  <p class="empty-state">Not found. <a routerLink="/sheets">Back to list</a></p>
+}

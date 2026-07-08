@@ -1,0 +1,110 @@
+<div class="page-header"><h1>Students</h1><p>Manage student records</p></div>
+<div class="toolbar">
+  <div class="search-input"><input type="search" placeholder="Search..." (input)="search.set($any($event.target).value); page.set(1); load()" /></div>
+  <select (change)="onBatchFilter($any($event.target).value)">
+    <option value="">All Batches</option>
+    @for (b of batches(); track b.id) { <option [value]="b.id">{{ b.name }}</option> }
+  </select>
+  <select #sectionSelect (change)="filterSectionId.set($any($event.target).value); page.set(1); load()">
+    <option value="">All Sections</option>
+    @for (s of sections(); track s.id) { <option [value]="s.id">{{ s.name }}</option> }
+  </select>
+  <button type="button" class="btn btn--secondary" (click)="showUpload.set(true)">Upload Excel</button>
+  <button type="button" class="btn btn--primary" (click)="openCreate()">+ Add Student</button>
+</div>
+<div class="card">
+  @if (loading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
+  @else {
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Email</th><th>Section</th><th>Batch</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (s of students(); track s.id) {
+          <tr>
+            <td>{{ s.name }}</td>
+            <td>{{ s.email }}</td>
+            <td>{{ s.Section?.name ?? '-' }}</td>
+            <td>{{ s.Batch?.name ?? '-' }}</td>
+            <td class="actions">
+              <button class="btn btn--ghost btn--sm" (click)="openEdit(s)">Edit</button>
+              <button class="btn btn--ghost btn--sm" (click)="deleteTarget.set(s)">Delete</button>
+            </td>
+          </tr>
+        } @empty { <tr><td colspan="5" class="empty-state">No students</td></tr> }
+      </tbody>
+    </table>
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [total]="total()"
+      [limit]="limit()"
+      (pageChange)="goPage($event)"
+      (limitChange)="limit.set($event); page.set(1); load()"
+    />
+  }
+</div>
+@if (showModal()) {
+  <div class="modal-backdrop" (click)="showModal.set(false)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header"><h2>{{ editing() ? 'Update' : 'Add' }} Student</h2></div>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="modal__body">
+          <div class="form-field"><label>Name</label><input formControlName="name" />
+            @if (form.controls.name.touched && form.controls.name.errors?.['required']) { <span class="error">Name is required</span> }
+          </div>
+          <div class="form-field"><label>Email</label><input formControlName="email" type="email" [readonly]="!!editing()" />
+            @if (form.controls.email.touched && form.controls.email.errors?.['required']) { <span class="error">Email is required</span> }
+            @if (form.controls.email.touched && form.controls.email.errors?.['email']) { <span class="error">Invalid email format</span> }
+          </div>
+          <div class="form-field"><label>Batch</label>
+            <select formControlName="batchId" (change)="loadSections($any($event.target).value)">
+              <option value="">Select</option>@for (b of batches(); track b.id) { <option [value]="b.id">{{ b.name }}</option> }
+            </select></div>
+          <div class="form-field"><label>Section</label>
+            <select formControlName="sectionId"><option value="">Select</option>@for (s of modalSections(); track s.id) { <option [value]="s.id">{{ s.name }}</option> }</select>
+          </div>
+          <div class="form-field"><label>Faculty</label>
+            <select formControlName="facultyId"><option value="">Select</option>@for (f of faculties(); track f.id) { <option [value]="f.id">{{ f.name }}</option> }</select>
+          </div>
+          <div class="form-field"><label>Gender</label>
+            <select formControlName="gender"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option><option value="Others">Others</option></select>
+          </div>
+          <div class="form-field"><label>University ID</label>
+            <input formControlName="univId" placeholder="e.g. 23-ABCD-1234/BCS" />
+            @if (form.controls.univId.touched && form.controls.univId.errors?.['pattern']) { <span class="error">Only letters, numbers, hyphens and slashes</span> }
+            @if (form.controls.univId.touched && form.controls.univId.errors?.['maxlength']) { <span class="error">Max 30 characters</span> }
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn btn--secondary" (click)="showModal.set(false)">Cancel</button>
+          <button type="submit" class="btn btn--primary" [disabled]="saving() || form.invalid">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+@if (showUpload()) {
+  <div class="modal-backdrop" (click)="showUpload.set(false)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header"><h2>Upload Excel</h2></div>
+      <div class="modal__body">
+        <p>Upload attendance Excel file. Use the standard attendance format.</p>
+        <input type="file" accept=".xlsx,.xls" (change)="onFileSelect($event)" />
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--secondary" (click)="showUpload.set(false)">Cancel</button>
+        <button type="button" class="btn btn--primary" (click)="uploadExcel()" [disabled]="uploading()">@if (uploading()) { <span class="loading-spinner"></span> Uploading… } @else { Upload }</button>
+      </div>
+    </div>
+  </div>
+}
+@if (deleteTarget()) {
+  <app-confirm-dialog
+    title="Delete Student"
+    [message]="'Delete ' + deleteTarget()!.name + '? The student will lose login access.'"
+    confirmLabel="Delete"
+    [loading]="deleting()"
+    loadingLabel="Deleting..."
+    (confirm)="delete()"
+    (cancel)="deleteTarget.set(null)"
+  />
+}

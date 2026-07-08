@@ -1,0 +1,7 @@
+{
+  "watch": ["src", "config"],
+  "ext": "js,json",
+  "ignore": ["src/**/*.test.js", "uploads", "exports", "node_modules"],
+  "delay": "500",
+  "legacyWatch": true
+}

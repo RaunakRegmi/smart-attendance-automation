@@ -1,0 +1,62 @@
+<div class="page-header"><h1>Faculties</h1><p>Manage faculty/department records</p></div>
+<div class="toolbar">
+  <div class="search-input"><input type="search" placeholder="Search faculties..." (input)="search.set($any($event.target).value); page.set(1); load()" /></div>
+  <button type="button" class="btn btn--primary" (click)="openCreate()">+ Create Faculty</button>
+</div>
+<div class="card">
+  @if (loading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
+  @else {
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Created</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (f of faculties(); track f.id) {
+          <tr>
+            <td>{{ f.name }}</td>
+            <td>{{ f.createdAt | date: 'medium' }}</td>
+            <td class="actions">
+              <button class="btn btn--ghost btn--sm" (click)="openEdit(f)">Edit</button>
+              <button class="btn btn--ghost btn--sm" (click)="confirmDelete(f)">Delete</button>
+            </td>
+          </tr>
+        } @empty { <tr><td colspan="3" class="empty-state">No faculties</td></tr> }
+      </tbody>
+    </table>
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [total]="total()"
+      [limit]="limit()"
+      (pageChange)="page.set($event); load()"
+      (limitChange)="limit.set($event); page.set(1); load()"
+    />
+  }
+</div>
+@if (showModal()) {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header"><h2>{{ editing() ? 'Update' : 'Create' }} Faculty</h2></div>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="modal__body">
+          <div class="form-field"><label>Name</label><input formControlName="name" />
+            @if (form.controls.name.touched && form.controls.name.errors?.['required']) { <span class="error">Name is required</span> }
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn btn--secondary" (click)="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn--primary" [disabled]="saving() || form.invalid">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+@if (deleteTarget()) {
+  <app-confirm-dialog
+    title="Delete Faculty"
+    [message]="'Delete ' + deleteTarget()!.name + '? Remove all students linked to this faculty first.'"
+    confirmLabel="Delete"
+    [loading]="deleting()"
+    loadingLabel="Deleting..."
+    (confirm)="delete()"
+    (cancel)="deleteTarget.set(null)"
+  />
+}

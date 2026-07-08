@@ -1,0 +1,108 @@
+<div class="profile-page">
+  <div class="page-header">
+    <h1>Profile</h1>
+    <p>Manage your account settings</p>
+  </div>
+
+  <div class="profile-grid">
+    <div class="card profile-card">
+      <div class="profile-card__header">
+        <h2>Profile Information</h2>
+      </div>
+
+      <form [formGroup]="profileForm" (ngSubmit)="updateProfile()">
+        <div class="form-field">
+          <label for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="you@example.com"
+            [class.invalid]="profileForm.controls.email.touched && profileForm.controls.email.invalid"
+          />
+          @if (profileForm.controls.email.touched && profileForm.controls.email.errors?.['required']) {
+            <span class="error">Email is required</span>
+          }
+          @if (profileForm.controls.email.touched && profileForm.controls.email.errors?.['email']) {
+            <span class="error">Enter a valid email</span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label>Role</label>
+          <div class="profile-card__role">{{ user()?.role }}</div>
+        </div>
+
+        <button type="submit" class="btn btn--primary" [disabled]="profileLoading() || profileForm.invalid">
+          @if (profileLoading()) {
+            <span class="loading-spinner"></span>
+          }
+          Save Changes
+        </button>
+      </form>
+    </div>
+
+    <div class="card profile-card">
+      <div class="profile-card__header">
+        <h2>Change Password</h2>
+      </div>
+
+      <form [formGroup]="passwordForm" (ngSubmit)="updatePassword()">
+        <div class="form-field">
+          <label for="currentPassword">Current Password</label>
+          <input
+            id="currentPassword"
+            type="password"
+            formControlName="currentPassword"
+            placeholder="Enter current password"
+            [class.invalid]="passwordForm.controls.currentPassword.touched && passwordForm.controls.currentPassword.invalid"
+          />
+          @if (passwordForm.controls.currentPassword.touched && passwordForm.controls.currentPassword.errors?.['required']) {
+            <span class="error">Current password is required</span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="newPassword">New Password</label>
+          <input
+            id="newPassword"
+            type="password"
+            formControlName="newPassword"
+            placeholder="Enter new password"
+            [class.invalid]="passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.invalid"
+          />
+          @if (passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.errors?.['required']) {
+            <span class="error">New password is required</span>
+          }
+          @if (passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.errors?.['minlength']) {
+            <span class="error">Password must be at least 6 characters</span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="confirmPassword">Confirm New Password</label>
+          <input
+            id="confirmPassword"
+            type="password"
+            formControlName="confirmPassword"
+            placeholder="Confirm new password"
+            [class.invalid]="passwordForm.controls.confirmPassword.touched && passwordForm.controls.confirmPassword.invalid"
+          />
+          @if (passwordForm.controls.confirmPassword.touched && passwordForm.controls.confirmPassword.errors?.['required']) {
+            <span class="error">Please confirm your new password</span>
+          }
+          @if (passwordForm.controls.confirmPassword.touched && passwordForm.errors?.['mustMatch']) {
+            <span class="error">Passwords do not match</span>
+          }
+        </div>
+
+        <button type="submit" class="btn btn--primary" [disabled]="passwordLoading() || passwordForm.invalid">
+          @if (passwordLoading()) {
+            <span class="loading-spinner"></span>
+          }
+          Update Password
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

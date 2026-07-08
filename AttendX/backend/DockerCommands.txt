@@ -1,0 +1,33 @@
+docker compose up
+
+docker compose down
+
+sudo ss -lptn 'sport = :5436'    ---> Check for anything occupying the port 5436
+
+sudo lsof -i :5436
+
+sudo kill -9 <PID>
+
+docker compose up --build
+
+docker compose down -v   ---> This will delete data from the db too
+
+
+
+*** If permission issue then : **********************************
+
+✅ Fix 2 (better): Add your user to docker group
+
+Run:
+
+sudo usermod -aG docker $USER
+
+Then log out and log back in, or run:
+
+newgrp docker
+
+After that, try again:
+
+docker compose up --build
+
+*******************************************************************
