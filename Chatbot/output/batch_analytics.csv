@@ -1,3 +1,2 @@
 batch,total_students,avg_attendance_pct,median_attendance_pct,batch_health_score,batch_health_tier,excellent_count,satisfactory_count,at_risk_count,critical_count
-Autumn 2025,66,86.4,88.24,86.4,Healthy,32,21,11,2
-Summer 2025,30,73.23,75.0,73.23,Stable,0,15,11,4
+Summer 2025,33,81.56,83.96,81.56,Stable,10,16,6,1
