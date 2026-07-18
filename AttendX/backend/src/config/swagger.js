@@ -46,7 +46,7 @@ const options = {
           properties: {
             id: { type: 'integer', example: 1 },
             email: { type: 'string', example: 'admin@example.com' },
-            role: { type: 'string', enum: ['ADMIN', 'STUDENT'], example: 'ADMIN' },
+            role: { type: 'string', enum: ['ADMIN', 'STUDENT', 'TEACHER'], example: 'ADMIN' },
             isActive: { type: 'boolean', example: true },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },

@@ -78,7 +78,7 @@ router.post('/login', authController.login);
  *                 format: password
  *               role:
  *                 type: string
- *                 enum: [ADMIN, STUDENT]
+ *                 enum: [ADMIN, STUDENT, TEACHER]
  *                 default: STUDENT
  *               isActive:
  *                 type: boolean
@@ -133,7 +133,7 @@ router.post('/users', authorizeRoles('ADMIN'), authController.createUser);
  *                 format: password
  *               role:
  *                 type: string
- *                 enum: [ADMIN, STUDENT]
+ *                 enum: [ADMIN, STUDENT, TEACHER]
  *               isActive:
  *                 type: boolean
  *     responses:

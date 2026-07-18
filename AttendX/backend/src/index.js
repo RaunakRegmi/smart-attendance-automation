@@ -28,6 +28,7 @@ const chatbotRoutes = require('./routes/chatbotRoutes');
 const agentToolRoutes = require('./routes/agentToolRoutes');
 const restoreRoutes = require('./routes/restoreRoutes');
 const sampleRoutes = require('./routes/sampleRoutes');
+const teacherRoutes = require('./routes/teacherRoutes');
 const schedulerService = require('./services/schedulerService');
 const errorHandler = require('./middleware/errorHandler');
 const User = require('./models/User');
@@ -200,6 +201,7 @@ app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/agent-tools', agentToolRoutes);
 app.use('/api/admin', restoreRoutes);
 app.use('/api/samples', sampleRoutes);
+app.use('/api/teacher', teacherRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is running' });

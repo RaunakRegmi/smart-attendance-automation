@@ -257,8 +257,10 @@ exports.updatePassword = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'Current password is wrong' });
     }
 
-    // Update password
+    // Update password; a successful change clears any admin-set
+    // "must change password" flag (used for admin-created teacher accounts).
     user.password = newPassword;
+    user.mustChangePassword = false;
     await user.save();
 
     const userResponse = user.get();
