@@ -20,7 +20,7 @@ const User = sequelize.define('User', {
     allowNull: false,
   },
   role: {
-    type: DataTypes.ENUM('ADMIN', 'STUDENT'),
+    type: DataTypes.ENUM('ADMIN', 'STUDENT', 'TEACHER'),
     allowNull: false,
     defaultValue: 'STUDENT',
   },
@@ -33,6 +33,13 @@ const User = sequelize.define('User', {
     type: DataTypes.INTEGER,
     allowNull: false,
     defaultValue: 0,
+  },
+  // Set when an admin creates the account with a temporary password; cleared
+  // on the user's first successful password change.
+  mustChangePassword: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
   },
 }, {
   tableName: 'users',

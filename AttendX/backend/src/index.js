@@ -47,6 +47,10 @@ const Notification = require('./models/Notification');
 const Setting = require('./models/Setting');
 const Conversation = require('./models/Conversation');
 const ChatMessage = require('./models/ChatMessage');
+const TeacherAssignment = require('./models/TeacherAssignment');
+const MessageThread = require('./models/MessageThread');
+const MessageThreadParticipant = require('./models/MessageThreadParticipant');
+const ThreadMessage = require('./models/ThreadMessage');
 
 const app = express();
 
@@ -149,6 +153,32 @@ User.hasMany(Conversation, { foreignKey: 'userId' });
 Conversation.belongsTo(User, { foreignKey: 'userId' });
 Conversation.hasMany(ChatMessage, { foreignKey: 'conversationId' });
 ChatMessage.belongsTo(Conversation, { foreignKey: 'conversationId' });
+
+// Lecturer → optional login user (role TEACHER); manual admin "promote" only
+User.hasOne(Lecturer, { foreignKey: 'userId' });
+Lecturer.belongsTo(User, { foreignKey: 'userId' });
+
+// Teacher assignment associations (row-level scoping backbone)
+User.hasMany(TeacherAssignment, { foreignKey: 'teacherUserId', as: 'teacherAssignments' });
+TeacherAssignment.belongsTo(User, { foreignKey: 'teacherUserId', as: 'teacher' });
+Section.hasMany(TeacherAssignment, { foreignKey: 'sectionId' });
+TeacherAssignment.belongsTo(Section, { foreignKey: 'sectionId' });
+Subject.hasMany(TeacherAssignment, { foreignKey: 'subjectId' });
+TeacherAssignment.belongsTo(Subject, { foreignKey: 'subjectId' });
+
+// Messaging associations (async threads; distinct from the chatbot's Conversation)
+MessageThread.hasMany(MessageThreadParticipant, { foreignKey: 'threadId', as: 'participants' });
+MessageThreadParticipant.belongsTo(MessageThread, { foreignKey: 'threadId' });
+User.hasMany(MessageThreadParticipant, { foreignKey: 'userId' });
+MessageThreadParticipant.belongsTo(User, { foreignKey: 'userId' });
+MessageThread.hasMany(ThreadMessage, { foreignKey: 'threadId', as: 'messages' });
+ThreadMessage.belongsTo(MessageThread, { foreignKey: 'threadId' });
+User.hasMany(ThreadMessage, { foreignKey: 'senderId', as: 'sentThreadMessages' });
+ThreadMessage.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
+MessageThread.belongsTo(User, { foreignKey: 'createdBy', as: 'creator' });
+// For STUDENT_TEACHER_SUBJECT threads, contextId points at subjects.id
+// (constraints: false — contextId is polymorphic-by-contextType, null for admin threads).
+MessageThread.belongsTo(Subject, { foreignKey: 'contextId', as: 'contextSubject', constraints: false });
 
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/students', studentRoutes);
