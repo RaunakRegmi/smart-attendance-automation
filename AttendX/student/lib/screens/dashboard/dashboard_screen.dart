@@ -6,9 +6,11 @@ import '../../theme/app_theme.dart';
 import '../../services/dashboard_provider.dart';
 import '../../services/schedule_provider.dart';
 import '../../services/notification_provider.dart';
+import '../../services/messages_provider.dart';
 import '../../services/notification_scheduler.dart';
 import '../../services/api_client.dart';
 import '../report/report_screen.dart';
+import '../messages/inbox_screen.dart';
 import '../../widgets/skeletons.dart';
 
 double _rs(BuildContext c, double v) {
@@ -37,6 +39,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await context.read<DashboardProvider>().loadDashboard();
       context.read<NotificationProvider>().loadNotifications();
+      context.read<MessagesProvider>().loadThreads();
       _loadAvatar();
       _loadAlertConfig();
     });
@@ -187,6 +190,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final dashboard = context.watch<DashboardProvider>();
     final notifProvider = context.watch<NotificationProvider>();
     final unread = notifProvider.unreadCount;
+    final unreadMessages = context.watch<MessagesProvider>().unreadCount;
 
     if (dashboard.isLoading && dashboard.data == null) {
       return Scaffold(
@@ -261,6 +265,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Text('AttendX', style: TextStyle(fontSize: _rs(context,18), fontWeight: FontWeight.w700, color: AppTheme.primary)),
                 ]),
 
+                Row(mainAxisSize: MainAxisSize.min, children: [
+                // Messages inbox with unread badge
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const InboxScreen()));
+                  },
+                  child: Stack(clipBehavior: Clip.none, children: [
+                    Container(width: _rs(context,40), height: _rs(context,40),
+                      decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(_rs(context,10)), border: Border.all(color: AppTheme.border)),
+                      child: Icon(Icons.chat_bubble_outline, size: _rs(context,18), color: AppTheme.textPrimary)),
+                    if (unreadMessages > 0)
+                      Positioned(top: _rs(context,-4), right: _rs(context,-4),
+                        child: Container(width: _rs(context,18), height: _rs(context,18),
+                          decoration: const BoxDecoration(color: AppTheme.error, shape: BoxShape.circle),
+                          child: Center(child: Text(unreadMessages > 9 ? '9+' : '$unreadMessages',
+                            style: TextStyle(fontSize: _rs(context,9), fontWeight: FontWeight.w700, color: Colors.white))))),
+                  ]),
+                ),
+                SizedBox(width: _rs(context,8)),
                 // Bell with badge (long-press to demo a class reminder)
                 GestureDetector(
                   onTap: () => _openNotifications(context),
@@ -279,6 +302,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             style: TextStyle(fontSize: _rs(context,9), fontWeight: FontWeight.w700, color: Colors.white))))),
                   ]),
                 ),
+                ]),
               ]),
             )),
 

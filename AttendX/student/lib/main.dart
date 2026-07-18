@@ -7,6 +7,7 @@ import 'services/dashboard_provider.dart';
 import 'services/attendance_provider.dart';
 import 'services/schedule_provider.dart';
 import 'services/notification_provider.dart';
+import 'services/messages_provider.dart';
 import 'services/notification_scheduler.dart';
 
 void main() {
@@ -27,6 +28,7 @@ class AttendXApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AttendanceProvider()),
         ChangeNotifierProvider(create: (_) => ScheduleProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => MessagesProvider()),
       ],
       child: MaterialApp(
         title: 'AttendX',
