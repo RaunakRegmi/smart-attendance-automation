@@ -232,12 +232,17 @@ const startServer = async () => {
       await sequelize.sync({ alter: true });
       console.log('Database schema synced (alter mode)');
     }
-    // Start the attendance sync scheduler (auto sync)
-    schedulerService.start();
-    // Start BullMQ worker to process sheet sync jobs
-    require('./workers/sheetSyncWorker');
-    // Start BullMQ worker to process sheet append jobs
-    require('./workers/sheetAppendWorker');
+    if (process.env.DISABLE_BACKGROUND_JOBS === 'true') {
+      // Test/CI mode: no scheduler and no BullMQ workers (no Redis required).
+      console.log('Background jobs disabled (DISABLE_BACKGROUND_JOBS=true)');
+    } else {
+      // Start the attendance sync scheduler (auto sync)
+      schedulerService.start();
+      // Start BullMQ worker to process sheet sync jobs
+      require('./workers/sheetSyncWorker');
+      // Start BullMQ worker to process sheet append jobs
+      require('./workers/sheetAppendWorker');
+    }
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
