@@ -1,0 +1,93 @@
+@if (loading()) {
+  <div class="empty-state"><span class="loading-spinner"></span></div>
+} @else {
+@if (data(); as d) {
+  <div class="page-header">
+    <h1>Welcome, {{ d.teacher.name }}</h1>
+    <p>Here's your teaching day at a glance</p>
+  </div>
+
+  @if (d.teacher.mustChangePassword) {
+    <div class="card" style="border-left: 4px solid #F59E0B; margin-bottom: 16px; padding: 12px 16px;">
+      <strong>Please change your temporary password.</strong>
+      <a routerLink="/teacher/profile"> Update it in your profile →</a>
+    </div>
+  }
+
+  <div class="stats-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 16px;">
+    <div class="card" style="padding: 16px;"><p class="hint">My classes</p><h2>{{ d.stats.classes }}</h2></div>
+    <div class="card" style="padding: 16px;"><p class="hint">Sections</p><h2>{{ d.stats.sections }}</h2></div>
+    <div class="card" style="padding: 16px;"><p class="hint">Students taught</p><h2>{{ d.stats.studentsTaught }}</h2></div>
+    <div class="card" style="padding: 16px;"><p class="hint">At-risk students</p><h2>{{ d.stats.atRiskCount }}</h2></div>
+    <div class="card" style="padding: 16px;">
+      <p class="hint">Unread messages</p>
+      <h2>{{ d.messages.unreadCount }}</h2>
+      <a routerLink="/teacher/messages" class="hint">Open inbox →</a>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom: 16px;">
+    <div class="page-header" style="padding: 16px 16px 0;"><h2>Today's classes</h2></div>
+    <table class="data-table">
+      <thead><tr><th>Time</th><th>Subject</th><th>Section</th><th>Room</th><th>Status</th></tr></thead>
+      <tbody>
+        @for (c of d.todayClasses; track c.routineId) {
+          <tr>
+            <td>{{ c.startTime }} – {{ c.endTime }}</td>
+            <td>{{ c.subjectName || c.subjectCode }}</td>
+            <td>{{ c.sectionName }} @if (c.batchName) { <span class="hint">({{ c.batchName }})</span> }</td>
+            <td>{{ c.room || '-' }}@if (c.block) { , {{ c.block }} }</td>
+            <td>
+              @if (c.status === 'ONGOING') { <span class="badge badge--success">Ongoing</span> }
+              @else if (c.status === 'UPCOMING') { <span class="badge">Upcoming</span> }
+              @else { <span class="badge badge--warning">Completed</span> }
+            </td>
+          </tr>
+        } @empty { <tr><td colspan="5" class="empty-state">No classes scheduled today</td></tr> }
+      </tbody>
+    </table>
+  </div>
+
+  @if (d.unresolvedRoutines.length > 0) {
+    <div class="card" style="border-left: 4px solid #EF4444; margin-bottom: 16px;">
+      <div class="page-header" style="padding: 16px 16px 0;">
+        <h2>Schedule rows needing attention</h2>
+        <p>These routine entries use a subject code that doesn't match any subject — they may be your classes. Ask an admin to fix the routine.</p>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Day</th><th>Time</th><th>Code</th><th>Name</th><th>Section</th></tr></thead>
+        <tbody>
+          @for (r of d.unresolvedRoutines; track r.routineId) {
+            <tr>
+              <td>{{ r.dayOfWeek }}</td>
+              <td>{{ r.startTime }} – {{ r.endTime }}</td>
+              <td>{{ r.subjectCode }}</td>
+              <td>{{ r.subjectName }}</td>
+              <td>{{ r.sectionName || r.sectionId }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <div class="card">
+    <div class="page-header" style="padding: 16px 16px 0;"><h2>Latest notifications</h2></div>
+    <table class="data-table">
+      <thead><tr><th>Title</th><th>Message</th><th>Received</th><th></th></tr></thead>
+      <tbody>
+        @for (n of d.notifications; track n.messageId) {
+          <tr>
+            <td>{{ n.title || 'Notification' }}</td>
+            <td>{{ n.body.slice(0, 80) }}</td>
+            <td>{{ n.createdAt | date: 'MMM d, h:mm a' }}</td>
+            <td>@if (!n.read) { <span class="badge badge--danger">New</span> }</td>
+          </tr>
+        } @empty { <tr><td colspan="4" class="empty-state">No notifications</td></tr> }
+      </tbody>
+    </table>
+  </div>
+} @else {
+  <div class="empty-state">Could not load dashboard</div>
+}
+}

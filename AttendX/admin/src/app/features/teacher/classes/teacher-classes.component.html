@@ -1,0 +1,29 @@
+<div class="page-header"><h1>My Classes</h1><p>The sections and subjects assigned to you</p></div>
+<div class="card">
+  @if (loading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
+  @else {
+    <table class="data-table">
+      <thead><tr><th>Subject</th><th>Section</th><th>Students</th><th>Avg. attendance</th><th>At risk</th><th></th></tr></thead>
+      <tbody>
+        @for (c of classes(); track c.assignmentId) {
+          <tr>
+            <td>{{ c.subjectCode }} — {{ c.subjectName || '-' }}</td>
+            <td>{{ c.sectionName }} @if (c.batchName) { <span class="hint">({{ c.batchName }})</span> }</td>
+            <td>{{ c.studentCount }}</td>
+            <td>
+              <span class="badge" [class.badge--success]="c.averageAttendance >= 80" [class.badge--danger]="c.averageAttendance > 0 && c.averageAttendance < 80">
+                {{ c.averageAttendance }}%
+              </span>
+            </td>
+            <td>{{ c.atRiskCount }}</td>
+            <td class="actions">
+              <a class="btn btn--ghost btn--sm" [routerLink]="['/teacher/classes', c.sectionId, c.subjectId]">Roster</a>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="empty-state">No classes assigned yet. An admin assigns classes to your account.</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

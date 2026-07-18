@@ -1,0 +1,63 @@
+<div class="page-header"><h1>Reports</h1><p>Attendance reports for your subjects (assigned sections only)</p></div>
+
+<div class="card" style="padding: 16px; margin-bottom: 16px;">
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+    <div class="form-field" style="min-width: 240px;">
+      <label>Subject</label>
+      <select [ngModel]="subjectId()" (ngModelChange)="subjectId.set($event ? +$event : null); sectionId.set('')">
+        <option [ngValue]="null">Select subject...</option>
+        @for (s of subjects(); track s.subjectId) {
+          <option [ngValue]="s.subjectId">{{ s.subjectCode }} — {{ s.subjectName || '-' }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-field" style="min-width: 200px;">
+      <label>Section (optional)</label>
+      <select [ngModel]="sectionId()" (ngModelChange)="sectionId.set($event)">
+        <option value="">All my sections</option>
+        @for (c of sectionsForSubject(); track c.assignmentId) {
+          <option [value]="c.sectionId">{{ c.sectionName }} @if (c.batchName) { ({{ c.batchName }}) }</option>
+        }
+      </select>
+    </div>
+    <button class="btn btn--primary" [disabled]="!subjectId() || loading()" (click)="load()">Generate</button>
+    @if (report()) {
+      <button class="btn btn--secondary" (click)="exportCsv()">Download CSV</button>
+    }
+  </div>
+</div>
+
+@if (loading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
+@else {
+@if (report(); as r) {
+  <div class="stats-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 16px;">
+    <div class="card" style="padding: 16px;"><p class="hint">Sessions</p><h2>{{ r.summary.totalSessions }}</h2></div>
+    <div class="card" style="padding: 16px;"><p class="hint">Records</p><h2>{{ r.summary.totalRecords }}</h2></div>
+    <div class="card" style="padding: 16px;"><p class="hint">Present</p><h2>{{ r.summary.presentCount }}</h2></div>
+    <div class="card" style="padding: 16px;"><p class="hint">Absent</p><h2>{{ r.summary.absentCount }}</h2></div>
+    <div class="card" style="padding: 16px;"><p class="hint">Attendance</p><h2>{{ r.summary.attendancePercentage }}%</h2></div>
+  </div>
+  <div class="card">
+    <table class="data-table">
+      <thead><tr><th>Student</th><th>Reg. No</th><th>Total</th><th>Present</th><th>Absent</th><th>Late</th><th>%</th></tr></thead>
+      <tbody>
+        @for (s of r.students; track s.student.id) {
+          <tr>
+            <td>{{ s.student.name }} <span class="hint">{{ s.student.email }}</span></td>
+            <td>{{ s.student.regNum || s.student.univId || '-' }}</td>
+            <td>{{ s.total }}</td>
+            <td>{{ s.present }}</td>
+            <td>{{ s.absent }}</td>
+            <td>{{ s.late }}</td>
+            <td>
+              <span class="badge" [class.badge--success]="!s.lowAttendance && s.total > 0" [class.badge--danger]="s.lowAttendance">
+                {{ s.total > 0 ? s.attendancePercentage + '%' : 'No data' }}
+              </span>
+            </td>
+          </tr>
+        } @empty { <tr><td colspan="7" class="empty-state">No students</td></tr> }
+      </tbody>
+    </table>
+  </div>
+}
+}

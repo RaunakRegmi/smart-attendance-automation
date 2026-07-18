@@ -1,0 +1,153 @@
+<div class="page-header"><h1>Teachers</h1><p>Manage teacher logins and class assignments</p></div>
+<div class="toolbar">
+  <div class="search-input"><input placeholder="Search by email..." (input)="search.set($any($event.target).value); page.set(1); load()" /></div>
+  <button class="btn btn--primary" (click)="openCreate()">+ Add Teacher</button>
+</div>
+<div class="card">
+  @if (loading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
+  @else {
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Email</th><th>Classes</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (t of teachers(); track t.id) {
+          <tr>
+            <td>{{ t.name }}</td>
+            <td>{{ t.email }}</td>
+            <td>{{ t.assignmentCount }}</td>
+            <td>
+              @if (t.isActive) { <span class="badge badge--success">Active</span> }
+              @else { <span class="badge badge--danger">Deactivated</span> }
+              @if (t.mustChangePassword) { <span class="badge badge--warning">Temp password</span> }
+            </td>
+            <td class="actions">
+              <button class="btn btn--ghost btn--sm" (click)="openAssignments(t)">Classes</button>
+              <button class="btn btn--ghost btn--sm" (click)="openEdit(t)">Edit</button>
+              @if (t.isActive) {
+                <button class="btn btn--ghost btn--sm" (click)="deactivateTarget.set(t)">Deactivate</button>
+              }
+            </td>
+          </tr>
+        } @empty { <tr><td colspan="5" class="empty-state">No teachers</td></tr> }
+      </tbody>
+    </table>
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [total]="total()"
+      [limit]="limit()"
+      (pageChange)="page.set($event); load()"
+      (limitChange)="limit.set($event); page.set(1); load()"
+    />
+  }
+</div>
+
+@if (showModal()) {
+  <div class="modal-backdrop" (click)="showModal.set(false)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header"><h2>{{ editing() ? 'Update' : 'Add' }} Teacher</h2></div>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="modal__body">
+          <div class="form-field"><label>Email (institutional)</label><input formControlName="email" type="email" />
+            @if (form.controls.email.touched && form.controls.email.invalid) { <span class="error">Valid email is required</span> }
+          </div>
+          <div class="form-field">
+            <label>{{ editing() ? 'Reset password (leave blank to keep)' : 'Temporary password' }}</label>
+            <input formControlName="password" type="password" autocomplete="new-password" />
+            @if (form.controls.password.touched && form.controls.password.errors?.['required']) { <span class="error">Password is required</span> }
+            @if (form.controls.password.touched && form.controls.password.errors?.['minlength']) { <span class="error">At least 6 characters</span> }
+            <span class="hint">The teacher is asked to change it on first login.</span>
+          </div>
+          <div class="form-field">
+            <label>Link existing lecturer record (optional)</label>
+            <select formControlName="lecturerId">
+              <option value="">— None —</option>
+              @for (l of lecturers(); track l.id) {
+                <option [value]="l.id">{{ l.name }}</option>
+              }
+            </select>
+          </div>
+          @if (!editing() && !form.getRawValue().lecturerId) {
+            <div class="form-field"><label>Display name (creates a lecturer record)</label><input formControlName="name" placeholder="e.g. Asha Sharma" /></div>
+          }
+          @if (editing()) {
+            <div class="form-field form-field--inline">
+              <label class="toggle-switch">
+                <input type="checkbox" formControlName="isActive" />
+                <span></span>
+              </label>
+              <label>Active</label>
+            </div>
+          }
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn btn--secondary" (click)="showModal.set(false)">Cancel</button>
+          <button type="submit" class="btn btn--primary" [disabled]="saving() || form.invalid">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (assignmentsFor(); as teacher) {
+  <div class="modal-backdrop" (click)="assignmentsFor.set(null)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header"><h2>Classes — {{ teacher.name }}</h2></div>
+      <div class="modal__body">
+        <form [formGroup]="assignmentForm" (ngSubmit)="addAssignment()">
+          <div class="form-field">
+            <label>Section</label>
+            <select formControlName="sectionId">
+              <option value="">Select section...</option>
+              @for (s of sections(); track s.id) {
+                <option [value]="s.id">{{ sectionLabel(s) }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Subject</label>
+            <select formControlName="subjectId">
+              <option value="">Select subject...</option>
+              @for (s of subjects(); track s.id) {
+                <option [value]="s.id">{{ s.subjectCode }} — {{ s.subjectName || '-' }}</option>
+              }
+            </select>
+          </div>
+          <button type="submit" class="btn btn--primary btn--sm" [disabled]="assignmentSaving() || assignmentForm.invalid">
+            Assign class
+          </button>
+        </form>
+        <hr />
+        @if (assignmentsLoading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
+        @else {
+          <table class="data-table">
+            <thead><tr><th>Section</th><th>Subject</th><th></th></tr></thead>
+            <tbody>
+              @for (a of assignments(); track a.id) {
+                <tr>
+                  <td>{{ a.sectionName }} @if (a.batchName) { <span class="hint">({{ a.batchName }})</span> }</td>
+                  <td>{{ a.subjectCode }} — {{ a.subjectName || '-' }}</td>
+                  <td class="actions"><button class="btn btn--ghost btn--sm" (click)="removeAssignment(a)">Remove</button></td>
+                </tr>
+              } @empty { <tr><td colspan="3" class="empty-state">No classes assigned yet</td></tr> }
+            </tbody>
+          </table>
+        }
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--secondary" (click)="assignmentsFor.set(null)">Close</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (deactivateTarget()) {
+  <app-confirm-dialog
+    title="Deactivate Teacher"
+    [message]="'Deactivate ' + deactivateTarget()!.name + '? They will no longer be able to log in. History and messages are preserved.'"
+    confirmLabel="Deactivate"
+    [loading]="deactivating()"
+    loadingLabel="Deactivating..."
+    (confirm)="deactivate()"
+    (cancel)="deactivateTarget.set(null)"
+  />
+}

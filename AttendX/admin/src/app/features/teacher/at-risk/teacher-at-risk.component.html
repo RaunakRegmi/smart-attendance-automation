@@ -1,0 +1,39 @@
+<div class="page-header"><h1>At-risk Students</h1><p>Students below the attendance threshold in your classes</p></div>
+
+<div class="toolbar">
+  <div class="form-field form-field--inline">
+    <label>Threshold</label>
+    <select [ngModel]="threshold()" (ngModelChange)="threshold.set(+$event); load()">
+      <option [ngValue]="90">90%</option>
+      <option [ngValue]="80">80%</option>
+      <option [ngValue]="70">70%</option>
+      <option [ngValue]="60">60%</option>
+    </select>
+  </div>
+</div>
+
+<div class="card">
+  @if (loading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
+  @else {
+    <table class="data-table">
+      <thead><tr><th>Student</th><th>Class</th><th>Attendance</th><th>Absences</th><th></th></tr></thead>
+      <tbody>
+        @for (row of rows(); track row.student.id + '-' + row.subjectId) {
+          <tr>
+            <td>{{ row.student.name }} <span class="hint">{{ row.student.regNum || row.student.email }}</span></td>
+            <td>{{ row.subjectCode }} · {{ row.sectionName }} @if (row.batchName) { <span class="hint">({{ row.batchName }})</span> }</td>
+            <td><span class="badge badge--danger">{{ row.attendance.percentage }}%</span> <span class="hint">{{ row.attendance.present + row.attendance.late }}/{{ row.attendance.total }}</span></td>
+            <td>{{ row.attendance.absent }}</td>
+            <td class="actions">
+              @if (row.student.userId) {
+                <button class="btn btn--ghost btn--sm" (click)="messageStudent(row)">Message student</button>
+              } @else {
+                <span class="hint" title="Student has no app login yet">No login</span>
+              }
+            </td>
+          </tr>
+        } @empty { <tr><td colspan="5" class="empty-state">No at-risk students — great!</td></tr> }
+      </tbody>
+    </table>
+  }
+</div>

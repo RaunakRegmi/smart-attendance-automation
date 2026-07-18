@@ -1,0 +1,58 @@
+<div class="page-header">
+  <h1>Attendance</h1>
+  <p>View attendance history for your classes. Attendance records come from the attendance sheet pipeline.</p>
+</div>
+
+<div class="card" style="padding: 16px; margin-bottom: 16px;">
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+    <div class="form-field" style="min-width: 280px;">
+      <label>Class</label>
+      <select [ngModel]="selectedKey()" (ngModelChange)="selectedKey.set($event)">
+        <option value="">Select a class...</option>
+        @for (c of classes(); track c.assignmentId) {
+          <option [value]="classKey(c)">{{ c.subjectCode }} — {{ c.sectionName }} @if (c.batchName) { ({{ c.batchName }}) }</option>
+        }
+      </select>
+    </div>
+    <div class="form-field">
+      <label>Date (optional)</label>
+      <input type="date" [ngModel]="date()" (ngModelChange)="date.set($event)" />
+    </div>
+    <button class="btn btn--primary" [disabled]="!selectedClass() || loading()" (click)="load()">View</button>
+    <button class="btn btn--secondary" disabled title="Future scope: attendance is currently managed through the sheet sync pipeline">
+      Mark attendance (coming soon)
+    </button>
+  </div>
+</div>
+
+@if (loading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
+@else {
+@if (view(); as v) {
+  <div class="stats-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 16px;">
+    <div class="card" style="padding: 16px;"><p class="hint">Records</p><h2>{{ v.summary.total }}</h2></div>
+    <div class="card" style="padding: 16px;"><p class="hint">Present</p><h2>{{ v.summary.present }}</h2></div>
+    <div class="card" style="padding: 16px;"><p class="hint">Absent</p><h2>{{ v.summary.absent }}</h2></div>
+    <div class="card" style="padding: 16px;"><p class="hint">Late</p><h2>{{ v.summary.late }}</h2></div>
+    <div class="card" style="padding: 16px;"><p class="hint">Attendance</p><h2>{{ v.summary.attendancePercentage }}%</h2></div>
+  </div>
+  <div class="card">
+    <table class="data-table">
+      <thead><tr><th>Date</th><th>Student</th><th>Reg. No</th><th>Status</th></tr></thead>
+      <tbody>
+        @for (rec of v.records; track rec.id) {
+          <tr>
+            <td>{{ rec.date | date: 'MMM d, y' }}</td>
+            <td>{{ rec.student.name }}</td>
+            <td>{{ rec.student.regNum || rec.student.univId || '-' }}</td>
+            <td>
+              @if (rec.status === 'Present') { <span class="badge badge--success">Present</span> }
+              @else if (rec.status === 'Late') { <span class="badge badge--warning">Late</span> }
+              @else { <span class="badge badge--danger">Absent</span> }
+            </td>
+          </tr>
+        } @empty { <tr><td colspan="4" class="empty-state">No records for this selection</td></tr> }
+      </tbody>
+    </table>
+  </div>
+}
+}

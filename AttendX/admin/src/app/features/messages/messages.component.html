@@ -1,0 +1,122 @@
+<div class="page-header"><h1>Messages</h1><p>Async conversations — refresh to check for replies</p></div>
+<div class="toolbar">
+  <div class="toolbar__filters">
+    <button class="btn btn--sm" [class.btn--primary]="filter() === 'all'" [class.btn--ghost]="filter() !== 'all'" (click)="filter.set('all')">All</button>
+    <button class="btn btn--sm" [class.btn--primary]="filter() === 'unread'" [class.btn--ghost]="filter() !== 'unread'" (click)="filter.set('unread')">Unread</button>
+    <button class="btn btn--ghost btn--sm" (click)="load()">↻ Refresh</button>
+  </div>
+  <button class="btn btn--primary" (click)="openCompose()">+ New Message</button>
+</div>
+
+<div class="messages-layout">
+  <div class="card messages-list">
+    @if (loading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
+    @else {
+      @for (t of visibleThreads(); track t.id) {
+        <button type="button" class="thread-item" [class.thread-item--active]="t.id === activeThreadId()" (click)="openThread(t)">
+          <div class="thread-item__top">
+            <span class="thread-item__name">{{ threadTitle(t) }}</span>
+            @if (t.unreadCount > 0) { <span class="badge badge--danger">{{ t.unreadCount }}</span> }
+          </div>
+          @if (t.lastMessage) {
+            <div class="thread-item__preview">{{ t.lastMessage.body | slice: 0:70 }}</div>
+          }
+          <div class="thread-item__time">{{ t.updatedAt | date: 'MMM d, h:mm a' }}</div>
+        </button>
+      } @empty { <div class="empty-state">No conversations yet</div> }
+    }
+  </div>
+
+  <div class="card messages-thread">
+    @if (!activeThread()) {
+      <div class="empty-state">Select a conversation</div>
+    } @else {
+      <div class="messages-thread__header">
+        <strong>{{ threadTitle(activeThread()!) }}</strong>
+        @if (activeThread()!.subject) {
+          <span class="hint">{{ activeThread()!.subject!.subjectName }}</span>
+        }
+      </div>
+      @if (messagesLoading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
+      @else {
+        <div class="messages-thread__scroll">
+          @for (m of messages(); track m.id) {
+            <div class="bubble" [class.bubble--mine]="m.senderId === myUserId()" [class.bubble--system]="m.isSystem">
+              @if (m.senderId !== myUserId() && m.senderName) {
+                <div class="bubble__sender">{{ m.senderName }}@if (m.senderRole) { <span class="hint"> · {{ m.senderRole }}</span> }</div>
+              }
+              <div class="bubble__body">{{ m.body }}</div>
+              <div class="bubble__time">{{ m.createdAt | date: 'MMM d, h:mm a' }}</div>
+            </div>
+          } @empty { <div class="empty-state">No messages</div> }
+        </div>
+        @if (canReply()) {
+          <div class="messages-thread__composer">
+            <textarea
+              rows="2"
+              placeholder="Write a reply..."
+              [ngModel]="draft()"
+              (ngModelChange)="draft.set($event)"
+            ></textarea>
+            <button class="btn btn--primary" [disabled]="sending() || !draft().trim()" (click)="send()">Send</button>
+          </div>
+        } @else {
+          <div class="messages-thread__composer messages-thread__composer--disabled hint">
+            Notifications are one-way — replies are disabled.
+          </div>
+        }
+      }
+    }
+  </div>
+</div>
+
+@if (showCompose()) {
+  <div class="modal-backdrop" (click)="showCompose.set(false)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header"><h2>New Message</h2></div>
+      <div class="modal__body">
+        @if (auth.isTeacher()) {
+          <div class="form-field">
+            <label>Send to</label>
+            <div class="form-field form-field--inline">
+              <input type="radio" id="grp-students" name="composeGroup" [checked]="composeGroup() === 'students'" (change)="composeGroup.set('students'); composeRecipient.set(null)" />
+              <label for="grp-students">A student</label>
+            </div>
+            <div class="form-field form-field--inline">
+              <input type="radio" id="grp-admins" name="composeGroup" [checked]="composeGroup() === 'admins'" (change)="composeGroup.set('admins'); composeRecipient.set(null)" />
+              <label for="grp-admins">An administrator</label>
+            </div>
+          </div>
+        }
+        <div class="form-field">
+          <label>Recipient</label>
+          <select [ngModel]="composeRecipient()?.userId ?? ''" (ngModelChange)="selectRecipientById($event)">
+            <option value="">Select...</option>
+            @for (c of composeList(); track c.userId) {
+              <option [value]="c.userId">{{ c.name }} @if (c.email) { ({{ c.email }}) }</option>
+            }
+          </select>
+        </div>
+        @if (composeNeedsSubject()) {
+          <div class="form-field">
+            <label>Subject (the class this is about)</label>
+            <select [ngModel]="composeSubjectId() ?? ''" (ngModelChange)="composeSubjectId.set($event ? +$event : null)">
+              <option value="">Select subject...</option>
+              @for (s of composeRecipient()?.subjects ?? []; track s.id) {
+                <option [value]="s.id">{{ s.subjectCode }} — {{ s.subjectName || '-' }}</option>
+              }
+            </select>
+          </div>
+        }
+        <div class="form-field">
+          <label>Message</label>
+          <textarea rows="4" [ngModel]="composeBody()" (ngModelChange)="composeBody.set($event)"></textarea>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--secondary" (click)="showCompose.set(false)">Cancel</button>
+        <button type="button" class="btn btn--primary" [disabled]="sending() || !composeRecipient() || !composeBody().trim()" (click)="sendCompose()">Send</button>
+      </div>
+    </div>
+  </div>
+}

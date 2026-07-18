@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, guestGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, teacherGuard, guestGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -48,6 +48,26 @@ export const routes: Routes = [
         path: 'lecturers',
         loadComponent: () =>
           import('./features/lecturers/lecturers.component').then((m) => m.LecturersComponent),
+      },
+      {
+        path: 'teachers',
+        loadComponent: () =>
+          import('./features/teachers/teachers.component').then((m) => m.TeachersComponent),
+      },
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./features/notifications/notifications.component').then((m) => m.NotificationsComponent),
+      },
+      {
+        path: 'messages',
+        loadComponent: () =>
+          import('./features/messages/messages.component').then((m) => m.MessagesComponent),
+      },
+      {
+        path: 'oversight',
+        loadComponent: () =>
+          import('./features/oversight/oversight.component').then((m) => m.OversightComponent),
       },
       {
         path: 'faculties',
@@ -103,6 +123,54 @@ export const routes: Routes = [
         path: 'jobs/scheduler',
         loadComponent: () =>
           import('./features/jobs/scheduler-page/scheduler-page.component').then((m) => m.SchedulerPageComponent),
+      },
+    ],
+  },
+  {
+    path: 'teacher',
+    loadComponent: () =>
+      import('./layout/teacher-layout/teacher-layout.component').then((m) => m.TeacherLayoutComponent),
+    canActivate: [authGuard, teacherGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/teacher/dashboard/teacher-dashboard.component').then((m) => m.TeacherDashboardComponent),
+      },
+      {
+        path: 'classes',
+        loadComponent: () =>
+          import('./features/teacher/classes/teacher-classes.component').then((m) => m.TeacherClassesComponent),
+      },
+      {
+        path: 'classes/:sectionId/:subjectId',
+        loadComponent: () =>
+          import('./features/teacher/roster/teacher-roster.component').then((m) => m.TeacherRosterComponent),
+      },
+      {
+        path: 'attendance',
+        loadComponent: () =>
+          import('./features/teacher/attendance/teacher-attendance.component').then((m) => m.TeacherAttendanceComponent),
+      },
+      {
+        path: 'reports',
+        loadComponent: () =>
+          import('./features/teacher/reports/teacher-reports.component').then((m) => m.TeacherReportsComponent),
+      },
+      {
+        path: 'at-risk',
+        loadComponent: () =>
+          import('./features/teacher/at-risk/teacher-at-risk.component').then((m) => m.TeacherAtRiskComponent),
+      },
+      {
+        path: 'messages',
+        loadComponent: () =>
+          import('./features/messages/messages.component').then((m) => m.MessagesComponent),
+      },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./features/teacher/profile/teacher-profile.component').then((m) => m.TeacherProfileComponent),
       },
     ],
   },

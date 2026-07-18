@@ -1,0 +1,62 @@
+<div class="page-header">
+  <h1>Message Oversight</h1>
+  <p>Read-only view of student ↔ teacher conversations for accountability. Views are logged; posting is not possible.</p>
+</div>
+<div class="toolbar">
+  <div class="search-input"><input placeholder="Search by name, email or subject..." (input)="search.set($any($event.target).value); page.set(1); load()" /></div>
+</div>
+<div class="card">
+  @if (loading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
+  @else {
+    <table class="data-table">
+      <thead><tr><th>Participants</th><th>Subject</th><th>Last message</th><th>Updated</th><th></th></tr></thead>
+      <tbody>
+        @for (t of threads(); track t.id) {
+          <tr>
+            <td>{{ participantSummary(t) }}</td>
+            <td>{{ t.subject?.subjectCode || '-' }}</td>
+            <td>{{ t.lastMessage?.body?.slice(0, 60) || '-' }}</td>
+            <td>{{ t.updatedAt | date: 'MMM d, h:mm a' }}</td>
+            <td class="actions"><button class="btn btn--ghost btn--sm" (click)="openThread(t)">View</button></td>
+          </tr>
+        } @empty { <tr><td colspan="5" class="empty-state">No student–teacher conversations yet</td></tr> }
+      </tbody>
+    </table>
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [total]="total()"
+      [limit]="limit()"
+      (pageChange)="page.set($event); load()"
+      (limitChange)="limit.set($event); page.set(1); load()"
+    />
+  }
+</div>
+
+@if (messagesLoading()) {
+  <div class="modal-backdrop"><div class="modal"><div class="modal__body empty-state"><span class="loading-spinner"></span></div></div></div>
+}
+@if (activeThread(); as thread) {
+  <div class="modal-backdrop" (click)="activeThread.set(null)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2>{{ participantSummary(thread) }}</h2>
+      </div>
+      <div class="modal__body">
+        @if (thread.subject) { <p class="hint">Subject: {{ thread.subject.subjectCode }} — {{ thread.subject.subjectName }}</p> }
+        <p><span class="badge badge--warning">Read-only</span> This view is recorded in the audit log.</p>
+        <div class="oversight-messages">
+          @for (m of messages(); track m.id) {
+            <div class="oversight-message">
+              <div><strong>{{ m.senderName || 'System' }}</strong> <span class="hint">{{ m.createdAt | date: 'MMM d, y h:mm a' }}</span></div>
+              <div>{{ m.body }}</div>
+            </div>
+          } @empty { <div class="empty-state">No messages</div> }
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--secondary" (click)="activeThread.set(null)">Close</button>
+      </div>
+    </div>
+  </div>
+}

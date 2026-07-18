@@ -44,6 +44,15 @@ export class AdminLayoutComponent {
       ],
     },
     {
+      title: 'Teachers',
+      items: [
+        { label: 'Teacher Accounts', route: '/teachers', icon: 'lecturer' },
+        { label: 'Notifications', route: '/notifications', icon: 'scheduler' },
+        { label: 'Messages', route: '/messages', icon: 'chatbot' },
+        { label: 'Oversight', route: '/oversight', icon: 'reports' },
+      ],
+    },
+    {
       title: 'Sheets',
       items: [
         { label: 'All sheets', route: '/sheets', icon: 'sheets' },

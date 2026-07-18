@@ -1,0 +1,62 @@
+<div class="page-header"><h1>Profile</h1><p>Your account and teaching assignments</p></div>
+
+@if (loading()) {
+  <div class="empty-state"><span class="loading-spinner"></span></div>
+} @else {
+@if (profile(); as p) {
+  @if (p.user.mustChangePassword) {
+    <div class="card" style="border-left: 4px solid #F59E0B; margin-bottom: 16px; padding: 12px 16px;">
+      <strong>You are using a temporary password set by an administrator.</strong> Please change it below.
+    </div>
+  }
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start;">
+    <div class="card" style="padding: 16px;">
+      <h2>Account</h2>
+      <p><span class="hint">Email:</span> {{ p.user.email }}</p>
+      @if (p.lecturer) {
+        <form [formGroup]="form" (ngSubmit)="save()">
+          <div class="form-field"><label>Display name</label><input formControlName="name" />
+            @if (form.controls.name.touched && form.controls.name.errors?.['required']) { <span class="error">Name is required</span> }
+          </div>
+          <div class="form-field"><label>Contact</label><input formControlName="contact" placeholder="e.g. +977-98..." /></div>
+          <button type="submit" class="btn btn--primary btn--sm" [disabled]="saving() || form.invalid">Save</button>
+        </form>
+      } @else {
+        <p class="hint">No linked lecturer profile — ask an admin to link one so students see your name.</p>
+      }
+    </div>
+
+    <div class="card" style="padding: 16px;">
+      <h2>Change password</h2>
+      <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+        <div class="form-field"><label>Current password</label><input formControlName="currentPassword" type="password" autocomplete="current-password" /></div>
+        <div class="form-field"><label>New password</label><input formControlName="newPassword" type="password" autocomplete="new-password" />
+          @if (passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.errors?.['minlength']) { <span class="error">At least 6 characters</span> }
+        </div>
+        <div class="form-field"><label>Confirm new password</label><input formControlName="confirmPassword" type="password" autocomplete="new-password" /></div>
+        <button type="submit" class="btn btn--primary btn--sm" [disabled]="changingPassword() || passwordForm.invalid">Update password</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 16px;">
+    <div class="page-header" style="padding: 16px 16px 0;">
+      <h2>My subjects & sections</h2>
+      <p>Assignments are managed by administrators</p>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Subject</th><th>Section</th><th>Batch</th></tr></thead>
+      <tbody>
+        @for (a of p.assignments; track a.id) {
+          <tr>
+            <td>{{ a.subjectCode }} — {{ a.subjectName || '-' }}</td>
+            <td>{{ a.sectionName }}</td>
+            <td>{{ a.batchName || '-' }}</td>
+          </tr>
+        } @empty { <tr><td colspan="3" class="empty-state">No assignments yet</td></tr> }
+      </tbody>
+    </table>
+  </div>
+}
+}

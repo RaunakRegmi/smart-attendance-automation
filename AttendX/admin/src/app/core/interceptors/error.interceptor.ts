@@ -17,10 +17,16 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         error.error?.error ||
         (error.status === 0 ? 'Unable to connect to server' : 'Something went wrong');
 
-      if (error.status === 401 || error.status === 403) {
+      if (error.status === 401) {
         if (!req.url.includes('/auth/login')) {
           auth.logout();
           router.navigate(['/login']);
+        }
+      } else if (error.status === 403) {
+        // A scoping 403 (e.g. a teacher touching a non-assigned class) is not a
+        // broken session — show access denied and stay in-app.
+        if (!req.url.includes('/auth/login')) {
+          toast.error(message || 'Access denied');
         }
       } else if (error.status !== 400) {
         toast.error(message);

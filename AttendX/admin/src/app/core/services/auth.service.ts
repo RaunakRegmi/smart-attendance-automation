@@ -25,6 +25,10 @@ export class AuthService {
     const role = this.user()?.role;
     return role === 'ADMIN' || String(role).toUpperCase() === 'ADMIN';
   });
+  readonly isTeacher = computed(() => {
+    const role = this.user()?.role;
+    return role === 'TEACHER' || String(role).toUpperCase() === 'TEACHER';
+  });
 
   login(email: string, password: string): Observable<ApiResponse<AuthData> | null> {
     return this.api.post<AuthData>('/auth/login', { email, password }).pipe(

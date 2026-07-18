@@ -1,0 +1,44 @@
+@if (loading()) {
+  <div class="empty-state"><span class="loading-spinner"></span></div>
+} @else {
+@if (roster(); as r) {
+  <div class="page-header">
+    <h1>{{ r.subject.subjectCode }} — {{ r.subject.subjectName || '' }}</h1>
+    <p>Section {{ r.section.name }} @if (r.section.batchName) { · {{ r.section.batchName }} } · {{ r.students.length }} students</p>
+  </div>
+  <div class="toolbar">
+    <a class="btn btn--secondary btn--sm" routerLink="/teacher/classes">← Back to classes</a>
+  </div>
+  <div class="card">
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Reg. No</th><th>Attendance</th><th>Present</th><th>Absent</th><th>Late</th><th></th></tr></thead>
+      <tbody>
+        @for (s of r.students; track s.id) {
+          <tr>
+            <td>{{ s.name }} <span class="hint">{{ s.email }}</span></td>
+            <td>{{ s.regNum || s.univId || '-' }}</td>
+            <td>
+              <span class="badge" [class.badge--success]="!s.attendance.atRisk && s.attendance.total > 0" [class.badge--danger]="s.attendance.atRisk">
+                {{ s.attendance.total > 0 ? s.attendance.percentage + '%' : 'No data' }}
+              </span>
+              @if (s.attendance.atRisk) { <span class="badge badge--warning">At risk</span> }
+            </td>
+            <td>{{ s.attendance.present }}</td>
+            <td>{{ s.attendance.absent }}</td>
+            <td>{{ s.attendance.late }}</td>
+            <td class="actions">
+              @if (s.userId) {
+                <button class="btn btn--ghost btn--sm" (click)="messageStudent(s.userId)">Message</button>
+              } @else {
+                <span class="hint" title="Student has no app login yet">No login</span>
+              }
+            </td>
+          </tr>
+        } @empty { <tr><td colspan="7" class="empty-state">No students in this section</td></tr> }
+      </tbody>
+    </table>
+  </div>
+} @else {
+  <div class="empty-state">Class not found or not assigned to you</div>
+}
+}

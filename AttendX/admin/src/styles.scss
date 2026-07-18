@@ -483,3 +483,68 @@ select option {
     color: $text-secondary;
   }
 }
+
+// ── Teacher portal / messaging additions (additive) ─────────────────────────
+
+.badge {
+  &--success {
+    background: $success-light;
+    color: $success;
+  }
+
+  &--danger {
+    background: $danger-light;
+    color: $danger;
+  }
+
+  &--warning {
+    background: $warning-light;
+    color: $warning;
+  }
+}
+
+.hint {
+  font-size: 0.8125rem;
+  color: $text-muted;
+}
+
+.form-field--inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  label {
+    margin: 0;
+  }
+}
+
+.toolbar__filters {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.recipient-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.oversight-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.oversight-message {
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  padding: 0.5rem 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

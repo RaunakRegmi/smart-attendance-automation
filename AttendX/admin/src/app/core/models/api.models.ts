@@ -21,8 +21,9 @@ export interface Pagination {
 export interface User {
   id: number;
   email: string;
-  role: 'ADMIN' | 'STUDENT';
+  role: 'ADMIN' | 'STUDENT' | 'TEACHER';
   isActive: boolean;
+  mustChangePassword?: boolean;
   createdAt?: string;
 }
 
@@ -321,4 +322,233 @@ export interface DashboardData {
   recentActivity: { id: string; title: string; timestamp: string }[];
   enrollmentTrend: { month: string; count: string }[];
   subjectsByDepartment: { department: string; count: number }[];
+}
+
+// ── Teacher management (admin) ───────────────────────────────────────────────
+
+export interface TeacherAccount {
+  id: number;
+  email: string;
+  isActive: boolean;
+  mustChangePassword: boolean;
+  createdAt?: string;
+  name: string;
+  lecturer: { id: number; name: string; contact?: string | null } | null;
+  assignmentCount: number;
+}
+
+export interface TeacherAssignmentRow {
+  id: number;
+  sectionId: string;
+  sectionName: string | null;
+  batchName: string | null;
+  subjectId: number;
+  subjectCode: string | null;
+  subjectName: string | null;
+  createdAt?: string;
+}
+
+// ── Messaging ────────────────────────────────────────────────────────────────
+
+export type ThreadContextType = 'STUDENT_TEACHER_SUBJECT' | 'ADMIN_TEACHER' | 'ADMIN_BROADCAST';
+
+export interface ThreadParticipant {
+  userId: number;
+  name: string;
+  email: string | null;
+  role: string | null;
+  lastReadAt?: string | null;
+  avatarUrl?: string | null;
+}
+
+export interface ThreadSummary {
+  id: number;
+  contextType: ThreadContextType;
+  contextId: number | null;
+  subject: { id: number; subjectCode: string; subjectName?: string } | null;
+  title: string | null;
+  createdBy: number;
+  createdAt: string;
+  updatedAt: string;
+  participants: ThreadParticipant[];
+  otherParticipants: ThreadParticipant[];
+  lastMessage: {
+    id: number;
+    body: string;
+    senderId: number | null;
+    senderName: string | null;
+    isSystem: boolean;
+    createdAt: string;
+  } | null;
+  unreadCount: number;
+}
+
+export interface ThreadMessageRow {
+  id: number;
+  threadId: number;
+  senderId: number | null;
+  senderName: string | null;
+  senderRole: string | null;
+  body: string;
+  isSystem: boolean;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface ThreadDetail {
+  id: number;
+  contextType: ThreadContextType;
+  contextId: number | null;
+  subject: { id: number; subjectCode: string; subjectName?: string } | null;
+  title: string | null;
+  createdBy: number;
+  createdAt: string;
+  updatedAt: string;
+  participants: ThreadParticipant[];
+}
+
+export interface MessageContact {
+  userId: number;
+  name: string;
+  email: string | null;
+  subjects?: { id: number; subjectCode: string; subjectName?: string }[];
+  studentId?: number;
+  sectionId?: string;
+}
+
+export interface NotificationSummary {
+  threadId: number;
+  title: string | null;
+  body: string | null;
+  sentAt: string;
+  totalRecipients: number;
+  readCount: number;
+}
+
+export interface NotificationReadStatus extends NotificationSummary {
+  recipients: { userId: number; name: string; email: string | null; read: boolean; readAt: string | null }[];
+}
+
+export interface UserNotification {
+  messageId: number;
+  threadId: number;
+  title: string | null;
+  body: string;
+  contextType: ThreadContextType;
+  createdAt: string;
+  read: boolean;
+}
+
+// ── Teacher portal ───────────────────────────────────────────────────────────
+
+export interface TeacherTodayClass {
+  routineId: number;
+  sectionId: string;
+  sectionName: string | null;
+  batchName: string | null;
+  subjectId: number;
+  subjectCode: string;
+  subjectName: string | null;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  room: string | null;
+  block: string | null;
+  status: 'UPCOMING' | 'ONGOING' | 'COMPLETED';
+}
+
+export interface UnresolvedRoutine {
+  routineId: number;
+  sectionId: string;
+  sectionName: string | null;
+  dayOfWeek: string;
+  subjectCode: string;
+  subjectName: string;
+  startTime: string;
+  endTime: string;
+  reason: string;
+}
+
+export interface TeacherDashboard {
+  teacher: { id: number; email: string; name: string; mustChangePassword: boolean };
+  todayClasses: TeacherTodayClass[];
+  unresolvedRoutines: UnresolvedRoutine[];
+  stats: { sections: number; subjects: number; classes: number; studentsTaught: number; atRiskCount: number };
+  messages: { unreadCount: number };
+  notifications: UserNotification[];
+}
+
+export interface TeacherClass {
+  assignmentId: number;
+  sectionId: string;
+  sectionName: string | null;
+  batchName: string | null;
+  subjectId: number;
+  subjectCode: string | null;
+  subjectName: string | null;
+  studentCount: number;
+  averageAttendance: number;
+  atRiskCount: number;
+}
+
+export interface RosterStudent {
+  id: number;
+  name: string;
+  email: string;
+  regNum: string | null;
+  univId: string | null;
+  avatarUrl: string | null;
+  userId: number | null;
+  attendance: { total: number; present: number; absent: number; late: number; percentage: number; atRisk: boolean };
+}
+
+export interface TeacherRoster {
+  section: { id: string; name: string | null; batchName: string | null };
+  subject: { id: number; subjectCode: string | null; subjectName: string | null };
+  students: RosterStudent[];
+}
+
+export interface AtRiskRow {
+  student: { id: number; name: string; email: string; regNum: string | null; avatarUrl: string | null; userId: number | null };
+  sectionId: string;
+  sectionName: string | null;
+  batchName: string | null;
+  subjectId: number;
+  subjectCode: string | null;
+  subjectName: string | null;
+  attendance: { total: number; present: number; absent: number; late: number; percentage: number; atRisk: boolean };
+}
+
+export interface TeacherReport {
+  subject: { id: number; subjectCode: string; subjectName?: string };
+  sections: { id: string; name: string | null; batchName: string | null }[];
+  summary: {
+    totalRecords: number;
+    presentCount: number;
+    absentCount: number;
+    lateCount: number;
+    totalSessions: number;
+    attendancePercentage: number;
+  };
+  students: {
+    student: { id: number; name: string; email: string; regNum: string | null; univId: string | null; sectionId: string };
+    total: number;
+    present: number;
+    absent: number;
+    late: number;
+    attendancePercentage: number;
+    lowAttendance: boolean;
+  }[];
+}
+
+export interface TeacherAttendanceView {
+  summary: { total: number; present: number; absent: number; late: number; attendancePercentage: number };
+  records: { id: number; date: string; status: string; student: { id: number; name: string; regNum: string | null; univId: string | null } }[];
+  readOnly: boolean;
+}
+
+export interface TeacherProfileData {
+  user: User;
+  lecturer: { id: number; name: string; email?: string | null; contact?: string | null } | null;
+  assignments: TeacherAssignmentRow[];
 }

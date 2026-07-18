@@ -1,0 +1,119 @@
+<div class="page-header"><h1>Teacher Notifications</h1><p>Compose announcements and track who has read them</p></div>
+<div class="toolbar">
+  <div></div>
+  <button class="btn btn--primary" (click)="showCompose.set(true)">+ New Notification</button>
+</div>
+<div class="card">
+  @if (loading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
+  @else {
+    <table class="data-table">
+      <thead><tr><th>Title</th><th>Sent</th><th>Recipients</th><th>Read</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (n of notifications(); track n.threadId) {
+          <tr>
+            <td>{{ n.title }}</td>
+            <td>{{ n.sentAt | date: 'MMM d, y h:mm a' }}</td>
+            <td>{{ n.totalRecipients }}</td>
+            <td>
+              <span class="badge" [class.badge--success]="n.readCount === n.totalRecipients">
+                {{ n.readCount }}/{{ n.totalRecipients }}
+              </span>
+            </td>
+            <td class="actions">
+              <button class="btn btn--ghost btn--sm" (click)="openReadStatus(n)">Read status</button>
+            </td>
+          </tr>
+        } @empty { <tr><td colspan="5" class="empty-state">No notifications sent yet</td></tr> }
+      </tbody>
+    </table>
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [total]="total()"
+      [limit]="limit()"
+      (pageChange)="page.set($event); load()"
+      (limitChange)="limit.set($event); page.set(1); load()"
+    />
+  }
+</div>
+
+@if (showCompose()) {
+  <div class="modal-backdrop" (click)="showCompose.set(false)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header"><h2>New Notification</h2></div>
+      <form [formGroup]="form" (ngSubmit)="send()">
+        <div class="modal__body">
+          <div class="form-field"><label>Title</label><input formControlName="title" />
+            @if (form.controls.title.touched && form.controls.title.errors?.['required']) { <span class="error">Title is required</span> }
+          </div>
+          <div class="form-field"><label>Message</label><textarea formControlName="body" rows="4"></textarea>
+            @if (form.controls.body.touched && form.controls.body.errors?.['required']) { <span class="error">Message is required</span> }
+          </div>
+          <div class="form-field">
+            <label>Recipients</label>
+            <div class="form-field form-field--inline">
+              <input type="radio" id="recipients-all" name="recipientMode" [checked]="sendToAll()" (change)="sendToAll.set(true)" />
+              <label for="recipients-all">All teachers</label>
+            </div>
+            <div class="form-field form-field--inline">
+              <input type="radio" id="recipients-some" name="recipientMode" [checked]="!sendToAll()" (change)="sendToAll.set(false)" />
+              <label for="recipients-some">Selected teachers</label>
+            </div>
+            @if (!sendToAll()) {
+              <div class="recipient-list">
+                @for (t of teachers(); track t.userId) {
+                  <div class="form-field form-field--inline">
+                    <input
+                      type="checkbox"
+                      [id]="'recipient-' + t.userId"
+                      [checked]="selectedIds().has(t.userId)"
+                      (change)="toggleRecipient(t.userId)"
+                    />
+                    <label [for]="'recipient-' + t.userId">{{ t.name }} ({{ t.email }})</label>
+                  </div>
+                } @empty { <p class="empty-state">No active teachers</p> }
+              </div>
+            }
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn btn--secondary" (click)="showCompose.set(false)">Cancel</button>
+          <button type="submit" class="btn btn--primary" [disabled]="sending() || form.invalid">Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (readStatusLoading()) {
+  <div class="modal-backdrop"><div class="modal"><div class="modal__body empty-state"><span class="loading-spinner"></span></div></div></div>
+}
+@if (readStatus(); as status) {
+  <div class="modal-backdrop" (click)="readStatus.set(null)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header"><h2>{{ status.title }}</h2></div>
+      <div class="modal__body">
+        <p>{{ status.body }}</p>
+        <p><strong>{{ status.readCount }}</strong> of <strong>{{ status.totalRecipients }}</strong> read</p>
+        <table class="data-table">
+          <thead><tr><th>Teacher</th><th>Status</th><th>Read at</th></tr></thead>
+          <tbody>
+            @for (r of status.recipients; track r.userId) {
+              <tr>
+                <td>{{ r.name }} <span class="hint">{{ r.email }}</span></td>
+                <td>
+                  @if (r.read) { <span class="badge badge--success">Read</span> }
+                  @else { <span class="badge">Unread</span> }
+                </td>
+                <td>{{ r.readAt ? (r.readAt | date: 'MMM d, h:mm a') : '-' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--secondary" (click)="readStatus.set(null)">Close</button>
+      </div>
+    </div>
+  </div>
+}

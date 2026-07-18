@@ -35,13 +35,18 @@ export class LoginComponent {
       next: (res) => {
         this.loading.set(false);
         if (res?.success) {
-          if (res.data.user.role !== 'ADMIN') {
-            this.toast.error('Admin access required');
+          const role = res.data.user.role;
+          if (role === 'ADMIN') {
+            this.toast.success('Welcome back!');
+            this.router.navigate(['/dashboard']);
+          } else if (role === 'TEACHER') {
+            this.toast.success('Welcome back!');
+            this.router.navigate(['/teacher']);
+          } else {
+            this.toast.error('Admin or teacher access required');
             this.auth.logout();
             return;
           }
-          this.toast.success('Welcome back!');
-          this.router.navigate(['/dashboard']);
         } else {
           this.toast.error('Invalid email or password');
         }
