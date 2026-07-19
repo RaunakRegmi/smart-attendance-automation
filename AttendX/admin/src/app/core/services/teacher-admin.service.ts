@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiService } from './api.service';
 import {
+  DeliveryChannel,
+  DeliveryStatus,
   TeacherAccount,
   TeacherAssignmentRow,
   NotificationSummary,
@@ -20,8 +22,24 @@ export class TeacherAdminService {
     return this.api.getPaginated<TeacherAccount>('/admin/teachers', params);
   }
 
-  createTeacher(data: { email: string; password: string; name?: string; lecturerId?: number }) {
-    return this.api.post<{ user: User; lecturer: { id: number; name: string } | null }>('/admin/teachers', data);
+  createTeacher(data: {
+    email: string;
+    password: string;
+    name?: string;
+    lecturerId?: number;
+    phone?: string;
+    address?: string;
+    deliveryChannels?: DeliveryChannel[];
+  }) {
+    return this.api.post<{
+      user: User & { phone?: string | null; address?: string | null };
+      lecturer: { id: number; name: string } | null;
+      delivery: DeliveryStatus | null;
+    }>('/admin/teachers', data);
+  }
+
+  resendCredentials(teacherId: number, data: { deliveryChannels: DeliveryChannel[]; newTempPassword?: string }) {
+    return this.api.post<{ delivery: DeliveryStatus }>(`/admin/teachers/${teacherId}/resend-credentials`, data);
   }
 
   updateTeacher(id: number, data: { email?: string; password?: string; isActive?: boolean; lecturerId?: number | null }) {

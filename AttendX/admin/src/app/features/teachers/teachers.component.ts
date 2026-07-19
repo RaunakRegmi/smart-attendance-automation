@@ -1,11 +1,14 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { TeacherAdminService } from '../../core/services/teacher-admin.service';
 import { LecturerService } from '../../core/services/lecturer.service';
 import { SectionService } from '../../core/services/section.service';
 import { SubjectService } from '../../core/services/subject.service';
 import { ToastService } from '../../core/services/toast.service';
 import {
+  DeliveryChannel,
+  DeliveryStatus,
   Lecturer,
   Section,
   Subject,
@@ -42,6 +45,19 @@ export class TeachersComponent implements OnInit {
   readonly deactivating = signal(false);
   readonly saving = signal(false);
 
+  // Credential delivery
+  readonly sendEmail = signal(false);
+  readonly sendSms = signal(false);
+  readonly deliveryResult = signal<{ teacherName: string; delivery: DeliveryStatus } | null>(null);
+  readonly resendFor = signal<TeacherAccount | null>(null);
+  readonly resendEmail = signal(false);
+  readonly resendSms = signal(false);
+  readonly resendNewPassword = signal('');
+  readonly resending = signal(false);
+  // Server-side duplicate errors shown inline on the relevant field
+  readonly emailServerError = signal('');
+  readonly phoneServerError = signal('');
+
   // Assignment management
   readonly assignmentsFor = signal<TeacherAccount | null>(null);
   readonly assignments = signal<TeacherAssignmentRow[]>([]);
@@ -52,9 +68,11 @@ export class TeachersComponent implements OnInit {
   readonly lecturers = signal<Lecturer[]>([]);
 
   readonly form = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: [''],
     name: [''],
+    email: ['', [Validators.required, Validators.email]],
+    phone: [''],
+    address: [''],
+    password: [''],
     lecturerId: [''],
     isActive: [true],
   });
@@ -63,6 +81,9 @@ export class TeachersComponent implements OnInit {
     sectionId: ['', Validators.required],
     subjectId: ['', Validators.required],
   });
+
+  private emailChannelTouched = false;
+  private smsChannelTouched = false;
 
   ngOnInit(): void {
     this.load();
@@ -74,6 +95,16 @@ export class TeachersComponent implements OnInit {
     });
     this.lecturerService.getAll({ limit: 500 }).subscribe({
       next: (res) => this.lecturers.set(res.data ?? []),
+    });
+    // Channel defaults follow the contact fields (§5): pre-select what's
+    // filled in unless the admin has toggled the checkbox manually.
+    this.form.controls.email.valueChanges.subscribe((value) => {
+      if (!this.emailChannelTouched) this.sendEmail.set(!!value && this.form.controls.email.valid);
+      this.emailServerError.set('');
+    });
+    this.form.controls.phone.valueChanges.subscribe((value) => {
+      if (!this.smsChannelTouched) this.sendSms.set(!!value);
+      this.phoneServerError.set('');
     });
   }
 
@@ -92,18 +123,26 @@ export class TeachersComponent implements OnInit {
 
   openCreate(): void {
     this.editing.set(null);
-    this.form.reset({ email: '', password: '', name: '', lecturerId: '', isActive: true });
+    this.form.reset({ name: '', email: '', phone: '', address: '', password: '', lecturerId: '', isActive: true });
     this.form.controls.password.addValidators([Validators.required, Validators.minLength(6)]);
     this.form.controls.password.updateValueAndValidity();
+    this.sendEmail.set(false);
+    this.sendSms.set(false);
+    this.emailChannelTouched = false;
+    this.smsChannelTouched = false;
+    this.emailServerError.set('');
+    this.phoneServerError.set('');
     this.showModal.set(true);
   }
 
   openEdit(t: TeacherAccount): void {
     this.editing.set(t);
     this.form.reset({
-      email: t.email,
-      password: '',
       name: t.lecturer?.name ?? '',
+      email: t.email,
+      phone: t.phone ?? '',
+      address: t.address ?? '',
+      password: '',
       lecturerId: t.lecturer ? String(t.lecturer.id) : '',
       isActive: t.isActive,
     });
@@ -111,7 +150,34 @@ export class TeachersComponent implements OnInit {
     this.form.controls.password.clearValidators();
     this.form.controls.password.addValidators(Validators.minLength(6));
     this.form.controls.password.updateValueAndValidity();
+    this.emailServerError.set('');
+    this.phoneServerError.set('');
     this.showModal.set(true);
+  }
+
+  toggleEmailChannel(checked: boolean): void {
+    this.emailChannelTouched = true;
+    this.sendEmail.set(checked);
+  }
+
+  toggleSmsChannel(checked: boolean): void {
+    this.smsChannelTouched = true;
+    this.sendSms.set(checked);
+  }
+
+  generatePassword(): void {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#';
+    let pw = '';
+    for (let i = 0; i < 10; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+    this.form.controls.password.setValue(pw);
+    this.form.controls.password.markAsDirty();
+  }
+
+  private handleServerError(err: HttpErrorResponse): void {
+    const message = err?.error?.message || 'Something went wrong';
+    if (/email already exists/i.test(message)) this.emailServerError.set(message);
+    else if (/phone number already exists/i.test(message) || /invalid nepali mobile/i.test(message)) this.phoneServerError.set(message);
+    else this.toast.error(message);
   }
 
   save(): void {
@@ -136,25 +202,84 @@ export class TeachersComponent implements OnInit {
           this.saving.set(false);
           this.load();
         },
-        error: () => this.saving.set(false),
+        error: (err: HttpErrorResponse) => {
+          this.saving.set(false);
+          this.handleServerError(err);
+        },
       });
     } else {
-      const data: { email: string; password: string; name?: string; lecturerId?: number } = {
+      const channels: DeliveryChannel[] = [];
+      if (this.sendEmail()) channels.push('email');
+      if (this.sendSms()) channels.push('sms');
+      const data: Parameters<TeacherAdminService['createTeacher']>[0] = {
         email: value.email,
         password: value.password,
+        deliveryChannels: channels,
       };
+      if (value.phone) data.phone = value.phone;
+      if (value.address) data.address = value.address;
       if (value.lecturerId) data.lecturerId = Number(value.lecturerId);
       else if (value.name) data.name = value.name;
       this.teacherService.createTeacher(data).subscribe({
-        next: () => {
+        next: (res) => {
           this.toast.success('Teacher account created');
           this.showModal.set(false);
           this.saving.set(false);
           this.load();
+          if (res.data?.delivery) {
+            this.deliveryResult.set({
+              teacherName: value.name || value.email,
+              delivery: res.data.delivery,
+            });
+          }
         },
-        error: () => this.saving.set(false),
+        error: (err: HttpErrorResponse) => {
+          this.saving.set(false);
+          this.handleServerError(err);
+        },
       });
     }
+  }
+
+  openResend(t: TeacherAccount): void {
+    this.resendFor.set(t);
+    this.resendEmail.set(!!t.email);
+    this.resendSms.set(!!t.phone);
+    this.resendNewPassword.set('');
+  }
+
+  resend(): void {
+    const t = this.resendFor();
+    if (!t || this.resending()) return;
+    const channels: DeliveryChannel[] = [];
+    if (this.resendEmail()) channels.push('email');
+    if (this.resendSms()) channels.push('sms');
+    if (!channels.length) {
+      this.toast.error('Select at least one channel');
+      return;
+    }
+    const newTempPassword = this.resendNewPassword().trim();
+    if (newTempPassword && newTempPassword.length < 6) {
+      this.toast.error('New temporary password must be at least 6 characters');
+      return;
+    }
+    this.resending.set(true);
+    this.teacherService
+      .resendCredentials(t.id, { deliveryChannels: channels, ...(newTempPassword ? { newTempPassword } : {}) })
+      .subscribe({
+        next: (res) => {
+          this.resending.set(false);
+          this.resendFor.set(null);
+          if (res.data?.delivery) {
+            this.deliveryResult.set({ teacherName: t.name, delivery: res.data.delivery });
+          }
+          this.load();
+        },
+        error: (err: HttpErrorResponse) => {
+          this.resending.set(false);
+          this.toast.error(err?.error?.message || 'Could not resend credentials');
+        },
+      });
   }
 
   deactivate(): void {

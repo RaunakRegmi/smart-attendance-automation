@@ -1,7 +1,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { MessagingService } from '../../core/services/messaging.service';
+import { ToastService } from '../../core/services/toast.service';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
 import { NavSection } from '../admin-layout/admin-layout.component';
 
@@ -20,6 +21,8 @@ import { NavSection } from '../admin-layout/admin-layout.component';
 export class TeacherLayoutComponent implements OnInit {
   readonly auth = inject(AuthService);
   private readonly messaging = inject(MessagingService);
+  private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   readonly sidebarCollapsed = signal(false);
   readonly userMenuOpen = signal(false);
@@ -43,6 +46,17 @@ export class TeacherLayoutComponent implements OnInit {
   ngOnInit(): void {
     this.messaging.getUnreadCount().subscribe({
       next: (res) => this.unreadCount.set(res.data?.unreadCount ?? 0),
+    });
+    // Admin-created accounts carry a temporary password: steer the teacher to
+    // the change-password screen on first login (redirect once, not a hard
+    // block — they can still navigate away).
+    this.auth.loadCurrentUser().subscribe({
+      next: (res) => {
+        if (res?.data?.user?.mustChangePassword && !this.router.url.startsWith('/teacher/profile')) {
+          this.toast.warning('Please change your temporary password');
+          this.router.navigate(['/teacher/profile']);
+        }
+      },
     });
   }
 

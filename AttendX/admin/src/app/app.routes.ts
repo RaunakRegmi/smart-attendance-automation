@@ -8,6 +8,12 @@ export const routes: Routes = [
     canActivate: [guestGuard],
   },
   {
+    // Public: reached from the credential-delivery link (?token=...)
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./features/auth/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent),
+  },
+  {
     path: '',
     loadComponent: () =>
       import('./layout/admin-layout/admin-layout.component').then((m) => m.AdminLayoutComponent),

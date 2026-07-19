@@ -329,12 +329,30 @@ export interface DashboardData {
 export interface TeacherAccount {
   id: number;
   email: string;
+  phone?: string | null;
+  address?: string | null;
   isActive: boolean;
   mustChangePassword: boolean;
   createdAt?: string;
   name: string;
   lecturer: { id: number; name: string; contact?: string | null } | null;
   assignmentCount: number;
+}
+
+export type DeliveryChannel = 'email' | 'sms';
+
+export interface ChannelDeliveryStatus {
+  attempted: boolean;
+  ok: boolean;
+  provider?: string;
+  to?: string;
+  error?: string;
+  demoMessage?: string;
+}
+
+export interface DeliveryStatus {
+  email: ChannelDeliveryStatus;
+  sms: ChannelDeliveryStatus;
 }
 
 export interface TeacherAssignmentRow {

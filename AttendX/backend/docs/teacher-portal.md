@@ -106,6 +106,41 @@ flutter run
 
 Environment: `DISABLE_BACKGROUND_JOBS=true` skips the scheduler + BullMQ workers (used by tests/CI).
 
+## Addendum: teacher credential delivery (email / SMS)
+
+When an admin creates a teacher (or resends credentials), AttendX can deliver
+the login URL + temporary password + a single-use set-password link via
+**email and/or SMS**. This infrastructure exists ONLY for teacher credential
+delivery and password reset — student notifications stay in-app.
+
+- **Providers are env-switched and demo-first**: `MAIL_PROVIDER=demo` logs the
+  email to the server console; `MAIL_PROVIDER=smtp` uses nodemailer with
+  `SMTP_*` vars. `SMS_PROVIDER=demo` validates/normalizes the Nepali number
+  (+977 9X…), logs the message, and returns it in the API response;
+  `SMS_PROVIDER=sparrow` is a reserved stub for the future Sparrow SMS
+  integration (placeholders in `.env.example`).
+- **Reset tokens** (`password_reset_tokens`): single-use, `RESET_TOKEN_TTL_HOURS`
+  (default 48h), stored as SHA-256 hashes — the raw token exists only in the
+  delivered link (`APP_BASE_URL/reset-password?token=…`).
+- **Endpoints**: `POST /api/admin/teachers` now accepts `phone`, `address`,
+  `defaultPassword` (alias of `password`), `deliveryChannels: ['email','sms']`,
+  with duplicate email/phone guards; `POST /api/admin/teachers/:id/resend-credentials`
+  (optional `newTempPassword` — the stored hash can't be recovered, so resend
+  either resets the password or sends a link-only message); public
+  `POST /api/auth/reset-password` consumes the token, clears
+  `mustChangePassword`, and revokes sessions via `tokenVersion`.
+- **Delivery is decoupled from creation**: a failed send never rolls back the
+  account; the response carries per-channel status the admin UI surfaces with
+  a Resend action.
+- **Email stays required** for teacher accounts — login is email-based and
+  `users.email` is NOT NULL; phone is a delivery channel, not an identity.
+- **First login**: the teacher portal redirects a `mustChangePassword` account
+  to the profile/change-password screen once per load (steered, not trapped).
+- New migrations: `20260719000000-add-phone-address-to-users` (nullable cols),
+  `20260719000100-create-password-reset-tokens` (both reversible).
+- Audit events: `teacher.credentials_sent`, `teacher.credentials_resent`,
+  `password.reset_consumed`.
+
 ## Frontend notes
 
 - The Angular error interceptor now treats **403 as in-app "access denied"** (401 still logs

@@ -87,7 +87,16 @@ export class AuthService {
     newPassword: string;
     confirmPassword: string;
   }): Observable<ApiResponse<User>> {
-    return this.api.put<User>('/auth/password', data);
+    return this.api.put<User>('/auth/password', data).pipe(
+      tap((res) => {
+        // Keep the cached user fresh — clears mustChangePassword client-side
+        // right after a successful change.
+        if (res.success && res.data?.id) {
+          localStorage.setItem(USER_KEY, JSON.stringify(res.data));
+          this.userSignal.set(res.data);
+        }
+      })
+    );
   }
 
   private loadUser(): User | null {

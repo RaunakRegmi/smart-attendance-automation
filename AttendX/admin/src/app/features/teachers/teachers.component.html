@@ -1,4 +1,4 @@
-<div class="page-header"><h1>Teachers</h1><p>Manage teacher logins and class assignments</p></div>
+<div class="page-header"><h1>Teachers</h1><p>Manage teacher logins, class assignments and credential delivery</p></div>
 <div class="toolbar">
   <div class="search-input"><input placeholder="Search by email..." (input)="search.set($any($event.target).value); page.set(1); load()" /></div>
   <button class="btn btn--primary" (click)="openCreate()">+ Add Teacher</button>
@@ -7,12 +7,13 @@
   @if (loading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
   @else {
     <table class="data-table">
-      <thead><tr><th>Name</th><th>Email</th><th>Classes</th><th>Status</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Classes</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody>
         @for (t of teachers(); track t.id) {
           <tr>
             <td>{{ t.name }}</td>
             <td>{{ t.email }}</td>
+            <td>{{ t.phone || '-' }}</td>
             <td>{{ t.assignmentCount }}</td>
             <td>
               @if (t.isActive) { <span class="badge badge--success">Active</span> }
@@ -23,11 +24,12 @@
               <button class="btn btn--ghost btn--sm" (click)="openAssignments(t)">Classes</button>
               <button class="btn btn--ghost btn--sm" (click)="openEdit(t)">Edit</button>
               @if (t.isActive) {
+                <button class="btn btn--ghost btn--sm" (click)="openResend(t)">Resend credentials</button>
                 <button class="btn btn--ghost btn--sm" (click)="deactivateTarget.set(t)">Deactivate</button>
               }
             </td>
           </tr>
-        } @empty { <tr><td colspan="5" class="empty-state">No teachers</td></tr> }
+        } @empty { <tr><td colspan="6" class="empty-state">No teachers</td></tr> }
       </tbody>
     </table>
     <app-pagination
@@ -47,12 +49,27 @@
       <div class="modal__header"><h2>{{ editing() ? 'Update' : 'Add' }} Teacher</h2></div>
       <form [formGroup]="form" (ngSubmit)="save()">
         <div class="modal__body">
-          <div class="form-field"><label>Email (institutional)</label><input formControlName="email" type="email" />
+          @if (!editing() && !form.getRawValue().lecturerId) {
+            <div class="form-field"><label>Full name</label><input formControlName="name" placeholder="e.g. Asha Sharma" />
+              <span class="hint">Shown to students; creates a linked lecturer record.</span>
+            </div>
+          }
+          <div class="form-field"><label>Login email (unique)</label><input formControlName="email" type="email" />
             @if (form.controls.email.touched && form.controls.email.invalid) { <span class="error">Valid email is required</span> }
+            @if (emailServerError()) { <span class="error">{{ emailServerError() }}</span> }
           </div>
+          <div class="form-field"><label>Phone (Nepali mobile, optional)</label><input formControlName="phone" placeholder="98XXXXXXXX" />
+            @if (phoneServerError()) { <span class="error">{{ phoneServerError() }}</span> }
+          </div>
+          <div class="form-field"><label>Address (optional)</label><input formControlName="address" /></div>
           <div class="form-field">
             <label>{{ editing() ? 'Reset password (leave blank to keep)' : 'Temporary password' }}</label>
-            <input formControlName="password" type="password" autocomplete="new-password" />
+            <div style="display: flex; gap: 8px;">
+              <input style="flex: 1;" formControlName="password" type="text" autocomplete="new-password" />
+              @if (!editing()) {
+                <button type="button" class="btn btn--secondary btn--sm" (click)="generatePassword()">Generate</button>
+              }
+            </div>
             @if (form.controls.password.touched && form.controls.password.errors?.['required']) { <span class="error">Password is required</span> }
             @if (form.controls.password.touched && form.controls.password.errors?.['minlength']) { <span class="error">At least 6 characters</span> }
             <span class="hint">The teacher is asked to change it on first login.</span>
@@ -66,8 +83,19 @@
               }
             </select>
           </div>
-          @if (!editing() && !form.getRawValue().lecturerId) {
-            <div class="form-field"><label>Display name (creates a lecturer record)</label><input formControlName="name" placeholder="e.g. Asha Sharma" /></div>
+          @if (!editing()) {
+            <div class="form-field">
+              <label>Send credentials via</label>
+              <div class="form-field form-field--inline">
+                <input type="checkbox" id="chan-email" [checked]="sendEmail()" (change)="toggleEmailChannel($any($event.target).checked)" [disabled]="!form.getRawValue().email" />
+                <label for="chan-email">Email @if (!form.getRawValue().email) { <span class="hint">(enter an email first)</span> }</label>
+              </div>
+              <div class="form-field form-field--inline">
+                <input type="checkbox" id="chan-sms" [checked]="sendSms()" (change)="toggleSmsChannel($any($event.target).checked)" [disabled]="!form.getRawValue().phone" />
+                <label for="chan-sms">SMS @if (!form.getRawValue().phone) { <span class="hint">(enter a phone first)</span> }</label>
+              </div>
+              <span class="hint">The message contains the login link, the temporary password, and a set-password link.</span>
+            </div>
           }
           @if (editing()) {
             <div class="form-field form-field--inline">
@@ -84,6 +112,71 @@
           <button type="submit" class="btn btn--primary" [disabled]="saving() || form.invalid">Save</button>
         </div>
       </form>
+    </div>
+  </div>
+}
+
+@if (deliveryResult(); as result) {
+  <div class="modal-backdrop" (click)="deliveryResult.set(null)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header"><h2>Credential delivery — {{ result.teacherName }}</h2></div>
+      <div class="modal__body">
+        @if (result.delivery.email.attempted) {
+          <p>
+            Email:
+            @if (result.delivery.email.ok) { <span class="badge badge--success">Sent ✓</span> }
+            @else { <span class="badge badge--danger">Failed ✗</span> <span class="hint">{{ result.delivery.email.error }}</span> }
+            @if (result.delivery.email.provider === 'demo') { <span class="badge badge--warning">demo mode (logged to server console)</span> }
+          </p>
+        }
+        @if (result.delivery.sms.attempted) {
+          <p>
+            SMS @if (result.delivery.sms.to) { <span class="hint">to {{ result.delivery.sms.to }}</span> }:
+            @if (result.delivery.sms.ok) { <span class="badge badge--success">Sent ✓</span> }
+            @else { <span class="badge badge--danger">Failed ✗</span> <span class="hint">{{ result.delivery.sms.error }}</span> }
+            @if (result.delivery.sms.provider === 'demo') { <span class="badge badge--warning">demo mode</span> }
+          </p>
+          @if (result.delivery.sms.demoMessage) {
+            <div class="oversight-message"><strong>Demo SMS preview:</strong><br />{{ result.delivery.sms.demoMessage }}</div>
+          }
+        }
+        @if (!result.delivery.email.attempted && !result.delivery.sms.attempted) {
+          <p class="hint">No delivery channels were selected.</p>
+        }
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--secondary" (click)="deliveryResult.set(null)">Close</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (resendFor(); as teacher) {
+  <div class="modal-backdrop" (click)="resendFor.set(null)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header"><h2>Resend credentials — {{ teacher.name }}</h2></div>
+      <div class="modal__body">
+        <div class="form-field">
+          <label>Channels</label>
+          <div class="form-field form-field--inline">
+            <input type="checkbox" id="resend-email" [checked]="resendEmail()" (change)="resendEmail.set($any($event.target).checked)" />
+            <label for="resend-email">Email ({{ teacher.email }})</label>
+          </div>
+          <div class="form-field form-field--inline">
+            <input type="checkbox" id="resend-sms" [checked]="resendSms()" (change)="resendSms.set($any($event.target).checked)" [disabled]="!teacher.phone" />
+            <label for="resend-sms">SMS @if (teacher.phone) { ({{ teacher.phone }}) } @else { <span class="hint">(no phone on record)</span> }</label>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>New temporary password (optional)</label>
+          <input type="text" [value]="resendNewPassword()" (input)="resendNewPassword.set($any($event.target).value)" placeholder="Leave blank to send a set-password link only" />
+          <span class="hint">The stored password can't be recovered. Set a new one to include it in the message, or leave blank and the teacher sets their own via the link.</span>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--secondary" (click)="resendFor.set(null)">Cancel</button>
+        <button type="button" class="btn btn--primary" [disabled]="resending()" (click)="resend()">Send</button>
+      </div>
     </div>
   </div>
 }
