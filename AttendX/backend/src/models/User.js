@@ -41,6 +41,15 @@ const User = sequelize.define('User', {
     allowNull: false,
     defaultValue: false,
   },
+  // Contact details for credential delivery (normalized +977 format for phone).
+  phone: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  address: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
 }, {
   tableName: 'users',
   timestamps: true,

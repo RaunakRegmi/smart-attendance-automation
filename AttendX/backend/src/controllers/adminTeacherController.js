@@ -8,6 +8,18 @@ const TeacherAssignment = require('../models/TeacherAssignment');
 const MessageThread = require('../models/MessageThread');
 const messagingService = require('../services/messagingService');
 const { logAuditEvent } = require('../services/auditEventService');
+const credentialDeliveryService = require('../services/credentialDeliveryService');
+const { normalizeNepaliMobile } = require('../services/smsService');
+
+const VALID_CHANNELS = ['email', 'sms'];
+
+const validateChannels = (deliveryChannels) => {
+  if (deliveryChannels === undefined) return { channels: [] };
+  if (!Array.isArray(deliveryChannels) || deliveryChannels.some((c) => !VALID_CHANNELS.includes(String(c).toLowerCase()))) {
+    return { error: "deliveryChannels must be an array containing only 'email' and/or 'sms'" };
+  }
+  return { channels: deliveryChannels.map((c) => String(c).toLowerCase()) };
+};
 
 // ── Teacher accounts ─────────────────────────────────────────────────────────
 
@@ -49,6 +61,8 @@ exports.getTeachers = async (req, res, next) => {
         return {
           id: u.id,
           email: u.email,
+          phone: u.phone || null,
+          address: u.address || null,
           isActive: u.isActive,
           mustChangePassword: u.mustChangePassword,
           createdAt: u.createdAt,
@@ -68,19 +82,48 @@ exports.getTeachers = async (req, res, next) => {
 
 // Create a teacher login. Optionally link an existing lecturer record
 // (explicit admin action — never auto-matched by email), or create a fresh
-// lecturer record when a display name is supplied.
+// lecturer record when a display name is supplied. When deliveryChannels are
+// given, the credentials (login URL, temp password, reset link) are sent via
+// email and/or SMS — delivery is decoupled from creation, so a failed send
+// never rolls back the account.
+// NOTE: email stays required — login is email-based and users.email is NOT
+// NULL, so a phone-only account could never sign in. Phone is a delivery
+// channel, not an identity.
 exports.createTeacher = async (req, res, next) => {
   try {
-    const { email, password, name, lecturerId } = req.body;
+    const { email, name, lecturerId, address, deliveryChannels } = req.body;
+    // The addendum spec calls this defaultPassword; the original API used
+    // password. Accept both, preferring defaultPassword.
+    const password = req.body.defaultPassword ?? req.body.password;
     if (!email || !password) {
       return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
     if (password.length < 6) {
       return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
     }
+    const { channels, error: channelError } = validateChannels(deliveryChannels);
+    if (channelError) {
+      return res.status(400).json({ success: false, message: channelError });
+    }
+
+    let phone = null;
+    if (req.body.phone) {
+      phone = normalizeNepaliMobile(req.body.phone);
+      if (!phone) {
+        return res.status(400).json({ success: false, message: 'Invalid Nepali mobile number (expected 96/97/98XXXXXXXX, +977 optional)' });
+      }
+    }
+
+    // Duplicate guards: reject clearly, never silently create a duplicate.
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: 'User with this email already exists' });
+      return res.status(400).json({ success: false, message: 'A user with this email already exists' });
+    }
+    if (phone) {
+      const existingPhone = await User.findOne({ where: { phone } });
+      if (existingPhone) {
+        return res.status(400).json({ success: false, message: 'A user with this phone number already exists' });
+      }
     }
 
     let lecturer = null;
@@ -100,6 +143,8 @@ exports.createTeacher = async (req, res, next) => {
       role: 'TEACHER',
       isActive: true,
       mustChangePassword: true,
+      phone,
+      address: address || null,
     });
 
     if (lecturer) {
@@ -116,6 +161,25 @@ exports.createTeacher = async (req, res, next) => {
 
     await logAuditEvent(req, 'teacher.created', { teacherUserId: user.id, email, lecturerId: lecturer?.id || null });
 
+    // Credential delivery (decoupled: the account exists regardless of what
+    // happens here; per-channel status is reported back to the admin).
+    let delivery = null;
+    if (channels.length) {
+      const sent = await credentialDeliveryService.deliverCredentials({
+        user,
+        name: name || lecturer?.name || email.split('@')[0],
+        tempPassword: password,
+        channels,
+      });
+      delivery = sent.delivery;
+      await logAuditEvent(req, 'teacher.credentials_sent', {
+        teacherUserId: user.id,
+        channels,
+        email: { attempted: delivery.email.attempted, ok: delivery.email.ok },
+        sms: { attempted: delivery.sms.attempted, ok: delivery.sms.ok },
+      });
+    }
+
     const userResponse = user.get();
     delete userResponse.password;
     res.status(201).json({
@@ -124,8 +188,59 @@ exports.createTeacher = async (req, res, next) => {
       data: {
         user: userResponse,
         lecturer: lecturer ? { id: lecturer.id, name: lecturer.name, contact: lecturer.contact } : null,
+        delivery,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Regenerate a reset token and re-send credentials — for a failed first send
+// or a teacher who lost the message. The stored password hash cannot be
+// recovered, so: with newTempPassword the password is reset (and included in
+// the message, mustChangePassword set); without it the message carries the
+// reset link only.
+exports.resendCredentials = async (req, res, next) => {
+  try {
+    const user = await findTeacher(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Teacher not found' });
+    }
+    if (!user.isActive) {
+      return res.status(400).json({ success: false, message: 'Cannot send credentials to a deactivated teacher' });
+    }
+    const { channels, error: channelError } = validateChannels(req.body.deliveryChannels ?? req.body.channels);
+    if (channelError) {
+      return res.status(400).json({ success: false, message: channelError });
+    }
+    if (!channels.length) {
+      return res.status(400).json({ success: false, message: 'Select at least one delivery channel (email/sms)' });
+    }
+
+    const { newTempPassword } = req.body;
+    if (newTempPassword !== undefined) {
+      if (!newTempPassword || newTempPassword.length < 6) {
+        return res.status(400).json({ success: false, message: 'New temporary password must be at least 6 characters' });
+      }
+      await user.update({ password: newTempPassword, mustChangePassword: true });
+    }
+
+    const lecturer = await Lecturer.findOne({ where: { userId: user.id } });
+    const { delivery } = await credentialDeliveryService.deliverCredentials({
+      user,
+      name: lecturer?.name || user.email.split('@')[0],
+      tempPassword: newTempPassword || null,
+      channels,
+    });
+    await logAuditEvent(req, 'teacher.credentials_resent', {
+      teacherUserId: user.id,
+      channels,
+      passwordReset: newTempPassword !== undefined,
+      email: { attempted: delivery.email.attempted, ok: delivery.email.ok },
+      sms: { attempted: delivery.sms.attempted, ok: delivery.sms.ok },
+    });
+    res.json({ success: true, message: 'Credentials sent', data: { delivery } });
   } catch (error) {
     next(error);
   }

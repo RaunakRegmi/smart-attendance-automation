@@ -358,6 +358,55 @@ exports.deleteUser = async (req, res, next) => {
   }
 };
 
+// Public (token-authenticated) set/reset-password: consumes a single-use
+// token issued by credentialDeliveryService. Clears mustChangePassword and
+// revokes existing sessions via tokenVersion.
+exports.resetPassword = async (req, res, next) => {
+  try {
+    const { token, newPassword, confirmPassword } = req.body;
+    if (!token || !newPassword || !confirmPassword) {
+      return res.status(400).json({ success: false, message: 'Token and both password fields are required' });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ success: false, message: 'Passwords do not match' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    }
+
+    const PasswordResetToken = require('../models/PasswordResetToken');
+    const { hashToken } = require('../services/credentialDeliveryService');
+    const { logAuditEvent } = require('../services/auditEventService');
+
+    const resetToken = await PasswordResetToken.findOne({ where: { tokenHash: hashToken(String(token)) } });
+    if (!resetToken) {
+      return res.status(400).json({ success: false, message: 'Invalid reset link' });
+    }
+    if (resetToken.usedAt) {
+      return res.status(400).json({ success: false, message: 'This reset link has already been used' });
+    }
+    if (resetToken.expiresAt < new Date()) {
+      return res.status(400).json({ success: false, message: 'This reset link has expired. Ask an admin to resend your credentials.' });
+    }
+
+    const user = await User.findByPk(resetToken.userId);
+    if (!user || !user.isActive) {
+      return res.status(400).json({ success: false, message: 'Account not found or deactivated' });
+    }
+
+    user.password = newPassword; // hashed by the model hook
+    user.mustChangePassword = false;
+    user.tokenVersion += 1; // revoke any outstanding sessions
+    await user.save();
+    await resetToken.update({ usedAt: new Date() });
+    await logAuditEvent(req, 'password.reset_consumed', { userId: user.id, tokenId: resetToken.id });
+
+    res.json({ success: true, message: 'Password set successfully. You can now log in.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.logout = async (req, res, next) => {
   try {
     // Increment tokenVersion to invalidate all existing tokens for this user

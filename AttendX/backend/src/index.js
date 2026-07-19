@@ -54,6 +54,7 @@ const TeacherAssignment = require('./models/TeacherAssignment');
 const MessageThread = require('./models/MessageThread');
 const MessageThreadParticipant = require('./models/MessageThreadParticipant');
 const ThreadMessage = require('./models/ThreadMessage');
+const PasswordResetToken = require('./models/PasswordResetToken');
 
 const app = express();
 
@@ -182,6 +183,10 @@ MessageThread.belongsTo(User, { foreignKey: 'createdBy', as: 'creator' });
 // For STUDENT_TEACHER_SUBJECT threads, contextId points at subjects.id
 // (constraints: false — contextId is polymorphic-by-contextType, null for admin threads).
 MessageThread.belongsTo(Subject, { foreignKey: 'contextId', as: 'contextSubject', constraints: false });
+
+// Password reset tokens (credential delivery / forgot-password)
+User.hasMany(PasswordResetToken, { foreignKey: 'userId' });
+PasswordResetToken.belongsTo(User, { foreignKey: 'userId' });
 
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/students', studentRoutes);

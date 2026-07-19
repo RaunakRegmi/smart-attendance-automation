@@ -59,13 +59,62 @@ router.get('/teachers', adminTeacherController.getTeachers);
  *               lecturerId:
  *                 type: integer
  *                 description: Link an existing lecturer record instead (explicit promote action)
+ *               phone:
+ *                 type: string
+ *                 description: Nepali mobile (96/97/98XXXXXXXX, +977 optional) — used for SMS delivery
+ *               address:
+ *                 type: string
+ *               deliveryChannels:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   enum: [email, sms]
+ *                 description: Where to send the credentials (login URL + temp password + reset link)
  *     responses:
  *       201:
- *         description: Teacher created
+ *         description: Teacher created (data.delivery carries per-channel send status)
+ *       400:
+ *         description: Duplicate email/phone or invalid input
  *       409:
  *         description: Lecturer already linked to another account
  */
 router.post('/teachers', adminTeacherController.createTeacher);
+
+/**
+ * @swagger
+ * /api/admin/teachers/{id}/resend-credentials:
+ *   post:
+ *     summary: Regenerate a reset token and re-send credentials (optionally resetting the temp password)
+ *     tags: [Admin Teachers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [deliveryChannels]
+ *             properties:
+ *               deliveryChannels:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   enum: [email, sms]
+ *               newTempPassword:
+ *                 type: string
+ *                 description: If set, resets the password and includes it in the message; otherwise the message carries the reset link only
+ *     responses:
+ *       200:
+ *         description: Per-channel delivery status
+ */
+router.post('/teachers/:id/resend-credentials', adminTeacherController.resendCredentials);
 
 /**
  * @swagger

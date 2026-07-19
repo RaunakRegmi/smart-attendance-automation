@@ -8,6 +8,7 @@ const authenticateJWT = async (req, res, next) => {
   if (
     req.path.startsWith('/api-docs') ||
     req.path === '/api/auth/login' ||
+    req.path === '/api/auth/reset-password' ||
     req.path === '/api/health' ||
     req.path.startsWith('/api/samples')
   ) {

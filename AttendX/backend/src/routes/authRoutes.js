@@ -56,6 +56,34 @@ router.post('/login', authController.login);
 
 /**
  * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Set/reset a password using a single-use delivered token (public)
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token, newPassword, confirmPassword]
+ *             properties:
+ *               token:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *               confirmPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password set; existing sessions revoked
+ *       400:
+ *         description: Invalid, used, or expired token / validation error
+ */
+router.post('/reset-password', authController.resetPassword);
+
+/**
+ * @swagger
  * /api/auth/users:
  *   post:
  *     summary: Create a new user (Admin only)
