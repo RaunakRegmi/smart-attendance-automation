@@ -10,7 +10,7 @@ export class SubjectService {
     return this.api.getPaginated<Subject>('/subjects', params);
   }
 
-  create(data: { subjectCode: string; subjectName?: string }) {
+  create(data: { subjectCode: string; subjectName?: string; batchId?: string; sectionId?: string }) {
     return this.api.post<Subject>('/subjects', data);
   }
 

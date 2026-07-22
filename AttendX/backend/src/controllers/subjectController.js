@@ -1,4 +1,6 @@
 const Subject = require('../models/Subject');
+const Batch = require('../models/Batch');
+const Section = require('../models/Section');
 const Lecturer = require('../models/Lecturer');
 const { Op } = require('sequelize');
 
@@ -15,6 +17,10 @@ exports.getSubjects = async (req, res, next) => {
     const offset = (Math.max(1, parseInt(page, 10)) - 1) * parseInt(limit, 10);
     const { count, rows } = await Subject.findAndCountAll({
       where,
+      include: [
+        { model: Batch, as: 'batch', attributes: ['id', 'name'] },
+        { model: Section, as: 'section', attributes: ['id', 'name'] },
+      ],
       order: [['createdAt', 'DESC']],
       limit: parseInt(limit, 10),
       offset,
@@ -36,11 +42,17 @@ exports.getSubjects = async (req, res, next) => {
 
 exports.createSubject = async (req, res, next) => {
   try {
-    const { subjectCode, subjectName } = req.body;
+    const { subjectCode, subjectName, batchId, sectionId } = req.body;
     if (!subjectCode) {
       return res.status(400).json({ success: false, message: 'Subject code is required' });
     }
-    const subject = await Subject.create({ subjectCode, subjectName });
+    if (!batchId) {
+      return res.status(400).json({ success: false, message: 'Batch is required' });
+    }
+    if (!sectionId) {
+      return res.status(400).json({ success: false, message: 'Section is required' });
+    }
+    const subject = await Subject.create({ subjectCode, subjectName, batchId, sectionId });
     res.status(201).json({ success: true, data: subject });
   } catch (error) {
     next(error);

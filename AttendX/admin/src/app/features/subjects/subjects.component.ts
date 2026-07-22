@@ -1,8 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SubjectService } from '../../core/services/subject.service';
+import { BatchService } from '../../core/services/batch.service';
+import { SectionService } from '../../core/services/section.service';
 import { ToastService } from '../../core/services/toast.service';
-import { Subject } from '../../core/models/api.models';
+import { Subject, Batch, Section } from '../../core/models/api.models';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 
@@ -14,6 +16,8 @@ import { PaginationComponent } from '../../shared/components/pagination/paginati
 })
 export class SubjectsComponent implements OnInit {
   private readonly subjectService = inject(SubjectService);
+  private readonly batchService = inject(BatchService);
+  private readonly sectionService = inject(SectionService);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
 
@@ -30,13 +34,19 @@ export class SubjectsComponent implements OnInit {
   readonly deleting = signal(false);
   readonly saving = signal(false);
 
+  readonly batches = signal<Batch[]>([]);
+  readonly sections = signal<Section[]>([]);
+
   readonly form = this.fb.nonNullable.group({
     subjectCode: ['', Validators.required],
     subjectName: [''],
+    batchId: ['', Validators.required],
+    sectionId: ['', Validators.required],
   });
 
   ngOnInit(): void {
     this.load();
+    this.loadBatches();
   }
 
   load(): void {
@@ -52,15 +62,41 @@ export class SubjectsComponent implements OnInit {
     });
   }
 
+  loadBatches(): void {
+    this.batchService.getAll().subscribe({
+      next: (res) => this.batches.set(res.data ?? []),
+    });
+  }
+
+  onBatchChange(batchId: string): void {
+    this.form.patchValue({ sectionId: '' });
+    if (!batchId) {
+      this.sections.set([]);
+      return;
+    }
+    this.sectionService.getAll(batchId).subscribe({
+      next: (res) => this.sections.set(res.data ?? []),
+    });
+  }
+
   openCreate(): void {
     this.editing.set(null);
-    this.form.reset();
+    this.form.reset({ subjectCode: '', subjectName: '', batchId: '', sectionId: '' });
+    this.sections.set([]);
     this.showModal.set(true);
   }
 
   openEdit(s: Subject): void {
     this.editing.set(s);
-    this.form.patchValue({ subjectCode: s.subjectCode, subjectName: s.subjectName ?? '' });
+    this.form.patchValue({
+      subjectCode: s.subjectCode,
+      subjectName: s.subjectName ?? '',
+      batchId: s.batchId ?? '',
+      sectionId: s.sectionId ?? '',
+    });
+    if (s.batchId) {
+      this.onBatchChange(s.batchId);
+    }
     this.showModal.set(true);
   }
 

@@ -7,18 +7,20 @@
   @if (loading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
   @else {
     <table class="data-table">
-      <thead><tr><th>Code</th><th>Title</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Code</th><th>Title</th><th>Batch</th><th>Section</th><th>Actions</th></tr></thead>
       <tbody>
         @for (s of subjects(); track s.id) {
           <tr>
             <td>{{ s.subjectCode }}</td>
             <td>{{ s.subjectName }}</td>
+            <td>{{ s.batch?.name ?? '—' }}</td>
+            <td>{{ s.section?.name ?? '—' }}</td>
             <td class="actions">
               <button class="btn btn--ghost btn--sm" (click)="openEdit(s)">Edit</button>
               <button class="btn btn--ghost btn--sm" (click)="deleteTarget.set(s)">Delete</button>
             </td>
           </tr>
-        } @empty { <tr><td colspan="3" class="empty-state">No subjects</td></tr> }
+        } @empty { <tr><td colspan="5" class="empty-state">No subjects</td></tr> }
       </tbody>
     </table>
     <app-pagination
@@ -42,6 +44,26 @@
           </div>
           <div class="form-field"><label>Title</label><input formControlName="subjectName" />
             @if (form.controls.subjectName.touched && form.controls.subjectName.errors?.['required']) { <span class="error">Title is required</span> }
+          </div>
+          <div class="form-field">
+            <label>Batch</label>
+            <select formControlName="batchId" (change)="onBatchChange(form.controls.batchId.value)">
+              <option value="">Select batch</option>
+              @for (b of batches(); track b.id) {
+                <option [value]="b.id">{{ b.name }}</option>
+              }
+            </select>
+            @if (form.controls.batchId.touched && form.controls.batchId.errors?.['required']) { <span class="error">Batch is required</span> }
+          </div>
+          <div class="form-field">
+            <label>Section</label>
+            <select formControlName="sectionId" [disabled]="!form.controls.batchId.value">
+              <option value="">Select section</option>
+              @for (sec of sections(); track sec.id) {
+                <option [value]="sec.id">{{ sec.name }}</option>
+              }
+            </select>
+            @if (form.controls.sectionId.touched && form.controls.sectionId.errors?.['required']) { <span class="error">Section is required</span> }
           </div>
         </div>
         <div class="modal__footer">

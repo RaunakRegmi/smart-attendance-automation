@@ -79,6 +79,10 @@ export interface Subject {
   id: number;
   subjectCode: string;
   subjectName?: string;
+  batchId?: string;
+  sectionId?: string;
+  batch?: Batch;
+  section?: Section;
   createdAt?: string;
 }
 

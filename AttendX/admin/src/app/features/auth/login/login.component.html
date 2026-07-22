@@ -31,20 +31,43 @@
 
       <div class="form-field">
         <label for="password">Password</label>
-        <input
-          id="password"
-          type="password"
-          formControlName="password"
-          placeholder="••••••••"
-          [class.invalid]="form.controls.password.touched && form.controls.password.invalid"
-        />
-        @if (form.controls.password.touched && form.controls.password.errors?.['required']) {
-          <span class="error">Password is required</span>
-        }
-        @if (form.controls.password.touched && form.controls.password.errors?.['minlength']) {
-          <span class="error">Password must be at least 6 characters</span>
+        <div class="password-wrap">
+          <input
+            id="password"
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="••••••••"
+            [class.invalid]="form.controls.password.touched && form.controls.password.invalid"
+          />
+          <button type="button" class="password-toggle" (click)="showPassword.set(!showPassword())" tabindex="-1">
+            @if (showPassword()) {
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+                <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            } @else {
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            }
+          </button>
+        </div>
+        @if (form.controls.password.touched && form.controls.password.invalid) {
+          <span class="error">
+            @if (form.controls.password.errors?.['required']) {
+              Password is required
+            } @else if (form.controls.password.errors?.['minlength']) {
+              Password must be at least 6 characters
+            }
+          </span>
         }
       </div>
+
+      @if (serverError()) {
+        <div class="login-card__error">{{ serverError() }}</div>
+      }
 
       <button type="submit" class="btn btn--primary login-card__submit" [disabled]="loading() || form.invalid">
         @if (loading()) {

@@ -43,9 +43,50 @@
     justify-content: center;
   }
 
+  &__error {
+    background: $danger-light;
+    color: $danger;
+    border: 1px solid $danger;
+    border-radius: $radius-sm;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    text-align: center;
+  }
+
   &__submit {
     width: 100%;
     margin-top: 0.5rem;
     padding: 0.75rem;
+  }
+}
+
+.password-wrap {
+  position: relative;
+
+  input {
+    width: 100%;
+    padding-right: 2.75rem;
+  }
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: $text-muted;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+
+  &:hover {
+    color: $text-primary;
   }
 }

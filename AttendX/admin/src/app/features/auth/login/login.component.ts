@@ -18,6 +18,8 @@ export class LoginComponent {
   private readonly toast = inject(ToastService);
 
   readonly loading = signal(false);
+  readonly showPassword = signal(false);
+  readonly serverError = signal('');
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -25,6 +27,7 @@ export class LoginComponent {
   });
 
   submit(): void {
+    this.serverError.set('');
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -37,26 +40,22 @@ export class LoginComponent {
         if (res?.success) {
           const role = res.data.user.role;
           if (role === 'ADMIN') {
-            this.toast.success('Welcome back!');
             this.router.navigate(['/dashboard']);
           } else if (role === 'TEACHER') {
-            this.toast.success('Welcome back!');
             this.router.navigate(['/teacher']);
           } else if (role === 'STUDENT') {
-            this.toast.success('Welcome back!');
             this.router.navigate(['/student']);
           } else {
-            this.toast.error('Admin, teacher, or student access required');
+            this.serverError.set('Admin, teacher, or student access required');
             this.auth.logout();
-            return;
           }
         } else {
-          this.toast.error('Invalid email or password');
+          this.serverError.set('Invalid email or password');
         }
       },
       error: () => {
         this.loading.set(false);
-        this.toast.error('Invalid email or password');
+        this.serverError.set('Invalid email or password');
       },
     });
   }
