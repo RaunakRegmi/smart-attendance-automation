@@ -6,7 +6,6 @@ const User = require('../models/User');
 const { parseExcelFile, exportToExcel } = require('../utils/excelHandler');
 const path = require('path');
 const fs = require('fs');
-const { linkSheet, syncSheet } = require('../services/sheetsService');
 
 // ---------------------------
 // Validation for legacy date headers
@@ -294,38 +293,20 @@ exports.getStudentAttendancePercentage = async (req, res, next) => {
 exports.getDashboard = async (req, res, next) => {
   try {
     const Batch = require('../models/Batch');
-    const Sheets = require('../models/Sheets');
     const Routine = require('../models/Routine');
     const Section = require('../models/Section');
-    const SyncJob = require('../models/SyncJob');
     const Notification = require('../models/Notification');
 
     const today = new Date().toISOString().split('T')[0];
     const totalStudents = await Student.count();
     const totalSubjects = await Subject.count();
     const totalBatches = await Batch.count();
-    const generatedReports = await Sheets.count();
     const presentToday = await Attendance.count({ where: { date: today, status: 'Present' } });
     const absentToday = await Attendance.count({ where: { date: today, status: 'Absent' } });
 
     // Build a unified activity feed from multiple sources. Each entry has a
     // human-readable title and timestamp; we merge and sort by recency.
     const activity = [];
-
-    const recentSyncJobs = await SyncJob.findAll({
-      where: { status: ['SUCCESS', 'FAILED', 'SKIPPED'] },
-      order: [['endTime', 'DESC']],
-      limit: 5,
-    });
-    for (const j of recentSyncJobs) {
-      activity.push({
-        id: `sync-${j.id}`,
-        title: j.status === 'SUCCESS'
-          ? `Sheet sync completed (${j.successCount || 0} records)`
-          : j.status === 'SKIPPED' ? 'Sheet sync skipped (no new data)' : 'Sheet sync failed',
-        timestamp: j.endTime || j.startTime || j.createdAt,
-      });
-    }
 
     const recentRoutines = await Routine.findAll({
       attributes: ['id', 'sectionId', 'createdAt'],
@@ -346,27 +327,6 @@ exports.getDashboard = async (req, res, next) => {
         id: `routine-${r.id}`,
         title: `Routine uploaded for ${batchAbbr}${batchAbbr ? '/' : ''}${sec || 'a section'}`,
         timestamp: r.createdAt,
-      });
-    }
-
-    const recentSheets = await Sheets.findAll({
-      attributes: ['id', 'sheetName', 'createdAt', 'lastSuccessfulSyncTime'],
-      order: [['createdAt', 'DESC']],
-      limit: 3,
-    });
-    for (const s of recentSheets) {
-      // sheetName is often a long Google Sheets URL — trim to a readable label.
-      let label = s.sheetName || 'untitled sheet';
-      if (/^https?:\/\//.test(label)) {
-        const m = label.match(/\/d\/([^/]+)/);
-        label = m ? `Google Sheet ${m[1].slice(0, 8)}…` : 'Google Sheet';
-      } else if (label.length > 50) {
-        label = label.slice(0, 47) + '…';
-      }
-      activity.push({
-        id: `sheet-${s.id}`,
-        title: `Sheet linked: ${label}`,
-        timestamp: s.createdAt,
       });
     }
 
@@ -415,7 +375,6 @@ exports.getDashboard = async (req, res, next) => {
         totalStudents,
         totalSubjects,
         totalBatches,
-        generatedReports,
         presentToday,
         absentToday,
         markedToday: presentToday + absentToday,
@@ -432,26 +391,3 @@ exports.getDashboard = async (req, res, next) => {
   }
 };
 
-// Add and sync a Google Sheet
-exports.addSheet = async (req, res, next) => {
-  try {
-    const { url, batchId, sectionId } = req.body;
-    if (!url || !batchId || !sectionId) {
-      return res.status(400).json({ success: false, message: 'URL, batch, and section are required' });
-    }
-    
-    // linkSheet now handles:
-    // 1. Duplicate check
-    // 2. Sheet creation
-    // 3. First-time immediate sync (no background job)
-    const result = await linkSheet(url, batchId, sectionId);
-    
-    res.json({
-      success: true,
-      message: result.message,
-      data: result
-    });
-  } catch (error) {
-    next(error);
-  }
-};

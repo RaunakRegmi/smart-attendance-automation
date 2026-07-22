@@ -3,7 +3,6 @@ const Student = require('../models/Student');
 const Batch = require('../models/Batch');
 const Section = require('../models/Section');
 const User = require('../models/User');
-const sheetAppendQueue = require('../queues/sheetAppendQueue');
 
 exports.getStudents = async (req, res, next) => {
   try {
@@ -93,9 +92,6 @@ exports.createStudent = async (req, res, next) => {
     const created = await Student.findByPk(student.id, {
       include: [{ model: Batch }, { model: Section }],
     });
-
-    sheetAppendQueue.add('append-student', { student: { id: student.id, name, email, batchId: batchId || null, sectionId: sectionId || null } })
-      .catch((err) => console.error('Failed to enqueue sheet append job:', err.message));
 
     res.status(201).json({ success: true, data: created });
   } catch (error) {

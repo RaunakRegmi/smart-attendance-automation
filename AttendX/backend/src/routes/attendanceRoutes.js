@@ -72,61 +72,6 @@ router.post('/upload', upload.single('file'), attendanceController.uploadExcel);
 
 /**
  * @swagger
- * /api/attendance/add-sheet:
- *   post:
- *     summary: Add and sync a Google Sheet
- *     tags: [Sheets]
- *     description: Save a Google Sheet URL, persist sheet metadata, and immediately sync attendance data from Google Sheets into the database.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - url
- *               - batchId
- *               - sectionId
- *             properties:
- *               url:
- *                 type: string
- *                 example: https://docs.google.com/spreadsheets/d/abc123/edit
- *               batchId:
- *                 type: string
- *                 format: uuid
- *               sectionId:
- *                 type: string
- *                 format: uuid
- *     responses:
- *       200:
- *         description: Sheet added and synced successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     sheetId:
- *                       type: string
- *                     syncResult:
- *                       type: object
- *       400:
- *         description: Missing required fields or invalid sheet URL
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.post('/add-sheet', attendanceController.addSheet);
-
-/**
- * @swagger
  * /api/attendance/stats:
  *   get:
  *     summary: Get overall attendance statistics

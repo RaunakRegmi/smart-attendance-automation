@@ -1,0 +1,73 @@
+<div class="multi-select" #container [class.multi-select--open]="isOpen()">
+  <div class="multi-select__trigger" #trigger (click)="toggleDropdown()" (keydown)="onKeydown($event)" tabindex="0" role="combobox" [attr.aria-expanded]="isOpen()" [attr.aria-haspopup]="'listbox'">
+    <div class="multi-select__values">
+      @if (selectedOptions().length === 0) {
+        <span class="multi-select__placeholder">{{ placeholder }}</span>
+      } @else {
+        @for (opt of selectedOptions(); track opt.id) {
+          <span class="multi-select__chip">
+            <span class="multi-select__chip-label">{{ opt.label }}</span>
+            <button type="button" class="multi-select__chip-remove" (click)="removeOption(opt, $event)" aria-label="Remove">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </span>
+        }
+      }
+    </div>
+    <div class="multi-select__actions">
+      @if (selectedOptions().length > 0) {
+        <button type="button" class="multi-select__clear" (click)="clearAll($event)" aria-label="Clear all">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      }
+      <span class="multi-select__arrow" [class.multi-select__arrow--open]="isOpen()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </span>
+    </div>
+  </div>
+
+  @if (isOpen()) {
+    <div class="multi-select__dropdown">
+      <div class="multi-select__search-wrap">
+        <svg class="multi-select__search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input
+          #searchInput
+          type="text"
+          class="multi-select__search"
+          [placeholder]="searchPlaceholder"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          (input)="onSearchInput($event)"
+          (keydown)="onKeydown($event)"
+        />
+      </div>
+      <ul class="multi-select__list" role="listbox">
+        @for (opt of filteredOptions(); track opt.id; let i = $index) {
+          <li
+            class="multi-select__option"
+            [class.multi-select__option--selected]="isSelected(opt)"
+            [class.multi-select__option--focused]="i === focusedIndex()"
+            (click)="toggleOption(opt, $event)"
+            role="option"
+            [attr.aria-selected]="isSelected(opt)"
+          >
+            <span class="multi-select__checkbox" [class.multi-select__checkbox--checked]="isSelected(opt)">
+              @if (isSelected(opt)) {
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              }
+            </span>
+            <div class="multi-select__option-text">
+              <span class="multi-select__option-label">{{ opt.label }}</span>
+              @if (opt.sublabel) {
+                <span class="multi-select__option-sublabel">{{ opt.sublabel }}</span>
+              }
+            </div>
+          </li>
+        } @empty {
+          <li class="multi-select__empty">No results found</li>
+        }
+      </ul>
+      <div class="multi-select__count">{{ selectedCount() }} selected</div>
+    </div>
+  }
+</div>

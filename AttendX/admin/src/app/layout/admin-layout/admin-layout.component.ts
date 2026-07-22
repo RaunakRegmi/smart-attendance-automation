@@ -53,24 +53,10 @@ export class AdminLayoutComponent {
       ],
     },
     {
-      title: 'Sheets',
-      items: [
-        { label: 'All sheets', route: '/sheets', icon: 'sheets' },
-        { label: 'Link sheet', route: '/sheets/add', icon: 'sheets-add' },
-      ],
-    },
-    {
       title: 'Routine',
       items: [
-        { label: 'All routines', route: '/routines', icon: 'sheets' },
-        { label: 'Upload routine', route: '/routines/add', icon: 'sheets-add' },
-      ],
-    },
-    {
-      title: 'Background jobs',
-      items: [
-        { label: 'Sync Operations', route: '/jobs/sync', icon: 'sync' },
-        { label: 'Scheduler', route: '/jobs/scheduler', icon: 'scheduler' },
+        { label: 'All routines', route: '/routines', icon: 'routine' },
+        { label: 'Upload routine', route: '/routines/add', icon: 'routine-add' },
       ],
     },
   ];

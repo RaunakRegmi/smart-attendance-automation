@@ -87,6 +87,11 @@ export interface Lecturer {
   name: string;
   email?: string;
   contact?: string;
+  subjects?: Subject[];
+  hasAccount?: boolean;
+  mustChangePassword?: boolean;
+  accountActive?: boolean;
+  userId?: number;
   createdAt?: string;
 }
 
@@ -116,42 +121,6 @@ export interface StudentProfile {
 export interface ProfileResponse {
   user: User;
   student?: StudentProfile;
-}
-
-export interface SheetRecord {
-  id: string;
-  sheetName: string;
-  sheetId: string;
-  batchId: string;
-  sectionId: string;
-  status: 'active' | 'inactive';
-  lastSuccessfulSyncTime?: string;
-  lastAttemptedSyncTime?: string;
-  Batch?: Batch;
-  Section?: Section;
-  metadata?: { url?: string };
-}
-
-/** Sync job row from GET /api/sync/status */
-export interface SyncJob {
-  id?: number;
-  sheetId?: string;
-  status?: string;
-  syncType?: string;
-  scheduledTime?: string;
-  startTime?: string;
-  endTime?: string;
-  failureDetails?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface QueueStatus {
-  totalJobs?: number;
-  waiting?: number;
-  active?: number;
-  completed?: number;
-  failed?: number;
 }
 
 export interface ReportStudent {
@@ -569,4 +538,107 @@ export interface TeacherProfileData {
   user: User;
   lecturer: { id: number; name: string; email?: string | null; contact?: string | null } | null;
   assignments: TeacherAssignmentRow[];
+}
+
+// ── Student portal ──────────────────────────────────────────────────────────
+
+export interface QrScanResult {
+  status: 'Present' | 'Late';
+  scannedAt: string;
+}
+
+export interface LateRequestResult {
+  id: number;
+  qrSessionId: string;
+  remarks: string;
+  status: string;
+  createdAt: string;
+}
+
+// ── QR Attendance Sessions ───────────────────────────────────────────────────
+
+export type ClassType = 'Lecture' | 'Tutorial' | 'Workshop';
+export type SessionStatus = 'Active' | 'Closed';
+export type ScanStatus = 'Present' | 'Late' | 'Absent';
+
+export interface QRSession {
+  id: number;
+  sectionId: string;
+  sectionName: string | null;
+  batchName: string | null;
+  subjectId: number;
+  subjectCode: string | null;
+  subjectName: string | null;
+  classType: ClassType;
+  date: string;
+  status: SessionStatus;
+  token: string;
+  tokenExpiresAt: string;
+  totalStudents: number;
+  presentCount: number;
+  lateCount: number;
+  absentCount: number;
+  createdAt: string;
+}
+
+export interface QRSessionHistoryItem {
+  id: number;
+  sectionId: string;
+  sectionName: string | null;
+  batchName: string | null;
+  subjectId: number;
+  subjectCode: string | null;
+  subjectName: string | null;
+  classType: ClassType;
+  date: string;
+  status: SessionStatus;
+  totalStudents: number;
+  presentCount: number;
+  lateCount: number;
+  absentCount: number;
+  createdAt: string;
+}
+
+export interface AttendanceScan {
+  id: number;
+  studentId: number;
+  studentName: string;
+  regNum: string | null;
+  univId: string | null;
+  status: ScanStatus;
+  scannedAt: string;
+  isLateRequest: boolean;
+  lateRequestStatus: string | null;
+}
+
+export interface QRSessionDetail {
+  session: QRSessionHistoryItem;
+  scans: AttendanceScan[];
+}
+
+export interface AttendanceRequest {
+  id: number;
+  sessionId: number;
+  studentId: number;
+  studentName: string;
+  regNum: string | null;
+  sessionDate: string;
+  classType: ClassType;
+  sectionName: string | null;
+  subjectCode: string | null;
+  remarks: string | null;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  createdAt: string;
+}
+
+export interface CreateSessionPayload {
+  sectionId: string;
+  subjectId: number;
+  classType: ClassType;
+  date: string;
+}
+
+export interface DecideRequestPayload {
+  status: 'Approved' | 'Rejected';
+  resolvedStatus?: ScanStatus;
 }

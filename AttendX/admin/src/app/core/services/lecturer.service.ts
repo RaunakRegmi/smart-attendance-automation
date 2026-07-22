@@ -1,6 +1,21 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiService } from './api.service';
-import { Lecturer } from '../models/api.models';
+import { DeliveryChannel, DeliveryStatus, Lecturer, Subject } from '../models/api.models';
+import { Observable } from 'rxjs';
+
+export interface LecturerCreatePayload {
+  name: string;
+  email?: string;
+  contact?: string;
+  password?: string;
+  subjectIds?: number[];
+  deliveryChannels?: DeliveryChannel[];
+}
+
+export interface ResendPayload {
+  deliveryChannels: DeliveryChannel[];
+  newTempPassword?: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class LecturerService {
@@ -10,12 +25,20 @@ export class LecturerService {
     return this.api.getPaginated<Lecturer>('/lecturers', params);
   }
 
-  create(data: Partial<Lecturer>) {
-    return this.api.post<Lecturer>('/lecturers', data);
+  getAllSubjects(): Observable<{ success: boolean; data: Subject[] }> {
+    return this.api.get<Subject[]>('/lecturers/subjects/all');
   }
 
-  update(id: number, data: Partial<Lecturer>) {
+  create(data: LecturerCreatePayload) {
+    return this.api.post<Lecturer & { delivery?: DeliveryStatus }>('/lecturers', data);
+  }
+
+  update(id: number, data: Partial<Lecturer> & { password?: string; subjectIds?: number[] }) {
     return this.api.put<Lecturer>(`/lecturers/${id}`, data);
+  }
+
+  resendCredentials(id: number, payload: ResendPayload): Observable<{ success: boolean; data: { delivery: DeliveryStatus } }> {
+    return this.api.post<{ delivery: DeliveryStatus }>(`/lecturers/${id}/resend-credentials`, payload);
   }
 
   delete(id: number) {

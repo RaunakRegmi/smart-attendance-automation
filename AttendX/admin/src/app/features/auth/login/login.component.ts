@@ -42,8 +42,11 @@ export class LoginComponent {
           } else if (role === 'TEACHER') {
             this.toast.success('Welcome back!');
             this.router.navigate(['/teacher']);
+          } else if (role === 'STUDENT') {
+            this.toast.success('Welcome back!');
+            this.router.navigate(['/student']);
           } else {
-            this.toast.error('Admin or teacher access required');
+            this.toast.error('Admin, teacher, or student access required');
             this.auth.logout();
             return;
           }

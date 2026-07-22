@@ -129,8 +129,8 @@ exports.getClassRoster = async (req, res, next) => {
   }
 };
 
-// Read-only in v1: attendance originates from the Google Sheets sync / Excel
-// upload pipeline. See markAttendance below for the future-scope write stub.
+// Read-only in v1: attendance originates from QR-based sessions or Excel upload.
+// See markAttendance below for the future-scope write stub.
 exports.getAttendance = async (req, res, next) => {
   try {
     const { sectionId, subjectId, date, startDate, endDate, page = 1, limit = 50 } = req.query;
@@ -189,14 +189,13 @@ exports.getAttendance = async (req, res, next) => {
 };
 
 // FUTURE SCOPE (deliberate stub, do not remove): in-app attendance marking is
-// not part of v1 — attendance stays sourced from the Sheets sync pipeline,
-// which would overwrite direct DB writes on its next run. When this becomes a
-// real feature it needs a decision on write-through vs. sync reconciliation.
+// not part of v1 — attendance stays sourced from QR-based sessions or Excel upload.
+// When this becomes a real feature it needs a decision on write-through vs. sync reconciliation.
 exports.markAttendance = async (req, res) => {
   res.status(501).json({
     success: false,
     message:
-      'Attendance marking from the teacher portal is not available yet. Attendance is managed through the existing sheet sync pipeline; this endpoint is a reserved extension point.',
+      'Attendance marking from the teacher portal is not available yet. Attendance is managed through QR-based sessions or Excel upload; this endpoint is a reserved extension point.',
   });
 };
 

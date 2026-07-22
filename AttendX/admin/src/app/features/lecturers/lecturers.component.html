@@ -1,4 +1,4 @@
-<div class="page-header"><h1>Lecturers</h1><p>Manage lecturer records</p></div>
+<div class="page-header"><h1>Lecturers</h1><p>Manage lecturer records and teacher accounts</p></div>
 <div class="toolbar">
   <div class="search-input"><input placeholder="Search..." (input)="search.set($any($event.target).value); page.set(1); load()" /></div>
   <button class="btn btn--primary" (click)="openCreate()">+ Add Lecturer</button>
@@ -7,19 +7,47 @@
   @if (loading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
   @else {
     <table class="data-table">
-      <thead><tr><th>Name</th><th>Email</th><th>Contact</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Name</th><th>Email</th><th>Contact</th><th>Subjects</th><th>Account</th><th>Actions</th></tr></thead>
       <tbody>
         @for (l of lecturers(); track l.id) {
           <tr>
             <td>{{ l.name }}</td>
             <td>{{ l.email || '-' }}</td>
             <td>{{ l.contact || '-' }}</td>
+            <td>
+              <div class="subject-chips">
+                @if (l.subjects && l.subjects.length > 0) {
+                  @for (s of l.subjects; track s.id) {
+                    <span class="subject-chip">{{ s.subjectCode }}</span>
+                  }
+                } @else {
+                  <span class="text-muted">-</span>
+                }
+              </div>
+            </td>
+            <td>
+              @if (l.hasAccount) {
+                @if (l.accountActive) {
+                  <span class="badge badge--success">Active</span>
+                } @else {
+                  <span class="badge badge--danger">Deactivated</span>
+                }
+                @if (l.mustChangePassword) {
+                  <span class="badge badge--warning">Temp password</span>
+                }
+              } @else {
+                <span class="badge badge--inactive">No Account</span>
+              }
+            </td>
             <td class="actions">
               <button class="btn btn--ghost btn--sm" (click)="openEdit(l)">Edit</button>
               <button class="btn btn--ghost btn--sm" (click)="deleteTarget.set(l)">Delete</button>
+              @if (l.hasAccount && l.accountActive) {
+                <button class="btn btn--ghost btn--sm" (click)="openResend(l)">Resend credentials</button>
+              }
             </td>
           </tr>
-        } @empty { <tr><td colspan="4" class="empty-state">No lecturers</td></tr> }
+        } @empty { <tr><td colspan="6" class="empty-state">No lecturers</td></tr> }
       </tbody>
     </table>
     <app-pagination
@@ -32,32 +60,150 @@
     />
   }
 </div>
+
 @if (showModal()) {
   <div class="modal-backdrop" (click)="showModal.set(false)">
-    <div class="modal" (click)="$event.stopPropagation()">
-      <div class="modal__header"><h2>{{ editing() ? 'Update' : 'Add' }} Lecturer</h2></div>
+    <div class="modal modal--wide" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2>{{ editing() ? 'Update' : 'Add' }} Lecturer</h2>
+      </div>
       <form [formGroup]="form" (ngSubmit)="save()">
         <div class="modal__body">
-          <div class="form-field"><label>Name</label><input formControlName="name" />
-            @if (form.controls.name.touched && form.controls.name.errors?.['required']) { <span class="error">Name is required</span> }
+          <div class="form-section">
+            <h3 class="form-section__title">Personal Information</h3>
+            <div class="form-row">
+              <div class="form-field">
+                <label>Name <span class="required">*</span></label>
+                <input formControlName="name" placeholder="Full name" />
+                @if (form.controls.name.touched && form.controls.name.errors?.['required']) { <span class="error">Name is required</span> }
+              </div>
+              <div class="form-field">
+                <label>Contact (optional)</label>
+                <input formControlName="contact" placeholder="Phone number" />
+              </div>
+            </div>
           </div>
-          <div class="form-field"><label>Email</label><input formControlName="email" type="email" />
-            @if (form.controls.email.touched && form.controls.email.errors?.['email']) { <span class="error">Invalid email format</span> }
+
+          <div class="form-section">
+            <h3 class="form-section__title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+              Teacher Account
+            </h3>
+            <p class="form-section__desc">Create login credentials for the teacher portal</p>
+            <div class="form-field">
+              <label>Login email (unique) <span class="required">*</span></label>
+              <input formControlName="email" type="email" placeholder="teacher@example.com" />
+              @if (form.controls.email.touched && form.controls.email.errors?.['email']) { <span class="error">Invalid email format</span> }
+              @if (emailServerError()) { <span class="error">{{ emailServerError() }}</span> }
+            </div>
+            <div class="form-field">
+              <label>{{ editing() ? 'Reset password (leave blank to keep)' : 'Temporary password' }} <span class="required">*</span></label>
+              <div class="password-row">
+                <input style="flex:1" formControlName="password" type="text" [placeholder]="editing() ? 'Leave empty to keep current' : 'Enter or generate'" autocomplete="new-password" />
+                @if (!editing()) {
+                  <button type="button" class="btn btn--secondary btn--sm" (click)="generatePassword()">Generate</button>
+                }
+              </div>
+              @if (form.controls.password.touched && form.controls.password.errors?.['required']) { <span class="error">Password is required</span> }
+              @if (form.controls.password.touched && form.controls.password.errors?.['minlength']) { <span class="error">At least 6 characters</span> }
+              <span class="hint">The teacher is asked to change it on first login.</span>
+            </div>
+            @if (!editing()) {
+              <div class="form-field">
+                <label>Send credentials via</label>
+                <div class="form-field form-field--inline">
+                  <input type="checkbox" id="chan-email" [checked]="sendEmail()" (change)="toggleEmailChannel($any($event.target).checked)" [disabled]="!form.getRawValue().email" />
+                  <label for="chan-email">Email @if (!form.getRawValue().email) { <span class="hint">(enter an email first)</span> }</label>
+                </div>
+                <span class="hint">The message contains the login link and the temporary password.</span>
+              </div>
+            }
           </div>
-          <div class="form-field"><label>Contact</label><input formControlName="contact" /></div>
+
+          <div class="form-section">
+            <h3 class="form-section__title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              Assigned Subjects
+            </h3>
+            <p class="form-section__desc">Select the subjects this lecturer will teach</p>
+            <div class="form-field">
+              <app-multi-select
+                [options]="subjectOptions()"
+                [selected]="selectedSubjectIds()"
+                placeholder="Select subjects..."
+                searchPlaceholder="Search by code or name..."
+                (selectedChange)="onSubjectsChange($event)"
+              />
+            </div>
+          </div>
         </div>
         <div class="modal__footer">
           <button type="button" class="btn btn--secondary" (click)="showModal.set(false)">Cancel</button>
-          <button type="submit" class="btn btn--primary" [disabled]="saving() || form.invalid">Save</button>
+          <button type="submit" class="btn btn--primary" [disabled]="saving() || form.invalid">
+            @if (saving()) { <span class="loading-spinner"></span> Saving... } @else { Save }
+          </button>
         </div>
       </form>
     </div>
   </div>
 }
+
+@if (deliveryResult(); as result) {
+  <div class="modal-backdrop" (click)="deliveryResult.set(null)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header"><h2>Credential delivery — {{ result.lecturerName }}</h2></div>
+      <div class="modal__body">
+        @if (result.delivery.email.attempted) {
+          <p>
+            Email:
+            @if (result.delivery.email.ok) { <span class="badge badge--success">Sent</span> }
+            @else { <span class="badge badge--danger">Failed</span> <span class="hint">{{ result.delivery.email.error }}</span> }
+            @if (result.delivery.email.provider === 'demo') { <span class="badge badge--warning">demo mode (logged to server console)</span> }
+          </p>
+        }
+        @if (!result.delivery.email.attempted) {
+          <p class="hint">No delivery channels were selected.</p>
+        }
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--secondary" (click)="deliveryResult.set(null)">Close</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (resendFor(); as lecturer) {
+  <div class="modal-backdrop" (click)="resendFor.set(null)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header"><h2>Resend credentials — {{ lecturer.name }}</h2></div>
+      <div class="modal__body">
+        <div class="form-field">
+          <label>Channels</label>
+          <div class="form-field form-field--inline">
+            <input type="checkbox" id="resend-email" [checked]="resendEmail()" (change)="resendEmail.set($any($event.target).checked)" />
+            <label for="resend-email">Email ({{ lecturer.email }})</label>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>New temporary password (optional)</label>
+          <input type="text" [value]="resendNewPassword()" (input)="resendNewPassword.set($any($event.target).value)" placeholder="Leave blank to send a set-password link only" />
+          <span class="hint">The stored password can't be recovered. Set a new one to include it in the message.</span>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--secondary" (click)="resendFor.set(null)">Cancel</button>
+        <button type="button" class="btn btn--primary" [disabled]="resending()" (click)="resend()">
+          @if (resending()) { <span class="loading-spinner"></span> Sending... } @else { Send }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
 @if (deleteTarget()) {
   <app-confirm-dialog
     title="Delete Lecturer"
-    [message]="'Delete ' + deleteTarget()!.name + '? Reassign their subjects first.'"
+    [message]="'Delete ' + deleteTarget()!.name + '? Their subjects will be unlinked.'"
     confirmLabel="Delete"
     [loading]="deleting()"
     loadingLabel="Deleting..."

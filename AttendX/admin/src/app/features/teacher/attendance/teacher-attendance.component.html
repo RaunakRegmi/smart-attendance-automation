@@ -1,58 +1,269 @@
 <div class="page-header">
-  <h1>Attendance</h1>
-  <p>View attendance history for your classes. Attendance records come from the attendance sheet pipeline.</p>
+  <h1>QR Attendance</h1>
+  <p>Start a QR session for students to scan, or review past sessions and late requests.</p>
 </div>
 
-<div class="card" style="padding: 16px; margin-bottom: 16px;">
-  <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
-    <div class="form-field" style="min-width: 280px;">
-      <label>Class</label>
-      <select [ngModel]="selectedKey()" (ngModelChange)="selectedKey.set($event)">
-        <option value="">Select a class...</option>
-        @for (c of classes(); track c.assignmentId) {
-          <option [value]="classKey(c)">{{ c.subjectCode }} — {{ c.sectionName }} @if (c.batchName) { ({{ c.batchName }}) }</option>
-        }
-      </select>
-    </div>
-    <div class="form-field">
-      <label>Date (optional)</label>
-      <input type="date" [ngModel]="date()" (ngModelChange)="date.set($event)" />
-    </div>
-    <button class="btn btn--primary" [disabled]="!selectedClass() || loading()" (click)="load()">View</button>
-    <button class="btn btn--secondary" disabled title="Future scope: attendance is currently managed through the sheet sync pipeline">
-      Mark attendance (coming soon)
-    </button>
-  </div>
+<div class="tabs">
+  @for (tab of tabs; track tab; let i = $index) {
+    <button class="tabs__item" [class.tabs__item--active]="activeTab() === i" (click)="switchTab(i)">{{ tab }}</button>
+  }
 </div>
 
-@if (loading()) { <div class="empty-state"><span class="loading-spinner"></span></div> }
-@else {
-@if (view(); as v) {
-  <div class="stats-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 16px;">
-    <div class="card" style="padding: 16px;"><p class="hint">Records</p><h2>{{ v.summary.total }}</h2></div>
-    <div class="card" style="padding: 16px;"><p class="hint">Present</p><h2>{{ v.summary.present }}</h2></div>
-    <div class="card" style="padding: 16px;"><p class="hint">Absent</p><h2>{{ v.summary.absent }}</h2></div>
-    <div class="card" style="padding: 16px;"><p class="hint">Late</p><h2>{{ v.summary.late }}</h2></div>
-    <div class="card" style="padding: 16px;"><p class="hint">Attendance</p><h2>{{ v.summary.attendancePercentage }}%</h2></div>
-  </div>
+@if (activeTab() === 0) {
+  <!-- ────────── Tab 1: Create Session ────────── -->
+  @if (activeSession(); as session) {
+    <div class="session-active">
+      <div class="session-active__left">
+        <div class="card session-qr">
+          <p class="hint" style="margin-bottom: 8px;">Current Token</p>
+          @if (qrImageUrl()) {
+            <img [src]="qrImageUrl()" alt="QR Code" class="session-qr__img" />
+          }
+          <div class="session-qr__token">{{ session.token }}</div>
+          <p class="hint" style="margin-top: 8px;">Expires at {{ session.tokenExpiresAt | date: 'HH:mm:ss' }}</p>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+          <button class="btn btn--ghost btn--sm" (click)="refreshQR()">Refresh QR</button>
+          <button class="btn btn--danger btn--sm" (click)="closeSession()" [disabled]="loading()">Close Session</button>
+        </div>
+      </div>
+
+      <div class="session-active__right">
+        <div class="card" style="padding: 16px;">
+          <h3 style="margin: 0 0 12px;">Session Details</h3>
+          <table class="detail-table">
+            <tr><td class="hint">Section</td><td>{{ session.sectionName }} @if (session.batchName) { ({{ session.batchName }}) }</td></tr>
+            <tr><td class="hint">Subject</td><td>{{ session.subjectCode }} — {{ session.subjectName }}</td></tr>
+            <tr><td class="hint">Class Type</td><td>{{ session.classType }}</td></tr>
+            <tr><td class="hint">Date</td><td>{{ session.date | date: 'MMM d, y' }}</td></tr>
+            <tr><td class="hint">Status</td><td><span class="badge badge--success">Active</span></td></tr>
+          </table>
+        </div>
+
+        <div class="stats-row" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px;">
+          <div class="card" style="padding: 12px; text-align: center;">
+            <p class="hint">Present</p>
+            <h2 class="stat-present">{{ session.presentCount }}</h2>
+          </div>
+          <div class="card" style="padding: 12px; text-align: center;">
+            <p class="hint">Late</p>
+            <h2 class="stat-late">{{ session.lateCount }}</h2>
+          </div>
+          <div class="card" style="padding: 12px; text-align: center;">
+            <p class="hint">Absent</p>
+            <h2 class="stat-absent">{{ session.absentCount }}</h2>
+          </div>
+        </div>
+
+        <p class="hint" style="margin-top: 12px; text-align: center;">
+          Total students: {{ session.totalStudents }} · QR auto-refreshes every 5 seconds
+        </p>
+      </div>
+    </div>
+  } @else {
+    <div class="card" style="padding: 16px;">
+      @if (loading()) {
+        <div class="empty-state"><span class="loading-spinner"></span></div>
+      } @else {
+        <div class="session-form">
+          <div class="form-field" style="min-width: 240px;">
+            <label>Section</label>
+            <select [ngModel]="selectedSectionId()" (ngModelChange)="onSectionChange($event)">
+              <option value="">Select section…</option>
+              @for (s of uniqueSections(); track s.id) {
+                <option [value]="s.id">{{ s.name }} @if (s.batch) { ({{ s.batch }}) }</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field" style="min-width: 240px;">
+            <label>Subject</label>
+            <select [ngModel]="selectedSubjectId()" (ngModelChange)="selectedSubjectId.set($event)" [disabled]="!selectedSectionId()">
+              <option [ngValue]="null">Select subject…</option>
+              @for (s of filteredSubjects(); track s.id) {
+                <option [ngValue]="s.id">{{ s.code }} — {{ s.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field" style="min-width: 160px;">
+            <label>Class Type</label>
+            <select [ngModel]="selectedClassType()" (ngModelChange)="selectedClassType.set($event)">
+              @for (ct of classTypes; track ct) {
+                <option [value]="ct">{{ ct }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label>Date</label>
+            <input type="date" [ngModel]="selectedDate()" (ngModelChange)="selectedDate.set($event)" />
+          </div>
+
+          <button
+            class="btn btn--primary"
+            [disabled]="!selectedSectionId() || !selectedSubjectId() || loading()"
+            (click)="startSession()"
+          >Start Session</button>
+        </div>
+      }
+    </div>
+  }
+}
+
+@if (activeTab() === 1) {
+  <!-- ────────── Tab 2: Session History ────────── -->
   <div class="card">
-    <table class="data-table">
-      <thead><tr><th>Date</th><th>Student</th><th>Reg. No</th><th>Status</th></tr></thead>
-      <tbody>
-        @for (rec of v.records; track rec.id) {
+    @if (loading()) {
+      <div class="empty-state"><span class="loading-spinner"></span></div>
+    } @else {
+      <table class="data-table">
+        <thead>
           <tr>
-            <td>{{ rec.date | date: 'MMM d, y' }}</td>
-            <td>{{ rec.student.name }}</td>
-            <td>{{ rec.student.regNum || rec.student.univId || '-' }}</td>
-            <td>
-              @if (rec.status === 'Present') { <span class="badge badge--success">Present</span> }
-              @else if (rec.status === 'Late') { <span class="badge badge--warning">Late</span> }
-              @else { <span class="badge badge--danger">Absent</span> }
-            </td>
+            <th>Date</th>
+            <th>Class Type</th>
+            <th>Section</th>
+            <th>Subject</th>
+            <th>Present</th>
+            <th>Late</th>
+            <th>Absent</th>
+            <th>Status</th>
+            <th></th>
           </tr>
-        } @empty { <tr><td colspan="4" class="empty-state">No records for this selection</td></tr> }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @for (s of history(); track s.id) {
+            <tr>
+              <td>{{ s.date | date: 'MMM d, y' }}</td>
+              <td>{{ s.classType }}</td>
+              <td>{{ s.sectionName }} @if (s.batchName) { <span class="hint">({{ s.batchName }})</span> }</td>
+              <td>{{ s.subjectCode }}</td>
+              <td><span class="badge badge--success">{{ s.presentCount }}</span></td>
+              <td><span class="badge badge--warning">{{ s.lateCount }}</span></td>
+              <td><span class="badge badge--danger">{{ s.absentCount }}</span></td>
+              <td>
+                @if (s.status === 'Active') { <span class="badge badge--success">Active</span> }
+                @else { <span class="badge">Closed</span> }
+              </td>
+              <td class="actions">
+                <button class="btn btn--ghost btn--sm" (click)="viewSession(s)">View</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="9" class="empty-state">No sessions yet</td></tr>
+          }
+        </tbody>
+      </table>
+      @if (historyTotalPages() > 1) {
+        <app-pagination
+          [page]="historyPage()"
+          [totalPages]="historyTotalPages()"
+          [total]="historyTotal()"
+          [limit]="historyLimit()"
+          (pageChange)="onHistoryPageChange($event)"
+          (limitChange)="onHistoryLimitChange($event)"
+        />
+      }
+    }
   </div>
 }
+
+@if (activeTab() === 2) {
+  <!-- ────────── Tab 3: Late Requests ────────── -->
+  <div class="card">
+    @if (loading()) {
+      <div class="empty-state"><span class="loading-spinner"></span></div>
+    } @else {
+      <div class="requests-list">
+        @for (req of pendingRequests(); track req.id) {
+          <div class="request-card">
+            <div class="request-card__header">
+              <strong>{{ req.studentName }}</strong>
+              @if (req.regNum) { <span class="hint">({{ req.regNum }})</span> }
+            </div>
+            <div class="request-card__meta">
+              <span>{{ req.sessionDate | date: 'MMM d, y' }}</span>
+              <span class="badge">{{ req.classType }}</span>
+              <span>{{ req.subjectCode }}</span>
+              <span class="hint">{{ req.sectionName }}</span>
+            </div>
+            @if (req.remarks) {
+              <p class="request-card__remarks">"{{ req.remarks }}"</p>
+            }
+            <div class="request-card__footer">
+              <span class="hint">Submitted {{ req.createdAt | date: 'MMM d, h:mm a' }}</span>
+              <div class="request-card__actions">
+                @if (requestActionLoading() === req.id) {
+                  <span class="loading-spinner" style="width: 18px; height: 18px;"></span>
+                } @else {
+                  <button class="btn btn--sm btn--success-outline" (click)="approveRequest(req, 'Present')" title="Approve as Present">Approve (Present)</button>
+                  <button class="btn btn--sm btn--warning-outline" (click)="approveRequest(req, 'Late')" title="Approve as Late">Approve (Late)</button>
+                  <button class="btn btn--sm btn--danger-outline" (click)="rejectRequest(req)" title="Reject">Reject</button>
+                }
+              </div>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty-state">No pending late requests</div>
+        }
+      </div>
+      @if (requestsTotalPages() > 1) {
+        <app-pagination
+          [page]="requestsPage()"
+          [totalPages]="requestsTotalPages()"
+          [total]="requestsTotal()"
+          [limit]="requestsLimit()"
+          (pageChange)="requestsPage.set($event); loadPendingRequests()"
+          (limitChange)="requestsLimit.set($event); requestsPage.set(1); loadPendingRequests()"
+        />
+      }
+    }
+  </div>
+}
+
+@if (showDetailModal() && sessionDetail(); as detail) {
+  <div class="modal-overlay" (click)="closeDetailModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2>Session — {{ detail.session.date | date: 'MMM d, y' }} · {{ detail.session.classType }}</h2>
+        <button class="btn btn--ghost btn--sm" (click)="closeDetailModal()">✕</button>
+      </div>
+      <div class="modal__body">
+        <div class="detail-info" style="margin-bottom: 16px;">
+          <span>{{ detail.session.subjectCode }} — {{ detail.session.sectionName }}</span>
+          <span class="badge" [class.badge--success]="detail.session.status === 'Closed'" style="margin-left: 8px;">{{ detail.session.status }}</span>
+        </div>
+        <div class="stats-row" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;">
+          <div class="card" style="padding: 10px; text-align: center;"><p class="hint">Total</p><strong>{{ detail.session.presentCount + detail.session.lateCount + detail.session.absentCount }}</strong></div>
+          <div class="card" style="padding: 10px; text-align: center;"><p class="hint">Present</p><strong class="stat-present">{{ detail.session.presentCount }}</strong></div>
+          <div class="card" style="padding: 10px; text-align: center;"><p class="hint">Late</p><strong class="stat-late">{{ detail.session.lateCount }}</strong></div>
+          <div class="card" style="padding: 10px; text-align: center;"><p class="hint">Absent</p><strong class="stat-absent">{{ detail.session.absentCount }}</strong></div>
+        </div>
+
+        @for (status of ['Present', 'Late', 'Absent']; track status) {
+          @if (scansByStatus(detail.scans, status).length > 0) {
+            <h4 style="margin: 16px 0 8px;">{{ status }} ({{ scansByStatus(detail.scans, status).length }})</h4>
+            <table class="data-table" style="font-size: 0.875rem;">
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Reg. No</th>
+                  <th>Scanned At</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (scan of scansByStatus(detail.scans, status); track scan.id) {
+                  <tr>
+                    <td>{{ scan.studentName }}</td>
+                    <td>{{ scan.regNum || scan.univId || '—' }}</td>
+                    <td>{{ scan.scannedAt | date: 'HH:mm:ss' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+      </div>
+    </div>
+  </div>
 }

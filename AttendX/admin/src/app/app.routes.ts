@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, teacherGuard, guestGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, teacherGuard, studentGuard, guestGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -105,31 +105,6 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/routines/routines-list/routines-list.component').then((m) => m.RoutinesListComponent),
       },
-      {
-        path: 'sheets/add',
-        loadComponent: () =>
-          import('./features/sheets/sheets-add/sheets-add.component').then((m) => m.SheetsAddComponent),
-      },
-      {
-        path: 'sheets/:id',
-        loadComponent: () =>
-          import('./features/sheets/sheet-detail/sheet-detail.component').then((m) => m.SheetDetailComponent),
-      },
-      {
-        path: 'sheets',
-        loadComponent: () =>
-          import('./features/sheets/sheets-list/sheets-list.component').then((m) => m.SheetsListComponent),
-      },
-      {
-        path: 'jobs/sync',
-        loadComponent: () =>
-          import('./features/jobs/sync-jobs/sync-jobs.component').then((m) => m.SyncJobsComponent),
-      },
-      {
-        path: 'jobs/scheduler',
-        loadComponent: () =>
-          import('./features/jobs/scheduler-page/scheduler-page.component').then((m) => m.SchedulerPageComponent),
-      },
     ],
   },
   {
@@ -177,6 +152,24 @@ export const routes: Routes = [
         path: 'profile',
         loadComponent: () =>
           import('./features/teacher/profile/teacher-profile.component').then((m) => m.TeacherProfileComponent),
+      },
+    ],
+  },
+  {
+    path: 'student',
+    loadComponent: () =>
+      import('./layout/student-layout/student-layout.component').then((m) => m.StudentLayoutComponent),
+    canActivate: [authGuard, studentGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/student/attendance/student-attendance.component').then((m) => m.StudentAttendanceComponent),
+      },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./features/student/profile/student-profile.component').then((m) => m.StudentProfileComponent),
       },
     ],
   },

@@ -1,0 +1,134 @@
+<div class="page-header">
+  <h1>Scan Attendance</h1>
+  <p>Enter the QR token displayed on your teacher's screen</p>
+</div>
+
+<!-- QR Scan Card -->
+<div class="card scan-card">
+  <div class="scan-card__header">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
+    </svg>
+    <h2>QR Attendance</h2>
+  </div>
+
+  <div class="form-field">
+    <label for="token">QR Token</label>
+    <input
+      id="token"
+      type="text"
+      placeholder="Paste the token here..."
+      [ngModel]="token()"
+      (ngModelChange)="token.set($event)"
+      (keyup.enter)="scan()"
+    />
+  </div>
+
+  <div class="form-field">
+    <label for="sessionId">Session ID</label>
+    <input
+      id="sessionId"
+      type="text"
+      placeholder="Enter session ID..."
+      [ngModel]="sessionId()"
+      (ngModelChange)="sessionId.set($event)"
+      (keyup.enter)="scan()"
+    />
+  </div>
+
+  <button
+    type="button"
+    class="btn btn--primary scan-card__submit"
+    [disabled]="scanning() || !token() || !sessionId()"
+    (click)="scan()"
+  >
+    @if (scanning()) {
+      <span class="loading-spinner"></span>
+    }
+    Submit Attendance
+  </button>
+
+  @if (scanError()) {
+    <div class="scan-card__error">{{ scanError() }}</div>
+  }
+
+  @if (scanResult(); as result) {
+    <div class="scan-card__result" [class.scan-card__result--late]="result.status === 'Late'">
+      <div class="scan-card__result-icon">
+        @if (result.status === 'Present') {
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+        } @else {
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        }
+      </div>
+      <div>
+        <strong>Status: {{ result.status }}</strong>
+        <span class="scan-card__result-time">Recorded at {{ result.scannedAt }}</span>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Late Request Card -->
+<div class="card late-card">
+  <div class="late-card__header">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+    <h2>Late Attendance Request</h2>
+  </div>
+  <p class="late-card__desc">Submit a late request for a closed session. Your teacher will review it.</p>
+
+  <div class="form-field">
+    <label for="lateSessionId">Session ID</label>
+    <input
+      id="lateSessionId"
+      type="text"
+      placeholder="Enter closed session ID..."
+      [ngModel]="lateSessionId()"
+      (ngModelChange)="lateSessionId.set($event)"
+    />
+  </div>
+
+  <div class="form-field">
+    <label for="remarks">Remarks</label>
+    <textarea
+      id="remarks"
+      rows="3"
+      placeholder="Explain why you were unable to scan the QR..."
+      [ngModel]="remarks()"
+      (ngModelChange)="remarks.set($event)"
+    ></textarea>
+  </div>
+
+  <button
+    type="button"
+    class="btn btn--primary late-card__submit"
+    [disabled]="submittingLate() || !lateSessionId() || !remarks()"
+    (click)="submitLateRequest()"
+  >
+    @if (submittingLate()) {
+      <span class="loading-spinner"></span>
+    }
+    Submit Late Request
+  </button>
+
+  @if (lateError()) {
+    <div class="late-card__error">{{ lateError() }}</div>
+  }
+
+  @if (lateResult()) {
+    <div class="late-card__success">{{ lateResult() }}</div>
+  }
+</div>

@@ -3,7 +3,6 @@ const Section = require('../models/Section');
 const Subject = require('../models/Subject');
 const Lecturer = require('../models/Lecturer');
 const Student = require('../models/Student');
-const Sheets = require('../models/Sheets');
 const User = require('../models/User');
 const Routine = require('../models/Routine');
 

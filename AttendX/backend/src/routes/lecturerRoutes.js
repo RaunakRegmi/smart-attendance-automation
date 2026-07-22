@@ -7,6 +7,20 @@ router.use(authorizeRoles('ADMIN'));
 
 /**
  * @swagger
+ * /api/lecturers/subjects/all:
+ *   get:
+ *     summary: Get all subjects for dropdown selection
+ *     tags: [Lecturer]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All subjects list
+ */
+router.get('/subjects/all', lecturerController.getAllSubjects);
+
+/**
+ * @swagger
  * /api/lecturers:
  *   get:
  *     summary: List lecturers (Admin, paginated)
@@ -36,7 +50,7 @@ router.get('/', lecturerController.getLecturers);
  * @swagger
  * /api/lecturers:
  *   post:
- *     summary: Create a lecturer (Admin)
+ *     summary: Create a lecturer (Admin) - auto-creates teacher account
  *     tags: [Lecturer]
  *     security:
  *       - bearerAuth: []
@@ -55,9 +69,20 @@ router.get('/', lecturerController.getLecturers);
  *                 format: email
  *               contact:
  *                 type: string
+ *               password:
+ *                 type: string
+ *               subjectIds:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *               deliveryChannels:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   enum: [email, sms]
  *     responses:
  *       201:
- *         description: Lecturer created
+ *         description: Lecturer created with optional teacher account
  */
 router.post('/', lecturerController.createLecturer);
 
@@ -80,6 +105,39 @@ router.post('/', lecturerController.createLecturer);
  *         description: Lecturer updated
  */
 router.put('/:id', lecturerController.updateLecturer);
+
+/**
+ * @swagger
+ * /api/lecturers/{id}/resend-credentials:
+ *   post:
+ *     summary: Resend credentials for a lecturer's teacher account
+ *     tags: [Lecturer]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               deliveryChannels:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   enum: [email, sms]
+ *               newTempPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Credentials sent
+ */
+router.post('/:id/resend-credentials', lecturerController.resendLecturerCredentials);
 
 /**
  * @swagger

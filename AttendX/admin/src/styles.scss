@@ -548,3 +548,240 @@ select option {
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+// ── QR Attendance ────────────────────────────────────────────────────────────
+
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid $border;
+  margin-bottom: 1.5rem;
+
+  &__item {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    background: transparent;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: $text-secondary;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.15s ease;
+
+    &:hover {
+      color: $text-primary;
+    }
+
+    &--active {
+      color: $primary;
+      border-bottom-color: $primary;
+    }
+  }
+}
+
+.session-form {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.session-active {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.5rem;
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.session-qr {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 320px;
+
+  &__img {
+    width: 280px;
+    height: 280px;
+    border-radius: $radius-sm;
+    border: 1px solid $border;
+    background: #fff;
+  }
+
+  &__token {
+    margin-top: 0.75rem;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: $primary;
+    background: $primary-light;
+    padding: 0.5rem 1rem;
+    border-radius: $radius-sm;
+    border: 1px solid $border;
+    word-break: break-all;
+    text-align: center;
+    user-select: all;
+  }
+}
+
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  td {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid $border;
+    vertical-align: top;
+  }
+
+  td:first-child {
+    padding-right: 1rem;
+    width: 120px;
+    font-weight: 500;
+  }
+}
+
+.stat-present { color: $success; }
+.stat-late { color: $warning; }
+.stat-absent { color: $danger; }
+
+.requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.request-card {
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  padding: 1rem 1.25rem;
+  transition: box-shadow 0.15s ease;
+
+  &:hover {
+    box-shadow: $shadow;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.375rem;
+  }
+
+  &__meta {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 0.8125rem;
+    color: $text-secondary;
+    margin-bottom: 0.375rem;
+  }
+
+  &__remarks {
+    margin: 0.375rem 0;
+    font-style: italic;
+    color: $text-secondary;
+    font-size: 0.8125rem;
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+.btn {
+  &--success-outline {
+    background: transparent;
+    border: 1px solid $success;
+    color: $success;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    border-radius: $radius-sm;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: $success-light;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &--warning-outline {
+    background: transparent;
+    border: 1px solid $warning;
+    color: darken($warning, 10%);
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    border-radius: $radius-sm;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: $warning-light;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &--danger-outline {
+    background: transparent;
+    border: 1px solid $danger;
+    color: $danger;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    border-radius: $radius-sm;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: $danger-light;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-overlay .modal {
+  max-width: 720px;
+}

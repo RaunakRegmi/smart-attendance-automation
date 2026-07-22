@@ -1,7 +1,6 @@
 const Section = require('../models/Section');
 const Batch = require('../models/Batch');
 const Student = require('../models/Student');
-const Sheets = require('../models/Sheets');
 const Routine = require('../models/Routine');
 const { Op } = require('sequelize');
 
@@ -96,20 +95,12 @@ exports.deleteSection = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Section not found' });
     }
 
-    // Check blocking conditions: students OR sheets exist
+    // Check blocking conditions: students exist
     const studentCount = await Student.count({ where: { sectionId: section.id } });
     if (studentCount > 0) {
       return res.status(409).json({
         success: false,
         message: `Remove students from "${section.name}" first`,
-      });
-    }
-
-    const sheetCount = await Sheets.count({ where: { sectionId: section.id } });
-    if (sheetCount > 0) {
-      return res.status(409).json({
-        success: false,
-        message: `Unlink sheets from "${section.name}" first`,
       });
     }
 

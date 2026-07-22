@@ -1,14 +1,15 @@
 import { Component, OnInit, ViewChild, ElementRef, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { StudentService } from '../../core/services/student.service';
 import { BatchService } from '../../core/services/batch.service';
 import { SectionService } from '../../core/services/section.service';
 import { FacultyService } from '../../core/services/faculty.service';
-import { SheetsService } from '../../core/services/sheets.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Student, Batch, Section, Faculty } from '../../core/models/api.models';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-students',
@@ -21,7 +22,7 @@ export class StudentsComponent implements OnInit {
   private readonly batchService = inject(BatchService);
   private readonly sectionService = inject(SectionService);
   private readonly facultyService = inject(FacultyService);
-  private readonly sheetsService = inject(SheetsService);
+  private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
 
@@ -186,7 +187,9 @@ export class StudentsComponent implements OnInit {
     }
     if (this.uploading()) return;
     this.uploading.set(true);
-    this.sheetsService.uploadAttendance(file).subscribe({
+    const formData = new FormData();
+    formData.append('file', file);
+    this.http.post<{ success: boolean; message?: string }>(`${environment.apiUrl}/attendance/upload`, formData).subscribe({
       next: (res) => {
         this.toast.success(res.message ?? 'Upload complete');
         this.showUpload.set(false);

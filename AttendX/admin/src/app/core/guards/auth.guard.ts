@@ -45,6 +45,25 @@ export const teacherGuard: CanActivateFn = () => {
   return router.createUrlTree(['/login']);
 };
 
+export const studentGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  if (auth.isAuthenticated() && auth.isStudent()) {
+    return true;
+  }
+  if (!auth.isAuthenticated()) {
+    return router.createUrlTree(['/login']);
+  }
+  if (auth.isAdmin()) {
+    return router.createUrlTree(['/dashboard']);
+  }
+  if (auth.isTeacher()) {
+    return router.createUrlTree(['/teacher']);
+  }
+  auth.clearSession();
+  return router.createUrlTree(['/login']);
+};
+
 export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
@@ -57,6 +76,8 @@ export const guestGuard: CanActivateFn = () => {
   if (auth.isTeacher()) {
     return router.createUrlTree(['/teacher']);
   }
-  // Logged in as non-admin: allow login page (do not bounce to /dashboard)
+  if (auth.isStudent()) {
+    return router.createUrlTree(['/student']);
+  }
   return true;
 };

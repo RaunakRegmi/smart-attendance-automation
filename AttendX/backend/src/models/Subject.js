@@ -1,6 +1,8 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const refresh = require('../services/knowledgeRefreshService');
+const Batch = require('./Batch');
+const Section = require('./Section');
 
 const Subject = sequelize.define('Subject', {
   id: {
@@ -19,6 +21,14 @@ const Subject = sequelize.define('Subject', {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
+  batchId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+  },
+  sectionId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+  },
 }, {
   tableName: 'subjects',
   timestamps: true,
@@ -31,5 +41,8 @@ const Subject = sequelize.define('Subject', {
     afterDestroy: () => refresh.trigger(),
   },
 });
+
+Subject.belongsTo(Batch, { foreignKey: 'batchId', as: 'batch' });
+Subject.belongsTo(Section, { foreignKey: 'sectionId', as: 'section' });
 
 module.exports = Subject;
