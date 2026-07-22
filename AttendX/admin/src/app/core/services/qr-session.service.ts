@@ -17,15 +17,15 @@ export class QrSessionService {
     return this.api.post<QRSession>('/qr-sessions', body);
   }
 
-  refreshQR(sessionId: number) {
+  refreshQR(sessionId: string) {
     return this.api.post<{ token: string; tokenExpiresAt: string }>(`/qr-sessions/${sessionId}/refresh`, {});
   }
 
-  closeSession(sessionId: number) {
+  closeSession(sessionId: string) {
     return this.api.put<QRSession>(`/qr-sessions/${sessionId}/close`, {});
   }
 
-  getSession(sessionId: number) {
+  getSession(sessionId: string) {
     return this.api.get<QRSessionDetail>(`/qr-sessions/${sessionId}`);
   }
 

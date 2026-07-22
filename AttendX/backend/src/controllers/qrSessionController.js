@@ -5,8 +5,10 @@ const AttendanceSession = require('../models/AttendanceSession');
 const AttendanceRequest = require('../models/AttendanceRequest');
 const Student = require('../models/Student');
 const User = require('../models/User');
-const Notification = require('../models/Notification');
 const Subject = require('../models/Subject');
+const Section = require('../models/Section');
+const Batch = require('../models/Batch');
+const Notification = require('../models/Notification');
 const scopeService = require('../services/teacherScopeService');
 
 const QR_TOKEN_EXPIRY = '5s';
@@ -26,6 +28,8 @@ const resolveSessionWithOwnership = async (sessionId, teacherUserId) => {
   const session = await QRSession.findByPk(sessionId, {
     include: [
       { model: User, as: 'creator', attributes: ['id', 'email'] },
+      { model: Section, attributes: ['id', 'name'] },
+      { model: Subject, attributes: ['id', 'subjectCode', 'subjectName'] },
     ],
   });
   if (!session) throw Object.assign(new Error('Session not found'), { statusCode: 404 });
@@ -33,6 +37,53 @@ const resolveSessionWithOwnership = async (sessionId, teacherUserId) => {
     throw Object.assign(new Error('Access denied. You do not own this session.'), { statusCode: 403 });
   }
   return session;
+};
+
+const buildSessionResponse = async (session, token, tokenExpiresAt) => {
+  const section = session.Section || await Section.findByPk(session.sectionId);
+  const subject = session.Subject || await Subject.findByPk(session.subjectId);
+  const batch = section ? await Batch.findByPk(section.batchId) : null;
+
+  const enrolledStudents = await Student.findAll({
+    where: { sectionId: session.sectionId },
+    attributes: ['id'],
+  });
+  const enrolledIds = enrolledStudents.map((s) => s.id);
+
+  let presentCount = 0;
+  let lateCount = 0;
+  let absentCount = 0;
+  if (enrolledIds.length > 0) {
+    const scans = await AttendanceSession.findAll({
+      where: { qrSessionId: session.id },
+      attributes: ['status'],
+    });
+    for (const s of scans) {
+      if (s.status === 'Present') presentCount++;
+      else if (s.status === 'Late') lateCount++;
+      else if (s.status === 'Absent') absentCount++;
+    }
+  }
+
+  return {
+    id: session.id,
+    sectionId: session.sectionId,
+    sectionName: section?.name ?? null,
+    batchName: batch?.name ?? null,
+    subjectId: session.subjectId,
+    subjectCode: subject?.subjectCode ?? null,
+    subjectName: subject?.subjectName ?? null,
+    classType: session.classType,
+    date: session.date,
+    status: session.isActive ? 'Active' : 'Closed',
+    token: token ?? session.sessionToken,
+    tokenExpiresAt: tokenExpiresAt ?? session.expiresAt?.toISOString(),
+    totalStudents: enrolledIds.length,
+    presentCount,
+    lateCount,
+    absentCount,
+    createdAt: session.createdAt,
+  };
 };
 
 exports.createSession = async (req, res, next) => {
@@ -51,6 +102,7 @@ exports.createSession = async (req, res, next) => {
     const now = new Date();
     const sessionId = require('crypto').randomUUID();
     const token = generateQRToken(sessionId);
+    const tokenExpiresAt = new Date(now.getTime() + 5000);
 
     const session = await QRSession.create({
       id: sessionId,
@@ -62,8 +114,12 @@ exports.createSession = async (req, res, next) => {
       startTime: now,
       sessionToken: token,
       isActive: true,
-      expiresAt: new Date(now.getTime() + 5000),
+      expiresAt: tokenExpiresAt,
     });
+
+    // Reload with associations
+    session.Section = await Section.findByPk(sectionId);
+    session.Subject = await Subject.findByPk(subjectId);
 
     // Notify enrolled students about session start
     try {
@@ -71,7 +127,6 @@ exports.createSession = async (req, res, next) => {
         where: { sectionId },
         attributes: ['userId'],
       });
-      const subject = await Subject.findByPk(subjectId, { attributes: ['subjectCode', 'subjectName'] });
       const subjectLabel = subject ? `${subject.subjectCode} - ${subject.subjectName}` : 'Unknown Subject';
       const notifications = enrolledStudents
         .filter((s) => s.userId)
@@ -88,28 +143,9 @@ exports.createSession = async (req, res, next) => {
       console.error('Failed to send session start notifications:', notifErr.message);
     }
 
-    res.status(201).json({
-      success: true,
-      message: 'QR session created',
-      data: {
-        session: {
-          id: session.id,
-          sectionId: session.sectionId,
-          subjectId: session.subjectId,
-          classType: session.classType,
-          date: session.date,
-          startTime: session.startTime,
-          isActive: session.isActive,
-          expiresAt: session.expiresAt,
-          createdAt: session.createdAt,
-        },
-        qrToken: {
-          token,
-          sessionId: session.id,
-          expiresIn: 5,
-        },
-      },
-    });
+    const data = await buildSessionResponse(session, token, tokenExpiresAt.toISOString());
+
+    res.status(201).json({ success: true, message: 'QR session created', data });
   } catch (error) {
     next(error);
   }
@@ -118,6 +154,9 @@ exports.createSession = async (req, res, next) => {
 exports.refreshQR = async (req, res, next) => {
   try {
     const { sessionId } = req.params;
+    if (!sessionId || sessionId === 'undefined' || sessionId === 'null') {
+      return res.status(400).json({ success: false, message: 'Invalid session ID' });
+    }
     const session = await resolveSessionWithOwnership(sessionId, req.user.id);
 
     if (!session.isActive) {
@@ -126,21 +165,19 @@ exports.refreshQR = async (req, res, next) => {
 
     const now = new Date();
     const token = generateQRToken(session.id);
+    const tokenExpiresAt = new Date(now.getTime() + 5000);
 
     await session.update({
       sessionToken: token,
-      expiresAt: new Date(now.getTime() + 5000),
+      expiresAt: tokenExpiresAt,
     });
 
     res.json({
       success: true,
       message: 'QR token refreshed',
       data: {
-        qrToken: {
-          token,
-          sessionId: session.id,
-          expiresIn: 5,
-        },
+        token,
+        tokenExpiresAt: tokenExpiresAt.toISOString(),
       },
     });
   } catch (error) {
@@ -216,12 +253,10 @@ exports.closeSession = async (req, res, next) => {
       success: true,
       message: 'Session closed',
       data: {
-        session: {
-          id: session.id,
-          isActive: session.isActive,
-          startTime: session.startTime,
-          endTime: session.endTime,
-        },
+        id: session.id,
+        isActive: false,
+        startTime: session.startTime,
+        endTime: now,
       },
     });
   } catch (error) {
@@ -236,6 +271,10 @@ exports.getSession = async (req, res, next) => {
     const isAdmin = req.user.role === 'ADMIN';
     const session = await resolveSessionWithOwnership(sessionId, isAdmin ? null : req.user.id);
 
+    const section = await Section.findByPk(session.sectionId);
+    const batch = section ? await Batch.findByPk(section.batchId) : null;
+    const subject = await Subject.findByPk(session.subjectId);
+
     const scans = await AttendanceSession.findAll({
       where: { qrSessionId: session.id },
       include: [{ model: Student, attributes: ['id', 'name', 'email', 'regNum', 'univId'] }],
@@ -246,9 +285,9 @@ exports.getSession = async (req, res, next) => {
     for (const scan of scans) {
       grouped[scan.status].push({
         id: scan.id,
-        student: scan.Student
-          ? { id: scan.Student.id, name: scan.Student.name, email: scan.Student.email, regNum: scan.Student.regNum, univId: scan.Student.univId }
-          : null,
+        studentName: scan.Student?.name ?? 'Unknown',
+        regNum: scan.Student?.regNum ?? null,
+        univId: scan.Student?.univId ?? null,
         status: scan.status,
         scannedAt: scan.scannedAt,
         source: scan.source,
@@ -261,23 +300,26 @@ exports.getSession = async (req, res, next) => {
         session: {
           id: session.id,
           sectionId: session.sectionId,
+          sectionName: section?.name ?? null,
+          batchName: batch?.name ?? null,
           subjectId: session.subjectId,
+          subjectCode: subject?.subjectCode ?? null,
+          subjectName: subject?.subjectName ?? null,
           classType: session.classType,
           date: session.date,
           startTime: session.startTime,
           endTime: session.endTime,
-          isActive: session.isActive,
-          expiresAt: session.expiresAt,
-          creator: session.creator ? { id: session.creator.id, email: session.creator.email } : null,
+          status: session.isActive ? 'Active' : 'Closed',
+          presentCount: grouped.Present.length,
+          lateCount: grouped.Late.length,
+          absentCount: grouped.Absent.length,
           createdAt: session.createdAt,
         },
-        scans: grouped,
-        summary: {
-          total: scans.length,
-          present: grouped.Present.length,
-          late: grouped.Late.length,
-          absent: grouped.Absent.length,
-        },
+        scans: [
+          ...grouped.Present,
+          ...grouped.Late,
+          ...grouped.Absent,
+        ],
       },
     });
   } catch (error) {
@@ -295,8 +337,8 @@ exports.getSessionHistory = async (req, res, next) => {
 
     const where = {};
     if (!isAdmin) where.createdBy = req.user.id;
-    if (sectionId) where.sectionId = sectionId;
-    if (subjectId) where.subjectId = subjectId;
+    if (sectionId && sectionId !== 'undefined' && sectionId !== 'null') where.sectionId = sectionId;
+    if (subjectId && subjectId !== 'undefined' && subjectId !== 'null') where.subjectId = subjectId;
     if (startDate || endDate) {
       where.date = {};
       if (startDate) where.date[Op.gte] = startDate;
@@ -307,6 +349,8 @@ exports.getSessionHistory = async (req, res, next) => {
       where,
       include: [
         { model: User, as: 'creator', attributes: ['id', 'email'] },
+        { model: Section, attributes: ['id', 'name'] },
+        { model: Subject, attributes: ['id', 'subjectCode', 'subjectName'] },
       ],
       order: [['date', 'DESC'], ['startTime', 'DESC']],
       limit: l,
@@ -331,22 +375,38 @@ exports.getSessionHistory = async (req, res, next) => {
       if (entry[key] !== undefined) entry[key]++;
     }
 
+    // Resolve batch names for each unique section
+    const sectionIds = [...new Set(sessions.map((s) => s.sectionId))];
+    const sectionMap = new Map();
+    for (const sid of sectionIds) {
+      const sec = await Section.findByPk(sid, { attributes: ['id', 'name', 'batchId'] });
+      if (sec) {
+        const batch = sec.batchId ? await Batch.findByPk(sec.batchId, { attributes: ['id', 'name'] }) : null;
+        sectionMap.set(sid, { name: sec.name, batchName: batch?.name ?? null });
+      }
+    }
+
     res.json({
       success: true,
       data: sessions.map((s) => {
         const counts = scanCounts.get(s.id) || { present: 0, late: 0, absent: 0 };
+        const secInfo = sectionMap.get(s.sectionId) || { name: null, batchName: null };
         return {
           id: s.id,
           sectionId: s.sectionId,
+          sectionName: secInfo.name,
+          batchName: secInfo.batchName,
           subjectId: s.subjectId,
+          subjectCode: s.Subject?.subjectCode ?? null,
+          subjectName: s.Subject?.subjectName ?? null,
           classType: s.classType,
           date: s.date,
-          startTime: s.startTime,
-          endTime: s.endTime,
-          isActive: s.isActive,
-          creator: s.creator ? { id: s.creator.id, email: s.creator.email } : null,
+          status: s.isActive ? 'Active' : 'Closed',
+          totalStudents: 0,
+          presentCount: counts.present,
+          lateCount: counts.late,
+          absentCount: counts.absent,
           createdAt: s.createdAt,
-          summary: counts,
         };
       }),
       pagination: { total: count, page: p, limit: l, totalPages: Math.ceil(count / l) },
@@ -479,23 +539,35 @@ exports.submitLateRequest = async (req, res, next) => {
 
 exports.getPendingRequests = async (req, res, next) => {
   try {
-    const scope = await scopeService.getAssignedScope(req.user.id);
+    const { page = 1, limit = 20 } = req.query;
+    const p = Math.max(1, parseInt(page, 10) || 1);
+    const l = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+
     const sessionIds = await QRSession.findAll({
       where: { createdBy: req.user.id },
       attributes: ['id'],
     }).then((sessions) => sessions.map((s) => s.id));
 
     if (!sessionIds.length) {
-      return res.json({ success: true, data: [] });
+      return res.json({ success: true, data: [], pagination: { total: 0, page: 1, limit: l, totalPages: 0 } });
     }
 
-    const requests = await AttendanceRequest.findAll({
+    const { count, rows: requests } = await AttendanceRequest.findAndCountAll({
       where: { qrSessionId: { [Op.in]: sessionIds }, status: 'pending' },
       include: [
         { model: Student, attributes: ['id', 'name', 'email', 'regNum', 'univId'] },
-        { model: QRSession, attributes: ['id', 'sectionId', 'subjectId', 'classType', 'date', 'startTime'] },
+        {
+          model: QRSession,
+          attributes: ['id', 'sectionId', 'subjectId', 'classType', 'date', 'startTime'],
+          include: [
+            { model: Section, attributes: ['id', 'name'] },
+            { model: Subject, attributes: ['id', 'subjectCode', 'subjectName'] },
+          ],
+        },
       ],
       order: [['createdAt', 'DESC']],
+      limit: l,
+      offset: (p - 1) * l,
     });
 
     res.json({
@@ -503,15 +575,16 @@ exports.getPendingRequests = async (req, res, next) => {
       data: requests.map((r) => ({
         id: r.id,
         remarks: r.remarks,
-        status: r.status,
+        status: 'Pending',
         createdAt: r.createdAt,
-        student: r.Student
-          ? { id: r.Student.id, name: r.Student.name, email: r.Student.email, regNum: r.Student.regNum, univId: r.Student.univId }
-          : null,
-        session: r.QRSession
-          ? { id: r.QRSession.id, sectionId: r.QRSession.sectionId, subjectId: r.QRSession.subjectId, classType: r.QRSession.classType, date: r.QRSession.date, startTime: r.QRSession.startTime }
-          : null,
+        studentName: r.Student?.name ?? 'Unknown',
+        regNum: r.Student?.regNum ?? null,
+        sessionDate: r.QRSession?.date ?? null,
+        classType: r.QRSession?.classType ?? null,
+        sectionName: r.QRSession?.Section?.name ?? null,
+        subjectCode: r.QRSession?.Subject?.subjectCode ?? null,
       })),
+      pagination: { total: count, page: p, limit: l, totalPages: Math.ceil(count / l) },
     });
   } catch (error) {
     next(error);
@@ -521,13 +594,13 @@ exports.getPendingRequests = async (req, res, next) => {
 exports.decideRequest = async (req, res, next) => {
   try {
     const { requestId } = req.params;
-    const { decision, classType = 'Late' } = req.body;
+    const { status, resolvedStatus } = req.body;
 
-    if (!decision || !['approved', 'rejected'].includes(decision)) {
-      return res.status(400).json({ success: false, message: "decision must be 'approved' or 'rejected'" });
+    if (!status || !['Approved', 'Rejected'].includes(status)) {
+      return res.status(400).json({ success: false, message: "status must be 'Approved' or 'Rejected'" });
     }
-    if (decision === 'approved' && !['Late', 'Absent'].includes(classType)) {
-      return res.status(400).json({ success: false, message: "classType must be 'Late' or 'Absent' for approval" });
+    if (status === 'Approved' && (!resolvedStatus || !['Present', 'Late'].includes(resolvedStatus))) {
+      return res.status(400).json({ success: false, message: "resolvedStatus must be 'Present' or 'Late' for approval" });
     }
 
     const request = await AttendanceRequest.findByPk(requestId, {
@@ -544,36 +617,36 @@ exports.decideRequest = async (req, res, next) => {
     }
 
     const now = new Date();
-    const resolvedStatus = decision === 'approved' ? classType : 'Absent';
+    const resolvedStatusFinal = status === 'Approved' ? resolvedStatus : 'Absent';
 
     const existing = await AttendanceSession.findOne({
       where: { qrSessionId: request.qrSessionId, studentId: request.studentId },
     });
     if (existing) {
-      await existing.update({ status: resolvedStatus, source: 'late-request', scannedAt: now });
+      await existing.update({ status: resolvedStatusFinal, source: 'late-request', scannedAt: now });
     } else {
       await AttendanceSession.create({
         qrSessionId: request.qrSessionId,
         studentId: request.studentId,
-        status: resolvedStatus,
+        status: resolvedStatusFinal,
         scannedAt: now,
         source: 'late-request',
       });
     }
 
     await request.update({
-      status: decision,
+      status: status.toLowerCase(),
       decidedBy: req.user.id,
       decidedAt: now,
     });
 
     res.json({
       success: true,
-      message: `Request ${decision}`,
+      message: `Request ${status.toLowerCase()}`,
       data: {
         id: request.id,
-        status: request.status,
-        decidedAt: request.decidedAt,
+        status: status,
+        decidedAt: now,
       },
     });
   } catch (error) {

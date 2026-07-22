@@ -135,7 +135,7 @@ export class TeacherAttendanceComponent implements OnInit, OnDestroy {
 
   refreshQR(): void {
     const session = this.activeSession();
-    if (!session) return;
+    if (!session || !session.id) return;
     this.qrService.refreshQR(session.id).subscribe({
       next: (res) => {
         this.activeSession.update((s) =>

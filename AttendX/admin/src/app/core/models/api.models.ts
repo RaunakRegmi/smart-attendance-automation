@@ -566,7 +566,7 @@ export type SessionStatus = 'Active' | 'Closed';
 export type ScanStatus = 'Present' | 'Late' | 'Absent';
 
 export interface QRSession {
-  id: number;
+  id: string;
   sectionId: string;
   sectionName: string | null;
   batchName: string | null;
@@ -586,7 +586,7 @@ export interface QRSession {
 }
 
 export interface QRSessionHistoryItem {
-  id: number;
+  id: string;
   sectionId: string;
   sectionName: string | null;
   batchName: string | null;
