@@ -34,7 +34,7 @@ export class QrSessionService {
   }
 
   getPendingRequests(params?: Record<string, string | number | boolean | undefined>) {
-    return this.api.getPaginated<AttendanceRequest>('/qr-sessions/requests', params);
+    return this.api.getPaginated<AttendanceRequest>('/qr-sessions/requests/pending', params);
   }
 
   decideRequest(requestId: number, body: DecideRequestPayload) {
