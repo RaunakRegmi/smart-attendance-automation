@@ -1,0 +1,92 @@
+<div class="page-header">
+  <div>
+    <h1>AI Assistant</h1>
+    <p>Ask questions about students, attendance, risk and batch performance.</p>
+  </div>
+  <div class="page-actions">
+    <span
+      class="status-chip"
+      [class.status-chip--ok]="vectorReady() === true"
+      [class.status-chip--bad]="vectorReady() === false"
+    >
+      <span class="status-chip__dot"></span>
+      @if (vectorReady() === true) { Knowledge base ready }
+      @else if (vectorReady() === false) { Knowledge base not built }
+      @else { Checking… }
+    </span>
+    <button type="button" class="btn btn--ghost" (click)="togglePanel()">
+      @if (panelOpen()) { Hide context } @else { Show context }
+    </button>
+    <button type="button" class="btn btn--ghost" (click)="clear()" [disabled]="messages().length === 0">Clear</button>
+    <button type="button" class="btn btn--primary" (click)="refresh()" [disabled]="refreshing()">
+      @if (refreshing()) { Refreshing… } @else { Refresh AI knowledge }
+    </button>
+  </div>
+</div>
+
+<div class="chat-shell">
+<section class="chat card">
+  <div class="chat__scroll" #scrollContainer>
+    @if (messages().length === 0) {
+      <div class="chat__empty">
+        <div class="chat__empty-icon">🎓</div>
+        <h2>Hi, admin.</h2>
+        <p>I can answer questions about student attendance, engagement, risk levels and batch performance.</p>
+        <div class="chat__suggestions">
+          @for (q of suggested; track q) {
+            <button type="button" class="chip" (click)="useSuggestion(q)">{{ q }}</button>
+          }
+        </div>
+      </div>
+    } @else {
+      @for (m of messages(); track $index) {
+        <div class="bubble" [class.bubble--user]="m.role === 'user'" [class.bubble--bot]="m.role === 'assistant'">
+          <div class="bubble__meta">{{ m.role === 'user' ? 'You' : 'AttendX AI' }} · {{ m.ts | date:'shortTime' }}</div>
+          @if (m.tools?.length) {
+            <div class="bubble__tools">
+              @for (t of m.tools; track $index) {
+                <span class="tool-chip"
+                  [class.tool-chip--running]="t.status === 'running'"
+                  [class.tool-chip--done]="t.status === 'done'"
+                  [class.tool-chip--error]="t.status === 'error'">{{ toolLabel(t) }}</span>
+              }
+            </div>
+          }
+          @if (m.text) { <div class="bubble__text">{{ m.text }}</div> }
+        </div>
+      }
+      @if (sending() && !streamingStarted()) {
+        <div class="bubble bubble--bot bubble--typing">
+          <span></span><span></span><span></span>
+        </div>
+      }
+    }
+  </div>
+
+  <form class="chat__input" (submit)="$event.preventDefault(); send()">
+    <textarea
+      rows="1"
+      placeholder="Ask about attendance, risk, batches…"
+      [ngModel]="input()"
+      (ngModelChange)="input.set($event)"
+      name="message"
+      (keydown)="onKey($event)"
+      [disabled]="sending()"
+    ></textarea>
+    <button type="submit" class="btn btn--primary" [disabled]="sending() || input().trim().length === 0">
+      Send
+    </button>
+  </form>
+</section>
+
+@if (panelOpen()) {
+  <app-context-window
+    class="chat-shell__panel"
+    [promptTokens]="contextStats()?.promptTokens ?? 0"
+    [completionTokens]="contextStats()?.completionTokens ?? 0"
+    [numCtx]="contextStats()?.numCtx ?? 8192"
+    [messageCount]="messages().length"
+    [summary]="summary()"
+  />
+}
+</div>

@@ -1,0 +1,201 @@
+# ── AttendX — full stack in one command ────────────────────────────────────
+#   docker compose up -d --build
+#
+# Brings up everything: Postgres, Redis, Backend (Node), Ollama (+ auto model pull),
+# Chatbot (FastAPI/RAG), and the Angular Admin (built and served by nginx, which also
+# proxies /api -> backend).
+#
+# NOTE: the first run downloads ~2.3 GB of Ollama models (nomic-embed-text + llama3.2)
+#       and runs them on CPU, so initial startup is slow. Models persist in a volume.
+# NOTE: the Flutter student app is a mobile client (APK), not a service, so it is not here.
+#
+# Reuses the same named volumes as AttendX/docker-compose.yml, so existing DB data is kept.
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: attendance_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-attendance_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin}
+    ports:
+      - "${DB_PUBLISH_PORT:-5436}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-attendance_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks: [attendance_network]
+
+  redis:
+    image: redis:7-alpine
+    container_name: attendance_redis
+    restart: unless-stopped
+    # Published on 6380 by default: a native redis-server already owns host 6379 on this machine.
+    ports:
+      - "${REDIS_PUBLISH_PORT:-6380}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks: [attendance_network]
+
+  backend:
+    build:
+      context: ./AttendX/backend
+      dockerfile: Dockerfile
+    container_name: attendance_backend
+    restart: unless-stopped
+    env_file:
+      - path: ./AttendX/backend/.env
+        required: false
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      PUBLIC_URL: http://localhost:${BACKEND_PUBLISH_PORT:-5001}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-attendance_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-admin}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_change_me}
+      UPLOAD_DIR: uploads
+      MAX_FILE_SIZE: 5000000
+      ALLOWED_EXTENSIONS: xlsx,xls
+      DB_SYNC_ALTER: "false"
+      # Chatbot is now a service on the compose network.
+      CHATBOT_URL: http://chatbot:8000
+      # Model context window (used for history budgeting + the context-window meter).
+      OLLAMA_NUM_CTX: ${OLLAMA_NUM_CTX:-8192}
+    ports:
+      - "${BACKEND_PUBLISH_PORT:-5001}:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./AttendX/backend:/app
+      - backend_node_modules:/app/node_modules
+      - backend_uploads:/app/uploads
+      - backend_exports:/app/exports
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    networks: [attendance_network]
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: attendance_ollama
+    restart: unless-stopped
+    ports:
+      - "${OLLAMA_PUBLISH_PORT:-11434}:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks: [attendance_network]
+
+  # One-shot: pulls the models into the ollama volume, then exits. Chatbot waits on it.
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: attendance_ollama_init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["/bin/sh", "-c", "ollama pull ${EMBED_MODEL:-nomic-embed-text} && ollama pull ${LLM_MODEL:-llama3.2} && echo 'models ready'"]
+    restart: "no"
+    networks: [attendance_network]
+
+  chatbot:
+    build:
+      context: ./Chatbot
+      dockerfile: Dockerfile
+    container_name: attendance_chatbot
+    restart: unless-stopped
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      OLLAMA_HOST: http://ollama:11434
+      EMBED_MODEL: ${EMBED_MODEL:-nomic-embed-text}
+      LLM_MODEL: ${LLM_MODEL:-llama3.2}
+      CHROMA_DIR: /app/chroma_db
+      NUM_CTX: ${NUM_CTX:-8192}
+      # Agent tools call back to the backend (over the compose network) with the caller's JWT.
+      BACKEND_INTERNAL_URL: http://backend:5000
+      TOOLS_ENABLED: ${TOOLS_ENABLED:-true}
+      MAX_TOOL_ITERS: ${MAX_TOOL_ITERS:-4}
+    ports:
+      - "${CHATBOT_PUBLISH_PORT:-8000}:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+      ollama-init:
+        condition: service_completed_successfully
+    volumes:
+      - chatbot_chroma:/app/chroma_db
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health').status==200 else 1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
+    networks: [attendance_network]
+
+  admin:
+    build:
+      context: ./AttendX/admin
+      dockerfile: Dockerfile
+    container_name: attendance_admin
+    restart: unless-stopped
+    ports:
+      - "${ADMIN_PUBLISH_PORT:-4200}:80"
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks: [attendance_network]
+
+volumes:
+  postgres_data:
+    name: attendance_postgres_data
+  redis_data:
+    name: attendance_redis_data
+  backend_node_modules:
+    name: attendance_backend_node_modules
+  backend_uploads:
+    name: attendance_backend_uploads
+  backend_exports:
+    name: attendance_backend_exports
+  ollama_data:
+    name: attendance_ollama_data
+  chatbot_chroma:
+    name: attendance_chatbot_chroma
+
+networks:
+  attendance_network:
+    driver: bridge

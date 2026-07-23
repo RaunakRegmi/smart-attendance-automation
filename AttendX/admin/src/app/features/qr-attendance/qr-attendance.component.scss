@@ -1,0 +1,168 @@
+.qr-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .qr-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card__title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.card--form {
+  padding: 1.5rem;
+}
+
+.form-actions {
+  margin-top: 0.75rem;
+}
+
+.qr-display {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.qr-image-wrapper {
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1rem;
+  display: inline-block;
+}
+
+.qr-image {
+  width: 240px;
+  height: 240px;
+  display: block;
+}
+
+.qr-info {
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.qr-info__row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.qr-info__label {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.qr-info__value {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.qr-info__countdown {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #0d9488;
+  font-variant-numeric: tabular-nums;
+}
+
+.qr-info__countdown--urgent {
+  color: #ef4444;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.qr-hint {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  color: #94a3b8;
+}
+
+.session-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.session-item--expired {
+  opacity: 0.6;
+}
+
+.session-item__subject {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.session-item__meta {
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin-left: 0.5rem;
+}
+
+.session-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge--active {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.badge--expired {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.btn--sm {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.btn--danger {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+
+  &:hover {
+    background: #dc2626;
+  }
+}
+
+.empty-text {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 2rem 0;
+}

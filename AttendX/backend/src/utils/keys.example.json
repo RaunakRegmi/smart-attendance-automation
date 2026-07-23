@@ -1,0 +1,23 @@
+{
+  "_README": "Template for src/utils/keys.json (which is gitignored). This is a Google Cloud SERVICE ACCOUNT key. Download the real file from Google Cloud Console (see steps below) and save it as keys.json in this same folder. Do NOT commit the real keys.json.",
+  "_HOW_TO_GET": [
+    "1. Google Cloud Console -> create/select a project (https://console.cloud.google.com).",
+    "2. APIs & Services -> Library -> enable 'Google Sheets API'.",
+    "3. APIs & Services -> Credentials -> Create credentials -> Service account.",
+    "4. Open the service account -> Keys tab -> Add key -> Create new key -> JSON. A *.json downloads.",
+    "5. Rename that file to keys.json and place it at AttendX/backend/src/utils/keys.json.",
+    "6. Copy the service account's client_email, then SHARE each Google Sheet with that email (Viewer is enough for read/sync) - this is the step people forget.",
+    "7. Restart the backend (docker compose restart backend). nodemon also auto-restarts on the new file."
+  ],
+  "type": "service_account",
+  "project_id": "YOUR_PROJECT_ID",
+  "private_key_id": "YOUR_PRIVATE_KEY_ID",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_CONTENT_WITH_\\n_LINE_BREAKS\n-----END PRIVATE KEY-----\n",
+  "client_email": "your-service-account@YOUR_PROJECT_ID.iam.gserviceaccount.com",
+  "client_id": "YOUR_CLIENT_ID",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/your-service-account%40YOUR_PROJECT_ID.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

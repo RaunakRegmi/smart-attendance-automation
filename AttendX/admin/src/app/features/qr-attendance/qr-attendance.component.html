@@ -1,0 +1,82 @@
+<div class="page-header">
+  <h1>QR Attendance</h1>
+  <p>Generate time-limited QR codes for students to scan and mark attendance.</p>
+</div>
+
+<div class="qr-layout">
+  <!-- Left: Generate -->
+  <div class="card card--form">
+    <h2 class="card__title">Generate QR Code</h2>
+    <form [formGroup]="form" (ngSubmit)="generate()">
+      <div class="form-field">
+        <label for="subject">Subject</label>
+        <select id="subject" formControlName="subjectId">
+          <option value="">Select subject</option>
+          @for (s of subjects(); track s.id) {
+            <option [value]="s.id">{{ s.subjectCode }} - {{ s.subjectName }}</option>
+          }
+        </select>
+        @if (form.controls.subjectId.touched && form.controls.subjectId.errors?.['required']) {
+          <span class="error">Subject is required</span>
+        }
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary" [disabled]="generating() || form.invalid">
+          {{ generating() ? 'Generating...' : 'Generate QR' }}
+        </button>
+      </div>
+    </form>
+
+    @if (qrImage()) {
+      <div class="qr-display">
+        <div class="qr-image-wrapper">
+          <img [src]="qrImage()" alt="QR Code" class="qr-image" />
+        </div>
+        <div class="qr-info">
+          <div class="qr-info__row">
+            <span class="qr-info__label">Subject</span>
+            <span class="qr-info__value">{{ qrSubject() }}</span>
+          </div>
+          <div class="qr-info__row">
+            <span class="qr-info__label">Expires at</span>
+            <span class="qr-info__value">{{ qrExpiry() }}</span>
+          </div>
+          <div class="qr-info__row">
+            <span class="qr-info__label">Time left</span>
+            <span class="qr-info__countdown" [class.qr-info__countdown--urgent]="secondsLeft() <= 60">
+              {{ secondsLeft() }}s
+            </span>
+          </div>
+        </div>
+        <p class="qr-hint">Students scan this with the AttendX mobile app</p>
+      </div>
+    }
+  </div>
+
+  <!-- Right: Active sessions -->
+  <div class="card">
+    <h2 class="card__title">Active Sessions Today</h2>
+    @if (activeSessions().length === 0) {
+      <p class="empty-text">No active QR sessions today.</p>
+    } @else {
+      <div class="session-list">
+        @for (s of activeSessions(); track s.id) {
+          <div class="session-item" [class.session-item--expired]="!s.isActive">
+            <div class="session-item__info">
+              <span class="session-item__subject">{{ s.subjectCode }}</span>
+              <span class="session-item__meta">{{ s.scannedCount }} scanned</span>
+            </div>
+            <div class="session-item__actions">
+              @if (s.isActive) {
+                <span class="badge badge--active">Active</span>
+                <button type="button" class="btn btn--sm btn--danger" (click)="deactivate(s.id)">Stop</button>
+              } @else {
+                <span class="badge badge--expired">Expired</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

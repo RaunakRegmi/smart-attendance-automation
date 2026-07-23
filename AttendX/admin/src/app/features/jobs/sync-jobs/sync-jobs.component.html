@@ -1,0 +1,130 @@
+<div class="page-header">
+  <h1>Sync Operations</h1>
+  <p>Monitor background sheet sync jobs.</p>
+</div>
+
+@if (queueStatus(); as qs) {
+  <div class="queue-metrics">
+    <button type="button" class="metric-card" [class.metric-card--active]="activeFilter() === ''" (click)="filterByStatus('')">
+      <div class="metric-card__icon metric-card__icon--total">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      </div>
+      <div class="metric-card__body">
+        <span class="metric-card__value">{{ qs.totalJobs }}</span>
+        <span class="metric-card__label">Total Operations</span>
+      </div>
+    </button>
+    <button type="button" class="metric-card" [class.metric-card--active]="activeFilter() === 'PENDING'" (click)="filterByStatus('PENDING')">
+      <div class="metric-card__icon metric-card__icon--waiting">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="metric-card__body">
+        <span class="metric-card__value">{{ qs.waiting }}</span>
+        <span class="metric-card__label">Waiting</span>
+      </div>
+    </button>
+    <button type="button" class="metric-card" [class.metric-card--active]="activeFilter() === 'RUNNING'" (click)="filterByStatus('RUNNING')">
+      <div class="metric-card__icon metric-card__icon--active">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+      <div class="metric-card__body">
+        <span class="metric-card__value">{{ qs.active }}</span>
+        <span class="metric-card__label">Active</span>
+      </div>
+    </button>
+    <button type="button" class="metric-card" [class.metric-card--active]="activeFilter() === 'SUCCESS'" (click)="filterByStatus('SUCCESS')">
+      <div class="metric-card__icon metric-card__icon--success">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <div class="metric-card__body">
+        <span class="metric-card__value">{{ qs.completed ?? 0 }}</span>
+        <span class="metric-card__label">Completed</span>
+      </div>
+    </button>
+    <button type="button" class="metric-card" [class.metric-card--active]="activeFilter() === 'FAILED'" (click)="filterByStatus('FAILED')">
+      <div class="metric-card__icon metric-card__icon--failed">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      </div>
+      <div class="metric-card__body">
+        <span class="metric-card__value">{{ qs.failed }}</span>
+        <span class="metric-card__label">Failed</span>
+      </div>
+    </button>
+  </div>
+  <p class="queue-timestamp">Last updated: {{ lastRefreshed() }}</p>
+}
+
+<div class="toolbar" [formGroup]="filters">
+  <select formControlName="sheetId" (change)="page.set(1); load()">
+    <option value="">All sheets</option>
+    @for (sh of sheets(); track sh.id) {
+      <option [value]="sh.id">{{ sh.sheetName }}</option>
+    }
+  </select>
+  <select formControlName="status" (change)="page.set(1); activeFilter.set(filters.getRawValue().status ?? ''); load()">
+    <option value="">All statuses</option>
+    <option value="PENDING">PENDING</option>
+    <option value="RUNNING">RUNNING</option>
+    <option value="SUCCESS">SUCCESS</option>
+    <option value="FAILED">FAILED</option>
+    <option value="SKIPPED">SKIPPED</option>
+  </select>
+  <button type="button" class="btn btn--secondary" (click)="load()">Refresh</button>
+</div>
+
+<div class="card card--inline">
+  <h2>Manual sync</h2>
+  <div class="manual-row">
+    <select (change)="manualSheetId.set($any($event.target).value)">
+      <option value="">Select linked sheet (uses DB UUID)…</option>
+      @for (sh of sheets(); track sh.id) {
+        <option [value]="sh.id">{{ sh.sheetName }} ({{ sh.id.slice(0, 8) }}…)</option>
+      }
+    </select>
+    <button type="button" class="btn btn--primary" (click)="manualSync()" [disabled]="syncing()">@if (syncing()) { <span class="loading-spinner"></span> Syncing… } @else { Run manual sync }</button>
+  </div>
+</div>
+
+<div class="card">
+  @if (loading()) {
+    <div class="empty-state"><span class="loading-spinner"></span></div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Sheet</th>
+            <th>Sheet ID</th>
+            <th>Status</th>
+            <th>Type</th>
+            <th>Scheduled</th>
+            <th>Ended</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (job of jobs(); track job.id ?? $index) {
+            <tr>
+            <td>{{ getSheetDisplay(job.sheetId) }}</td>
+            <td class="mono">{{ job.sheetId }}</td>
+              <td>{{ job.status }}</td>
+              <td>{{ job.syncType }}</td>
+              <td>{{ job.scheduledTime | date: 'short' }}</td>
+              <td>{{ job.endTime | date: 'short' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="empty-state">No jobs match the filters.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [total]="total()"
+      [limit]="limit()"
+      (pageChange)="onPageChange($event)"
+      (limitChange)="onLimitChange($event)" />
+  }
+</div>

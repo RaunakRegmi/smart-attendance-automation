@@ -1,0 +1,51 @@
+@use '../../../../styles/variables' as *;
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, $primary-light 0%, $bg-page 80%);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 2.5rem;
+  border-radius: 16px;
+
+  &__header {
+    text-align: center;
+    margin-bottom: 2rem;
+
+    h1 {
+      margin: 1rem 0 0.25rem;
+      font-size: 1.5rem;
+    }
+
+    p {
+      margin: 0;
+      color: $text-secondary;
+      font-size: 0.9375rem;
+    }
+  }
+
+  &__logo {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto;
+    background: $primary;
+    color: #fff;
+    border-radius: $radius;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__submit {
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+  }
+}

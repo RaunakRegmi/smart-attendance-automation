@@ -1,0 +1,6 @@
+course_code,course_name,avg_attendance_pct,performance_tier,total_students,students_perfect,students_below_75
+WEB002,WEB002,86.76,Strong,66,8,12
+AI003,AI003,86.81,Strong,66,8,12
+DSA001,DSA001,86.76,Strong,66,8,12
+Maths004,Maths004,85.19,Strong,66,4,13
+Python005,Python005,73.24,Concerning,30,0,15

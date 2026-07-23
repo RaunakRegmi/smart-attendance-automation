@@ -1,0 +1,99 @@
+@use '../../../../styles/variables' as *;
+
+.ctx {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: $radius;
+  font-size: 0.8125rem;
+  color: $text-secondary;
+}
+
+.ctx__title {
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $text-muted;
+}
+
+.ctx__meter {
+  height: 8px;
+  border-radius: 999px;
+  background: $primary-light;
+  overflow: hidden;
+}
+
+.ctx__bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.35s ease;
+
+  &--ok { background: $success; }
+  &--warn { background: $warning; }
+  &--bad { background: $danger; }
+}
+
+.ctx__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.ctx__pct {
+  font-weight: 700;
+  &--ok { color: $success; }
+  &--warn { color: $warning; }
+  &--bad { color: $danger; }
+}
+
+.ctx__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.ctx__chip {
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: $primary-light;
+  color: $text-secondary;
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &--on {
+    background: $success-light;
+    color: $success;
+  }
+}
+
+.ctx__summary {
+  border-top: 1px solid $border;
+  padding-top: 0.6rem;
+}
+
+.ctx__summary-label {
+  font-weight: 700;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $text-muted;
+  margin-bottom: 0.3rem;
+}
+
+.ctx__summary-text {
+  color: $text-primary;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.ctx__hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: $text-muted;
+  line-height: 1.4;
+}

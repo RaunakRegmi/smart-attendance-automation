@@ -1,0 +1,4 @@
+sno,batch,student_name,email,total_present,total_absent,total_late,total_present_with_late,total_classes,attendance_percentage,status
+8,Autumn 2025,Hema Lama,hema_lama_a25@sunway.edu.np,17,11,0,17,28,60.71,At Risk
+9,Autumn 2025,Ishan Koirala,ishan_koirala_a25@sunway.edu.np,19,9,0,19,28,67.86,At Risk
+21,Autumn 2025,Ujjwal Basnet,ujjwal_basnet_a25@sunway.edu.np,20,8,0,20,28,71.43,At Risk

@@ -1,0 +1,25 @@
+<div class="ctx">
+  <div class="ctx__title">Context window</div>
+
+  <div class="ctx__meter" [attr.data-level]="level()">
+    <div class="ctx__bar" [class]="'ctx__bar--' + level()" [style.width.%]="pct()"></div>
+  </div>
+  <div class="ctx__row">
+    <span>{{ used() | number }} / {{ numCtx() | number }} tokens</span>
+    <span class="ctx__pct ctx__pct--{{ level() }}">{{ pct() }}%</span>
+  </div>
+
+  <div class="ctx__chips">
+    <span class="ctx__chip">🧠 {{ messageCount() }} in context</span>
+    <span class="ctx__chip" [class.ctx__chip--on]="!!summary()">📝 {{ summary() ? 'summary active' : 'no summary yet' }}</span>
+  </div>
+
+  @if (summary()) {
+    <div class="ctx__summary">
+      <div class="ctx__summary-label">What I remember</div>
+      <div class="ctx__summary-text">{{ summary() }}</div>
+    </div>
+  } @else {
+    <p class="ctx__hint">Older turns get summarised here once the conversation grows — so nothing is forgotten.</p>
+  }
+</div>
