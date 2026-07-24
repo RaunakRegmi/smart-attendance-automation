@@ -15,8 +15,8 @@ class ApiClient {
     if (Platform.isLinux || Platform.isMacOS || Platform.isWindows) {
       return 'http://localhost:5001';
     }
-    // Android emulator reaches the host's loopback via 10.0.2.2.
-    if (Platform.isAndroid) return 'http://10.0.2.2:5001';
+    // Android: use LAN IP for physical devices, 10.0.2.2 for emulators.
+    if (Platform.isAndroid) return 'http://192.168.1.80:5001';
     // iOS simulator shares the host network. Physical devices need a LAN IP or a tunnel.
     return 'http://localhost:5001';
   }

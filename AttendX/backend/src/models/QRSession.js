@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
+const Subject = require('./Subject');
 
 const QRSession = sequelize.define('QRSession', {
   id: {
@@ -50,3 +51,6 @@ const QRSession = sequelize.define('QRSession', {
 });
 
 module.exports = QRSession;
+
+Subject.hasMany(QRSession, { foreignKey: 'subjectId' });
+QRSession.belongsTo(Subject, { foreignKey: 'subjectId' });

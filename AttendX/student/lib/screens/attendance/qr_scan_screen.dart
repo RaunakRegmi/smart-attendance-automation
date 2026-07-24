@@ -75,7 +75,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
     );
 
     try {
-      final response = await ApiClient.post('/qr/scan', body: {'token': token});
+      final response = await ApiClient.post('/api/qr/scan', body: {'token': token});
       if (!mounted) return;
       Navigator.of(context).pop();
 

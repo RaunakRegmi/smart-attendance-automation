@@ -4,10 +4,8 @@ const authorizeRoles = require('../middleware/authorizeRoles');
 
 const router = express.Router();
 
-router.use(authorizeRoles('ADMIN'));
-
-router.post('/generate', qrController.generateQR);
-router.get('/sessions', qrController.getActiveSessions);
-router.put('/deactivate/:id', qrController.deactivateSession);
+router.post('/generate', authorizeRoles('ADMIN'), qrController.generateQR);
+router.get('/sessions', authorizeRoles('ADMIN'), qrController.getActiveSessions);
+router.put('/deactivate/:id', authorizeRoles('ADMIN'), qrController.deactivateSession);
 
 module.exports = router;
