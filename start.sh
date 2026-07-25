@@ -53,7 +53,25 @@ if ! docker info > /dev/null 2>&1; then
   echo "  Start Docker Desktop: open -a Docker"
   exit 1
 fi
-echo -e "  ${GREEN}${ok}${NC} Docker is running"
+# `docker info` answers as soon as the CLI proxy is up, which can be before the
+# VM/daemon is actually ready to build or pull images — confirm it can run a
+# real container before trusting it, since that's what compose is about to do.
+echo -n "  ${info} Confirming daemon can run containers..."
+DOCKER_READY=false
+for i in $(seq 1 30); do
+  if docker run --rm hello-world > /dev/null 2>&1; then
+    DOCKER_READY=true
+    break
+  fi
+  sleep 1
+done
+if [ "$DOCKER_READY" = true ]; then
+  echo -e "\r  ${GREEN}${ok}${NC} Docker is running"
+else
+  echo -e "\r  ${RED}${fail}${NC} Docker daemon not fully ready after 30s"
+  echo "  Try: quit Docker Desktop completely (not just close the window), reopen it, and wait for the whale icon to settle before rerunning."
+  exit 1
+fi
 
 # ── 2. Python venv for chatbot ───────────────────────────────────
 echo -e "${YELLOW}[2/4]${NC} Python chatbot environment"
@@ -70,10 +88,24 @@ echo -e "  ${GREEN}${ok}${NC} Python $("$PYTHON" --version 2>&1)"
 # ── 3. Docker Compose (Postgres + Redis + Backend) ──────────────
 echo -e "${YELLOW}[3/4]${NC} Backend stack"
 cd "$ATTENDX_DIR"
-lsof -ti :5436 2>/dev/null | xargs kill -9 2>/dev/null || true
-lsof -ti :6379 2>/dev/null | xargs kill -9 2>/dev/null || true
-lsof -ti :5001 2>/dev/null | xargs kill -9 2>/dev/null || true
-docker compose up -d --build db redis backend > /tmp/attendx-docker.log 2>&1
+# NOTE: these ports are forwarded through the Docker engine's own listener once
+# db/redis/backend containers are up — killing whatever holds them kills the
+# engine itself, not a stray process. `docker compose up -d` already recreates
+# its own containers safely, so no manual port cleanup is needed here.
+
+COMPOSE_OK=false
+for attempt in 1 2; do
+  if docker compose up -d --build db redis backend > /tmp/attendx-docker.log 2>&1; then
+    COMPOSE_OK=true
+    break
+  fi
+  echo -e "  ${YELLOW}${info}${NC} docker compose up failed (attempt $attempt), retrying in 5s..."
+  sleep 5
+done
+if [ "$COMPOSE_OK" != true ]; then
+  echo -e "  ${RED}${fail}${NC} docker compose up failed after retries — check /tmp/attendx-docker.log"
+  exit 1
+fi
 echo -e "  ${GREEN}${ok}${NC} Docker services starting (log: /tmp/attendx-docker.log)"
 wait_for "http://localhost:5001/api/health" "Backend API" 60
 
