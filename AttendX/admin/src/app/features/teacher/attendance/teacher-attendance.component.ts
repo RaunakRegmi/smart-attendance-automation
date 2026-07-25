@@ -78,9 +78,13 @@ export class TeacherAttendanceComponent implements OnInit, OnDestroy {
   });
 
   readonly qrImageUrl = computed(() => {
-    const token = this.activeSession()?.token;
-    if (!token) return '';
-    return `https://api.qrserver.com/v1/create-qr-code/?size=280x280&bgcolor=FFFFFF&color=0F172A&data=${encodeURIComponent(token)}`;
+    const session = this.activeSession();
+    if (!session?.token) return '';
+    // Encode a deep link (not just the raw token) so any phone's native camera
+    // app can scan and open it directly — the student page auto-submits from
+    // the URL's query params instead of requiring manual copy-paste.
+    const deepLink = `${window.location.origin}/student?token=${encodeURIComponent(session.token)}&sessionId=${encodeURIComponent(session.id)}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=280x280&bgcolor=FFFFFF&color=0F172A&data=${encodeURIComponent(deepLink)}`;
   });
 
   ngOnInit(): void {

@@ -1,5 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { StudentPortalApiService } from '../../../core/services/student-portal-api.service';
 import { ToastService } from '../../../core/services/toast.service';
 
@@ -10,9 +11,11 @@ import { ToastService } from '../../../core/services/toast.service';
   templateUrl: './student-attendance.component.html',
   styleUrl: './student-attendance.component.scss',
 })
-export class StudentAttendanceComponent {
+export class StudentAttendanceComponent implements OnInit {
   private readonly portal = inject(StudentPortalApiService);
   private readonly toast = inject(ToastService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly token = signal('');
   readonly sessionId = signal('');
@@ -25,6 +28,22 @@ export class StudentAttendanceComponent {
   readonly submittingLate = signal(false);
   readonly lateResult = signal<string | null>(null);
   readonly lateError = signal('');
+
+  ngOnInit(): void {
+    // Deep link from a scanned QR code: /student?token=...&sessionId=...
+    // Auto-fill and submit immediately — the token has a very short expiry,
+    // so don't wait on the student to press anything.
+    const params = this.route.snapshot.queryParamMap;
+    const tok = params.get('token');
+    const sid = params.get('sessionId');
+    if (tok && sid) {
+      this.token.set(tok);
+      this.sessionId.set(sid);
+      // Drop the query params from the URL so a refresh doesn't resubmit.
+      this.router.navigate([], { queryParams: {}, replaceUrl: true });
+      this.scan();
+    }
+  }
 
   scan(): void {
     const tok = this.token().trim();
