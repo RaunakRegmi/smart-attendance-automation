@@ -24,7 +24,7 @@ const authenticateJWT = async (req, res, next) => {
   try {
     decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch (err) {
-    return res.status(403).json({ success: false, message: 'Invalid or expired token' });
+    return res.status(401).json({ success: false, message: 'Invalid or expired token' });
   }
 
   // Verify tokenVersion matches the user's current version (token not revoked)
@@ -32,10 +32,10 @@ const authenticateJWT = async (req, res, next) => {
     attributes: ['id', 'tokenVersion', 'isActive'],
   });
   if (!user || !user.isActive) {
-    return res.status(403).json({ success: false, message: 'Account deactivated or not found' });
+    return res.status(401).json({ success: false, message: 'Account deactivated or not found' });
   }
   if (user.tokenVersion !== decoded.tokenVersion) {
-    return res.status(403).json({ success: false, message: 'Token has been revoked. Please log in again.' });
+    return res.status(401).json({ success: false, message: 'Token has been revoked. Please log in again.' });
   }
 
   req.user = decoded;
