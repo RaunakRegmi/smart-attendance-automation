@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, effect } from '@angular/core';
+import QRCode from 'qrcode';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TeacherPortalService } from '../../../core/services/teacher-portal.service';
@@ -12,6 +13,7 @@ import {
   QRSessionDetail,
 } from '../../../core/models/api.models';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-teacher-attendance',
@@ -77,14 +79,36 @@ export class TeacherAttendanceComponent implements OnInit, OnDestroy {
     return Array.from(seen.values());
   });
 
-  readonly qrImageUrl = computed(() => {
+  private readonly qrDeepLink = computed(() => {
     const session = this.activeSession();
     if (!session?.token) return '';
     // Encode a deep link (not just the raw token) so any phone's native camera
     // app can scan and open it directly — the student page auto-submits from
     // the URL's query params instead of requiring manual copy-paste.
-    const deepLink = `${window.location.origin}/student?token=${encodeURIComponent(session.token)}&sessionId=${encodeURIComponent(session.id)}`;
-    return `https://api.qrserver.com/v1/create-qr-code/?size=280x280&bgcolor=FFFFFF&color=0F172A&data=${encodeURIComponent(deepLink)}`;
+    // publicOrigin overrides the browser origin: a phone scanning a `localhost`
+    // link resolves it to itself, so serving over LAN/tunnel needs that host baked in.
+    const origin = environment.publicOrigin || window.location.origin;
+    return `${origin}/student?token=${encodeURIComponent(session.token)}&sessionId=${encodeURIComponent(session.id)}`;
+  });
+
+  readonly qrImageUrl = signal<string>('');
+
+  /// The QR is rendered to a local data URI rather than fetched from an image API,
+  /// so it still appears when the machine has no internet access — and so a token
+  /// that lives 5 seconds isn't waiting on a network round-trip to be displayed.
+  private readonly renderQr = effect(() => {
+    const link = this.qrDeepLink();
+    if (!link) {
+      this.qrImageUrl.set('');
+      return;
+    }
+    QRCode.toDataURL(link, {
+      width: 280,
+      margin: 1,
+      color: { dark: '#0F172AFF', light: '#FFFFFFFF' },
+    })
+      .then((dataUrl) => this.qrImageUrl.set(dataUrl))
+      .catch(() => this.qrImageUrl.set(''));
   });
 
   ngOnInit(): void {

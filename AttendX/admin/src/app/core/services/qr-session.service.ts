@@ -22,7 +22,7 @@ export class QrSessionService {
   }
 
   closeSession(sessionId: string) {
-    return this.api.put<QRSession>(`/qr-sessions/${sessionId}/close`, {});
+    return this.api.post<QRSession>(`/qr-sessions/${sessionId}/close`, {});
   }
 
   getSession(sessionId: string) {

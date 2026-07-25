@@ -114,7 +114,7 @@ Notifications sent:
 |----------|--------|-------------|
 | `/api/qr-sessions` | POST | Create new session |
 | `/api/qr-sessions/:id/refresh` | POST | Refresh QR token |
-| `/api/qr-sessions/:id/close` | PUT | Close session |
+| `/api/qr-sessions/:id/close` | POST | Close session |
 | `/api/qr-sessions/:id` | GET | Get session details |
 | `/api/qr-sessions` | GET | Get session history |
 

@@ -17,8 +17,20 @@ ok=" ✓"; fail=" ✗"; info=" •"
 
 cleanup() {
   echo -e "\n${YELLOW}Shutting down services...${NC}"
-  kill $OLLAMA_PID $CHATBOT_PID $ADMIN_PID 2>/dev/null || true
+  # `npm start` and the chatbot each run inside a subshell, so $CHATBOT_PID/$ADMIN_PID
+  # are the subshells — killing those orphans the real `ng serve` / python children,
+  # which keep holding :4200 and :8000. Reap by port, which catches the whole tree.
+  kill $CHATBOT_PID $ADMIN_PID 2>/dev/null || true
+  for port in 8000 4200; do
+    lsof -ti :$port 2>/dev/null | xargs kill -9 2>/dev/null || true
+  done
+  # Only stop Ollama if this script started it — otherwise we'd kill a daemon the
+  # user already had running and pay the 4.7 GB model reload on the next launch.
+  if [ "$OLLAMA_STARTED_BY_US" = true ]; then
+    kill $OLLAMA_PID 2>/dev/null || true
+  fi
   echo "  Stopping Docker containers..."
+  # No -v: named volumes (and the seeded DB) must survive a restart.
   cd "$ATTENDX_DIR" && docker compose down 2>/dev/null || true
   wait 2>/dev/null || true
   echo -e "${GREEN}All services stopped.${NC}"
@@ -46,8 +58,24 @@ echo -e "${BLUE}║     AttendX — Starting All Services      ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════╝${NC}"
 echo ""
 
+# Everything needed to run is cached locally (backend image, Ollama models, npm and
+# pip deps), so the whole stack comes up offline. Probe once up front so the
+# network-dependent steps can be skipped cleanly instead of stalling on retries
+# and printing alarming red ✗ marks mid-presentation.
+ONLINE=false
+if curl -sf --max-time 3 https://registry.ollama.ai > /dev/null 2>&1 \
+   || curl -sf --max-time 3 https://registry.npmjs.org > /dev/null 2>&1; then
+  ONLINE=true
+fi
+if [ "$ONLINE" = true ]; then
+  echo -e "  ${info} Network: online"
+else
+  echo -e "  ${info} Network: offline — using cached images and models"
+fi
+echo ""
+
 # ── 1. Docker ────────────────────────────────────────────────────
-echo -e "${YELLOW}[1/4]${NC} Docker"
+echo -e "${YELLOW}[1/5]${NC} Docker"
 if ! docker info > /dev/null 2>&1; then
   echo -e "  ${RED}${fail}${NC} Docker is not running"
   echo "  Start Docker Desktop: open -a Docker"
@@ -74,19 +102,47 @@ else
 fi
 
 # ── 2. Python venv for chatbot ───────────────────────────────────
-echo -e "${YELLOW}[2/4]${NC} Python chatbot environment"
-if [ -f "$CHATBOT_DIR/venv/bin/python" ]; then
-  PYTHON="$CHATBOT_DIR/venv/bin/python"
-elif [ -f "$ROOT_DIR/.venv/bin/python" ]; then
-  PYTHON="$ROOT_DIR/.venv/bin/python"
+echo -e "${YELLOW}[2/5]${NC} Python chatbot environment"
+# Pick the first interpreter that can actually import the chatbot's heavy deps.
+# Checking imports rather than just existence matters: Chatbot/venv is a venv
+# imported from another machine (its symlinks dangle), and a plain `python3` can
+# resolve to conda base — which has no chromadb — if a conda env is active.
+CHATBOT_DEPS_CHECK='import chromadb, ollama, fastapi, uvicorn, redis, dotenv, pandas'
+PYTHON=""
+for candidate in \
+  "$CHATBOT_DIR/venv/bin/python" \
+  "$ROOT_DIR/.venv/bin/python" \
+  /usr/local/bin/python3 \
+  /opt/homebrew/bin/python3 \
+  python3
+do
+  if command -v "$candidate" > /dev/null 2>&1 \
+     && "$candidate" -c "$CHATBOT_DEPS_CHECK" > /dev/null 2>&1; then
+    PYTHON="$candidate"
+    break
+  fi
+done
+
+if [ -n "$PYTHON" ]; then
+  echo -e "  ${GREEN}${ok}${NC} Python $("$PYTHON" --version 2>&1) — $("$PYTHON" -c 'import sys; print(sys.executable)')"
 else
+  # Nothing has the deps. Fall back and try to install, which needs the network.
   PYTHON=python3
+  echo -e "  ${YELLOW}${info}${NC} No interpreter has the chatbot deps — installing into $(command -v python3)"
+  if [ "$ONLINE" = true ]; then
+    "$PYTHON" -m pip install -q -r "$CHATBOT_DIR/requirements.txt" 2>&1 | tail -3 || true
+  else
+    echo -e "  ${RED}${fail}${NC} Offline — cannot install. The chatbot will not start."
+  fi
+  if "$PYTHON" -c "$CHATBOT_DEPS_CHECK" > /dev/null 2>&1; then
+    echo -e "  ${GREEN}${ok}${NC} Dependencies installed"
+  else
+    echo -e "  ${RED}${fail}${NC} Chatbot dependencies still missing — chat features will be down"
+  fi
 fi
-echo -e "  ${GREEN}${ok}${NC} Python $("$PYTHON" --version 2>&1)"
-"$PYTHON" -m pip install -q -r "$CHATBOT_DIR/requirements.txt" 2>/dev/null || true
 
 # ── 3. Docker Compose (Postgres + Redis + Backend) ──────────────
-echo -e "${YELLOW}[3/4]${NC} Backend stack"
+echo -e "${YELLOW}[3/5]${NC} Backend stack"
 cd "$ATTENDX_DIR"
 # NOTE: these ports are forwarded through the Docker engine's own listener once
 # db/redis/backend containers are up — killing whatever holds them kills the
@@ -107,27 +163,50 @@ if [ "$COMPOSE_OK" != true ]; then
   exit 1
 fi
 echo -e "  ${GREEN}${ok}${NC} Docker services starting (log: /tmp/attendx-docker.log)"
-wait_for "http://localhost:5001/api/health" "Backend API" 60
+# The backend entrypoint runs db:migrate + seed before listening, so first boot on a
+# recreated container takes ~30-60s.
+wait_for "http://localhost:5001/api/health" "Backend API" 90 || BACKEND_FAILED=true
 
 # ── 4. Ollama ───────────────────────────────────────────────────
 echo -e "${YELLOW}[4/5]${NC} Ollama (LLM service)"
+OLLAMA_STARTED_BY_US=false
 if ! pgrep -x ollama > /dev/null; then
   lsof -ti :11434 2>/dev/null | xargs kill -9 2>/dev/null || true
   ollama serve > /dev/null 2>&1 &
   OLLAMA_PID=$!
+  OLLAMA_STARTED_BY_US=true
   echo -e "  ${GREEN}${ok}${NC} Ollama starting (PID $OLLAMA_PID)"
-  wait_for "http://localhost:11434/api/tags" "Ollama" 15
+  wait_for "http://localhost:11434/api/tags" "Ollama" 15 || OLLAMA_FAILED=true
 else
   OLLAMA_PID=$(pgrep -x ollama)
   echo -e "  ${GREEN}${ok}${NC} Ollama already running (PID $OLLAMA_PID)"
 fi
 
-# Pull required Ollama models
+# Required models. Both are already in the local Ollama store, so a pull is only ever
+# a freshness check — verify presence locally and skip the network round-trip when
+# offline, rather than failing a pull and printing a red ✗ for a model we do have.
 EMBED_MODEL="${EMBED_MODEL:-nomic-embed-text}"
 LLM_MODEL="${LLM_MODEL:-qwen2.5:7b}"
 echo -e "  ${info} Checking Ollama models..."
-ollama pull "$EMBED_MODEL" > /dev/null 2>&1 && echo -e "  ${GREEN}${ok}${NC} Embedding model: $EMBED_MODEL" || echo -e "  ${RED}${fail}${NC} Failed to pull $EMBED_MODEL"
-ollama pull "$LLM_MODEL" > /dev/null 2>&1 && echo -e "  ${GREEN}${ok}${NC} LLM model: $LLM_MODEL" || echo -e "  ${RED}${fail}${NC} Failed to pull $LLM_MODEL"
+OLLAMA_LOCAL_MODELS="$(ollama list 2>/dev/null | awk 'NR>1 {print $1}')"
+for model in "$EMBED_MODEL" "$LLM_MODEL"; do
+  # `ollama list` always prints an explicit tag, so an untagged name needs ":latest".
+  case "$model" in *:*) want="$model" ;; *) want="$model:latest" ;; esac
+  if printf '%s\n' "$OLLAMA_LOCAL_MODELS" | grep -qxF "$want"; then
+    echo -e "  ${GREEN}${ok}${NC} Model present: $model"
+  elif [ "$ONLINE" = true ]; then
+    echo -n "  ${info} Pulling $model (this can take several minutes)..."
+    if ollama pull "$model" > /dev/null 2>&1; then
+      echo -e "\r  ${GREEN}${ok}${NC} Model pulled: $model            "
+    else
+      echo -e "\r  ${RED}${fail}${NC} Failed to pull $model           "
+      MODELS_FAILED=true
+    fi
+  else
+    echo -e "  ${RED}${fail}${NC} Model missing and offline: $model"
+    MODELS_FAILED=true
+  fi
+done
 
 # ── 5. Chatbot + Admin ──────────────────────────────────────────
 echo -e "${YELLOW}[5/5]${NC} Chatbot + Admin"
@@ -143,21 +222,47 @@ lsof -ti :8000 2>/dev/null | xargs kill -9 2>/dev/null || true
 ) > /tmp/attendx-chatbot.log 2>&1 &
 CHATBOT_PID=$!
 echo -e "  ${GREEN}${ok}${NC} Chatbot starting (PID $CHATBOT_PID, log: /tmp/attendx-chatbot.log)"
-wait_for "http://localhost:8000/health" "RAG Chatbot" 30
+if ! wait_for "http://localhost:8000/health" "RAG Chatbot" 30; then
+  CHATBOT_FAILED=true
+  echo -e "  ${RED}${info}${NC} Last lines of /tmp/attendx-chatbot.log:"
+  tail -5 /tmp/attendx-chatbot.log 2>/dev/null | sed 's/^/      /'
+fi
 
 # Angular admin (4200)
 lsof -ti :4200 2>/dev/null | xargs kill -9 2>/dev/null || true
+# --host 0.0.0.0 is required for the QR demo: the QR encodes a deep link to
+# /student, and the phone's browser opens it against this machine's LAN IP.
+# ng serve binds to localhost only by default, so the phone would get connection
+# refused. --disable-host-check accepts the IP-based Host header.
 (
-  cd "$ADMIN_DIR" && npm start
+  cd "$ADMIN_DIR" && npm start -- --host 0.0.0.0 --disable-host-check
 ) > /tmp/attendx-admin.log 2>&1 &
 ADMIN_PID=$!
 echo -e "  ${GREEN}${ok}${NC} Admin starting (PID $ADMIN_PID, log: /tmp/attendx-admin.log)"
-wait_for "http://localhost:4200" "Angular Admin" 90
+# A cold Angular build can exceed 90s; keep waiting a bit longer rather than opening
+# the browser at a dev server that hasn't finished its first compile.
+wait_for "http://localhost:4200" "Angular Admin" 150 || ADMIN_FAILED=true
+
+# The phone reaches the backend over the LAN, not loopback — detect the address now so
+# the printed command is correct for whatever network we're on today.
+LAN_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
 
 echo ""
-echo -e "${BLUE}╔══════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║            All services running!                     ║${NC}"
-echo -e "${BLUE}╚══════════════════════════════════════════════════════╝${NC}"
+if [ -n "$BACKEND_FAILED$CHATBOT_FAILED$ADMIN_FAILED$OLLAMA_FAILED$MODELS_FAILED" ]; then
+  echo -e "${YELLOW}╔══════════════════════════════════════════════════════╗${NC}"
+  echo -e "${YELLOW}║        Started, but some services need attention     ║${NC}"
+  echo -e "${YELLOW}╚══════════════════════════════════════════════════════╝${NC}"
+  echo ""
+  [ -n "$BACKEND_FAILED" ] && echo -e "  ${RED}${fail}${NC} Backend API  — check /tmp/attendx-docker.log; then: docker compose logs backend"
+  [ -n "$OLLAMA_FAILED" ]  && echo -e "  ${RED}${fail}${NC} Ollama       — run 'ollama serve' in another terminal"
+  [ -n "$MODELS_FAILED" ]  && echo -e "  ${RED}${fail}${NC} Models       — AI answers will fail until the model is present"
+  [ -n "$CHATBOT_FAILED" ] && echo -e "  ${RED}${fail}${NC} RAG Chatbot  — check /tmp/attendx-chatbot.log"
+  [ -n "$ADMIN_FAILED" ]   && echo -e "  ${RED}${fail}${NC} Admin panel  — check /tmp/attendx-admin.log (may still be compiling; reload in a minute)"
+else
+  echo -e "${BLUE}╔══════════════════════════════════════════════════════╗${NC}"
+  echo -e "${BLUE}║            All services running!                     ║${NC}"
+  echo -e "${BLUE}╚══════════════════════════════════════════════════════╝${NC}"
+fi
 echo ""
 echo -e "  ${GREEN}Admin Panel${NC}     ${YELLOW}→${NC} http://localhost:4200"
 echo -e "  ${GREEN}AI Assistant${NC}    ${YELLOW}→${NC} http://localhost:4200/chatbot"
@@ -165,10 +270,23 @@ echo -e "  ${GREEN}Backend API${NC}     ${YELLOW}→${NC} http://localhost:5001/
 echo -e "  ${GREEN}Swagger Docs${NC}    ${YELLOW}→${NC} http://localhost:5001/api-docs"
 echo -e "  ${GREEN}Chatbot UI${NC}      ${YELLOW}→${NC} http://localhost:8000"
 echo -e "  ${GREEN}Student Chat${NC}    ${YELLOW}→${NC} http://localhost:8000/student"
-echo -e "  ${GREEN}Flutter App${NC}     ${YELLOW}→${NC} cd $STUDENT_DIR && flutter run"
+echo ""
+if [ -n "$LAN_IP" ]; then
+  echo -e "  ${YELLOW}QR demo — the phone scans a deep link, so use the LAN URL, not localhost:${NC}"
+  echo -e "    ${GREEN}Open the teacher portal here${NC} ${YELLOW}→${NC} http://${LAN_IP}:4200"
+  echo -e "    ${info} The QR encodes this page's origin. Opening it at localhost makes the"
+  echo -e "      phone resolve the link to itself, so the scan will fail."
+  echo -e "    ${info} Check from the phone's browser first: ${YELLOW}http://${LAN_IP}:4200${NC}"
+  echo ""
+  echo -e "  ${GREEN}Flutter app${NC} (optional — it has no QR scanner; login/attendance views only):"
+  echo -e "    cd $STUDENT_DIR && flutter run --dart-define=API_BASE_URL=http://${LAN_IP}:5001"
+else
+  echo -e "  ${RED}${fail}${NC} No LAN IP found (Wi-Fi off?) — a phone cannot reach this machine."
+  echo -e "      Join a network, or use a phone hotspot, then restart."
+fi
 echo ""
 
-if command -v open &> /dev/null; then
+if command -v open &> /dev/null && [ -z "$ADMIN_FAILED" ]; then
   sleep 2
   open http://localhost:4200 2>/dev/null || true
 fi

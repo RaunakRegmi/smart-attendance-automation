@@ -9,16 +9,27 @@ class ApiClient {
   static const String _baseUrlKey = 'api_base_url';
   static const String _tokenKey = 'auth_token';
 
+  /// Build-time override, so a physical phone can be pointed at the host's LAN IP
+  /// without editing this file:
+  ///   flutter run --dart-define=API_BASE_URL=http://192.168.1.98:5001
+  /// start.sh detects the current LAN IP and prints the exact command to use.
+  static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
+
+  /// The LAN address of the dev machine, used when nothing overrides it. A physical
+  /// phone cannot reach the host's loopback, so `localhost`/`10.0.2.2` are wrong here;
+  /// an emulator can reach the LAN IP too, so this works for both. Only valid while
+  /// the host keeps this address — pass --dart-define on a different network.
+  static const String _lanFallback = 'http://192.168.1.98:5001';
+
   static String get defaultBaseUrl {
+    if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
     if (kIsWeb) return 'http://localhost:5001';
     // Desktop (Linux/macOS/Windows) shares the host network → localhost reaches the backend.
     if (Platform.isLinux || Platform.isMacOS || Platform.isWindows) {
       return 'http://localhost:5001';
     }
-    // Android emulator reaches the host's loopback via 10.0.2.2.
-    if (Platform.isAndroid) return 'http://10.0.2.2:5001';
-    // iOS simulator shares the host network. Physical devices need a LAN IP or a tunnel.
-    return 'http://localhost:5001';
+    // Physical Android/iOS devices need a routable address, not the host's loopback.
+    return _lanFallback;
   }
 
   static Future<String> getBaseUrl() async {

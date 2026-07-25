@@ -127,14 +127,15 @@ exports.createSession = async (req, res, next) => {
         where: { sectionId },
         attributes: ['userId'],
       });
+      const subject = session.Subject;
       const subjectLabel = subject ? `${subject.subjectCode} - ${subject.subjectName}` : 'Unknown Subject';
       const notifications = enrolledStudents
         .filter((s) => s.userId)
         .map((s) => ({
           targetUserId: s.userId,
           title: `Attendance Session Started`,
-          message: `${classType} session for ${subjectLabel} started at ${now.toLocaleTimeString()}. Scan the QR code to mark attendance.`,
-          type: 'info',
+          description: `${classType} session for ${subjectLabel} started at ${now.toLocaleTimeString()}. Scan the QR code to mark attendance.`,
+          category: 'ATTENDANCE',
         }));
       if (notifications.length > 0) {
         await Notification.bulkCreate(notifications);
@@ -235,10 +236,10 @@ exports.closeSession = async (req, res, next) => {
             return {
               targetUserId: s.userId,
               title: `Attendance Session Closed`,
-              message: wasScanned
+              description: wasScanned
                 ? `${session.classType} session for ${subjectLabel} has been closed. Your attendance was recorded.`
                 : `${session.classType} session for ${subjectLabel} has been closed. You did not scan the QR. You may submit a late request if needed.`,
-              type: wasScanned ? 'info' : 'warning',
+              category: 'ATTENDANCE',
             };
           });
         if (notifications.length > 0) {
