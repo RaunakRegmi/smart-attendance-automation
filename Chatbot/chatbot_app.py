@@ -3,7 +3,7 @@ RAG Chatbot for Smart Campus Management System.
 
 Setup:
     1. ollama pull nomic-embed-text
-    2. ollama pull llama3.2          (or change LLM_MODEL below)
+    2. ollama pull qwen2.5:7b        (or change LLM_MODEL below)
     3. python rag_indexer.py         (builds the vector store once)
     4. python chatbot_app.py         (starts the web server)
 
@@ -32,7 +32,12 @@ _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CHROMA_DIR = os.getenv("CHROMA_DIR", os.path.join(_BASE_DIR, "chroma_db"))
 COLLECTION_NAME = os.getenv("COLLECTION_NAME", "student_data")
 EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
-LLM_MODEL = os.getenv("LLM_MODEL", "llama3.2")
+# qwen2.5:7b over llama3.2: measured on the same 5-turn admin script, llama3.2 fired a
+# spurious knowledge-base search on conversational turns and hedged about what it had
+# just been told ("I don't have any information about your personal preferences"), while
+# qwen2.5:7b called zero tools on those turns and recalled correctly. Costs ~45% more
+# latency (16s vs 11s for 5 turns) and 4.7GB vs 2.0GB on disk.
+LLM_MODEL = os.getenv("LLM_MODEL", "qwen2.5:7b")
 N_RESULTS = int(os.getenv("N_RESULTS", "5"))
 # Max embedding distance for a retrieved doc to count as relevant. Tuned for
 # nomic-embed-text on this corpus (on-topic ~250-350, off-topic ~450+); raise it if

@@ -169,16 +169,18 @@ echo -n "  ${info} Pulling Ollama models..."
 ollama pull nomic-embed-text > /tmp/attendx-ollama-embed.log 2>&1 && \
   echo -e "\r  ${GREEN}${ok}${NC} Ollama nomic-embed-text pulled" || \
   echo -e "\r  ${YELLOW}${info}${NC} nomic-embed-text pull skipped (may already exist)"
-ollama pull llama3.2 > /tmp/attendx-ollama-llm.log 2>&1 && \
-  echo -e "\r  ${GREEN}${ok}${NC} Ollama llama3.2 pulled" || \
-  echo -e "\r  ${YELLOW}${info}${NC} llama3.2 pull skipped (may already exist)"
+LLM_MODEL="${LLM_MODEL:-qwen2.5:7b}"
+ollama pull "$LLM_MODEL" > /tmp/attendx-ollama-llm.log 2>&1 && \
+  echo -e "\r  ${GREEN}${ok}${NC} Ollama $LLM_MODEL pulled" || \
+  echo -e "\r  ${YELLOW}${info}${NC} $LLM_MODEL pull skipped (may already exist)"
 
 # ── [5/7] Chatbot + Admin ──
 echo -e "${YELLOW}[5/7]${NC} Chatbot + Admin"
 kill_port "$CHATBOT_PORT"
 # Chatbot runs natively while the backend runs in Docker (published on $BACKEND_PORT),
 # so agent tools must reach the backend over localhost, not the compose hostname.
-(cd "$CHATBOT_DIR" && BACKEND_INTERNAL_URL="http://localhost:${BACKEND_PORT}" "$PYTHON" chatbot_app.py) > /tmp/attendx-chatbot.log 2>&1 &
+(cd "$CHATBOT_DIR" && BACKEND_INTERNAL_URL="http://localhost:${BACKEND_PORT}" \
+  LLM_MODEL="$LLM_MODEL" "$PYTHON" chatbot_app.py) > /tmp/attendx-chatbot.log 2>&1 &
 CHATBOT_PID=$!
 wait_for "http://localhost:${CHATBOT_PORT}/health" "RAG Chatbot" 30
 

@@ -124,7 +124,7 @@ fi
 
 # Pull required Ollama models
 EMBED_MODEL="${EMBED_MODEL:-nomic-embed-text}"
-LLM_MODEL="${LLM_MODEL:-llama3.2}"
+LLM_MODEL="${LLM_MODEL:-qwen2.5:7b}"
 echo -e "  ${info} Checking Ollama models..."
 ollama pull "$EMBED_MODEL" > /dev/null 2>&1 && echo -e "  ${GREEN}${ok}${NC} Embedding model: $EMBED_MODEL" || echo -e "  ${RED}${fail}${NC} Failed to pull $EMBED_MODEL"
 ollama pull "$LLM_MODEL" > /dev/null 2>&1 && echo -e "  ${GREEN}${ok}${NC} LLM model: $LLM_MODEL" || echo -e "  ${RED}${fail}${NC} Failed to pull $LLM_MODEL"
@@ -138,7 +138,8 @@ lsof -ti :8000 2>/dev/null | xargs kill -9 2>/dev/null || true
 # so its agent tools must call the backend via localhost — the compose-network
 # hostname `backend` does not resolve from the host.
 (
-  cd "$CHATBOT_DIR" && BACKEND_INTERNAL_URL="http://localhost:5001" "$PYTHON" chatbot_app.py
+  cd "$CHATBOT_DIR" && BACKEND_INTERNAL_URL="http://localhost:5001" \
+    EMBED_MODEL="$EMBED_MODEL" LLM_MODEL="$LLM_MODEL" "$PYTHON" chatbot_app.py
 ) > /tmp/attendx-chatbot.log 2>&1 &
 CHATBOT_PID=$!
 echo -e "  ${GREEN}${ok}${NC} Chatbot starting (PID $CHATBOT_PID, log: /tmp/attendx-chatbot.log)"

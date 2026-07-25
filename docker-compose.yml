@@ -5,7 +5,7 @@
 # Chatbot (FastAPI/RAG), and the Angular Admin (built and served by nginx, which also
 # proxies /api -> backend).
 #
-# NOTE: the first run downloads ~2.3 GB of Ollama models (nomic-embed-text + llama3.2)
+# NOTE: the first run downloads ~5 GB of Ollama models (nomic-embed-text + qwen2.5:7b)
 #       and runs them on CPU, so initial startup is slow. Models persist in a volume.
 # NOTE: the Flutter student app is a mobile client (APK), not a service, so it is not here.
 #
@@ -122,7 +122,7 @@ services:
         condition: service_healthy
     environment:
       OLLAMA_HOST: http://ollama:11434
-    entrypoint: ["/bin/sh", "-c", "ollama pull ${EMBED_MODEL:-nomic-embed-text} && ollama pull ${LLM_MODEL:-llama3.2} && echo 'models ready'"]
+    entrypoint: ["/bin/sh", "-c", "ollama pull ${EMBED_MODEL:-nomic-embed-text} && ollama pull ${LLM_MODEL:-qwen2.5:7b} && echo 'models ready'"]
     restart: "no"
     networks: [attendance_network]
 
@@ -136,7 +136,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       OLLAMA_HOST: http://ollama:11434
       EMBED_MODEL: ${EMBED_MODEL:-nomic-embed-text}
-      LLM_MODEL: ${LLM_MODEL:-llama3.2}
+      LLM_MODEL: ${LLM_MODEL:-qwen2.5:7b}
       CHROMA_DIR: /app/chroma_db
       NUM_CTX: ${NUM_CTX:-8192}
       # Agent tools call back to the backend (over the compose network) with the caller's JWT.
