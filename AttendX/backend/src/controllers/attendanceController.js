@@ -3,6 +3,7 @@ const Student = require('../models/Student');
 const Subject = require('../models/Subject');
 const Attendance = require('../models/Attendance');
 const User = require('../models/User');
+const Faculty = require('../models/Faculty');
 const { parseExcelFile, exportToExcel } = require('../utils/excelHandler');
 const path = require('path');
 const fs = require('fs');
@@ -361,11 +362,12 @@ exports.getDashboard = async (req, res, next) => {
 
     const subjectsByFaculty = await Student.findAll({
       attributes: [
-        'faculty',
-        [Student.sequelize.fn('COUNT', Student.sequelize.col('id')), 'count'],
+        [Student.sequelize.col('Faculty.name'), 'faculty'],
+        [Student.sequelize.fn('COUNT', Student.sequelize.col('Student.id')), 'count'],
       ],
-      where: { faculty: { [Op.ne]: null } },
-      group: ['faculty'],
+      include: [{ model: Faculty, attributes: [] }],
+      where: { facultyId: { [Op.ne]: null } },
+      group: ['Faculty.name'],
       raw: true,
     });
 

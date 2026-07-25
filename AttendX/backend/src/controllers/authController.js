@@ -63,7 +63,7 @@ exports.register = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Validation errors', errors: errors.array() });
     }
 
-    const { name, email, password, gender, bloodGroup, regNum, univId, admissionDate, dob, faculty, facultyId, guardianName, guardianContact, batchId, sectionId } = req.body;
+    const { name, email, password, gender, bloodGroup, regNum, univId, admissionDate, dob, facultyId, guardianName, guardianContact, batchId, sectionId } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
@@ -89,7 +89,6 @@ exports.register = async (req, res, next) => {
       univId,
       admissionDate,
       dob,
-      faculty: faculty,
       facultyId: facultyId || null,
       guardianName,
       guardianContact,
@@ -147,7 +146,7 @@ exports.getMe = async (req, res, next) => {
 
 exports.updateProfile = async (req, res, next) => {
   try {
-    const { name, email, gender, bloodGroup, regNum, univId, admissionDate, dob, faculty, facultyId, guardianName, guardianContact, batchId, sectionId } = req.body;
+    const { name, email, gender, bloodGroup, regNum, univId, admissionDate, dob, facultyId, guardianName, guardianContact, batchId, sectionId } = req.body;
 
     // Find the user
     const user = await User.findByPk(req.user.id);
@@ -181,7 +180,6 @@ exports.updateProfile = async (req, res, next) => {
         univId,
         admissionDate,
         dob,
-        faculty,
         facultyId,
         guardianName,
         guardianContact,

@@ -5,6 +5,7 @@ const Subject = require('../models/Subject');
 const Section = require('../models/Section');
 const Batch = require('../models/Batch');
 const Routine = require('../models/Routine');
+const Faculty = require('../models/Faculty');
 
 const buildPagination = (page, limit) => {
   const p = Math.max(1, parseInt(page, 10) || 1);
@@ -24,11 +25,11 @@ exports.getStudentDailyReport = async (req, res, next) => {
       where,
       include: [
         { model: Subject, attributes: ['id', 'subjectCode', 'subjectName'] },
-        { model: Student, attributes: ['id', 'name', 'email', 'regNum', 'faculty'] },
+        { model: Student, attributes: ['id', 'name', 'email', 'regNum'], include: [{ model: Faculty, attributes: ['name'] }] },
       ],
       order: [[Subject, 'subjectName', 'ASC']],
     });
-    const student = records.length > 0 ? records[0].Student : await Student.findByPk(studentId, { attributes: ['id', 'name', 'email', 'regNum', 'faculty'] });
+    const student = records.length > 0 ? records[0].Student : await Student.findByPk(studentId, { attributes: ['id', 'name', 'email', 'regNum'], include: [{ model: Faculty, attributes: ['name'] }] });
     res.json({
       success: true,
       data: {
@@ -117,8 +118,8 @@ exports.getStudentAggregateReport = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'studentId is required' });
     }
     const student = await Student.findByPk(studentId, {
-      include: [{ model: Batch, attributes: ['id', 'name'] }, { model: Section, attributes: ['id', 'name'] }],
-      attributes: ['id', 'name', 'email', 'regNum', 'univId', 'faculty'],
+      include: [{ model: Batch, attributes: ['id', 'name'] }, { model: Section, attributes: ['id', 'name'] }, { model: Faculty, attributes: ['name'] }],
+      attributes: ['id', 'name', 'email', 'regNum', 'univId'],
     });
     if (!student) {
       return res.status(404).json({ success: false, message: 'Student not found' });
@@ -181,7 +182,8 @@ exports.getSectionWiseReport = async (req, res, next) => {
     const { page: p, limit: l, offset } = buildPagination(page, limit);
     const { count, rows: students } = await Student.findAndCountAll({
       where: studentWhere,
-      attributes: ['id', 'name', 'email', 'regNum', 'faculty'],
+      attributes: ['id', 'name', 'email', 'regNum'],
+      include: [{ model: Faculty, attributes: ['name'] }],
       limit: l,
       offset,
       order: [['name', 'ASC']],
@@ -213,7 +215,7 @@ exports.getSectionWiseReport = async (req, res, next) => {
         }
       });
       return {
-        student: { id: student.id, name: student.name, email: student.email, regNum: student.regNum, faculty: student.faculty },
+        student: { id: student.id, name: student.name, email: student.email, regNum: student.regNum, faculty: student.Faculty?.name || null },
         overall: { total, present, absent, late, attendancePercentage: percentage, lowAttendance: percentage < 80 },
         subjectWise: subjectMap,
       };
@@ -249,8 +251,8 @@ exports.getBatchWiseReport = async (req, res, next) => {
     const { page: p, limit: l, offset } = buildPagination(page, limit);
     const { count, rows: students } = await Student.findAndCountAll({
       where: studentWhere,
-      attributes: ['id', 'name', 'email', 'regNum', 'sectionId', 'faculty'],
-      include: [{ model: Section, attributes: ['id', 'name'] }],
+      attributes: ['id', 'name', 'email', 'regNum', 'sectionId'],
+      include: [{ model: Section, attributes: ['id', 'name'] }, { model: Faculty, attributes: ['name'] }],
       limit: l,
       offset,
       order: [['name', 'ASC']],
@@ -268,7 +270,7 @@ exports.getBatchWiseReport = async (req, res, next) => {
       const late = recs.filter(r => r.status === 'Late').length;
       const percentage = total > 0 ? parseFloat(((present + late) / total * 100).toFixed(2)) : 0;
       return {
-        student: { id: student.id, name: student.name, email: student.email, regNum: student.regNum, faculty: student.faculty, section: student.Section?.name },
+        student: { id: student.id, name: student.name, email: student.email, regNum: student.regNum, faculty: student.Faculty?.name || null, section: student.Section?.name },
         overall: { total, present, absent, late, attendancePercentage: percentage, lowAttendance: percentage < 80},
       };
     });
@@ -303,7 +305,7 @@ exports.getSubjectWiseReport = async (req, res, next) => {
     const { page: p, limit: l, offset } = buildPagination(page, limit);
     const { count, rows: attendanceRows } = await Attendance.findAndCountAll({
       where: { subjectId: subject.id },
-      include: [{ model: Student, attributes: ['id', 'name', 'email', 'regNum', 'faculty', 'sectionId'], include: [{ model: Section, attributes: ['id', 'name'] }] }],
+      include: [{ model: Student, attributes: ['id', 'name', 'email', 'regNum', 'sectionId'], include: [{ model: Section, attributes: ['id', 'name'] }, { model: Faculty, attributes: ['name'] }] }],
       limit: l,
       offset,
       order: [['date', 'DESC']],
@@ -320,7 +322,7 @@ exports.getSubjectWiseReport = async (req, res, next) => {
         summary: { totalRecords, presentCount, absentCount, lateCount, totalSessions: uniqueDates.length, attendancePercentage: totalRecords > 0 ? parseFloat(((presentCount + lateCount) / totalRecords * 100).toFixed(2)) : 0 },
         records: attendanceRows.map(r => ({
           id: r.id, date: r.date, status: r.status,
-          student: { id: r.Student.id, name: r.Student.name, email: r.Student.email, regNum: r.Student.regNum, faculty: r.Student.faculty, section: r.Student.Section?.name },
+          student: { id: r.Student.id, name: r.Student.name, email: r.Student.email, regNum: r.Student.regNum, faculty: r.Student.Faculty?.name || null, section: r.Student.Section?.name },
         })),
       },
       pagination: { total: count, page: p, limit: l, totalPages: Math.ceil(count / l) },
@@ -336,8 +338,8 @@ exports.getFacultyWiseReport = async (req, res, next) => {
     }
     const { page: p, limit: l, offset } = buildPagination(page, limit);
     const { count, rows: students } = await Student.findAndCountAll({
-      where: { faculty: { [Op.iLike]: `%${faculty}%` } },
-      attributes: ['id', 'name', 'email', 'regNum', 'faculty'],
+      attributes: ['id', 'name', 'email', 'regNum'],
+      include: [{ model: Faculty, attributes: ['name'], where: { name: { [Op.iLike]: `%${faculty}%` } } }],
       limit: l,
       offset,
       order: [['name', 'ASC']],
@@ -354,7 +356,7 @@ exports.getFacultyWiseReport = async (req, res, next) => {
       const absent = recs.filter(r => r.status === 'Absent').length;
       const late = recs.filter(r => r.status === 'Late').length;
       return {
-        student: { id: student.id, name: student.name, email: student.email, regNum: student.regNum, faculty: student.faculty },
+        student: { id: student.id, name: student.name, email: student.email, regNum: student.regNum, faculty: student.Faculty?.name || null },
         overall: { total, present, absent, late, attendancePercentage: total > 0 ? parseFloat(((present + late) / total * 100).toFixed(2)) : 0 },
       };
     });
@@ -465,7 +467,7 @@ exports.getDateRangeReport = async (req, res, next) => {
     const { count, rows: records } = await Attendance.findAndCountAll({
       where: attendanceWhere,
       include: [
-        { model: Student, attributes: ['id', 'name', 'email', 'regNum', 'faculty'] },
+        { model: Student, attributes: ['id', 'name', 'email', 'regNum'], include: [{ model: Faculty, attributes: ['name'] }] },
         { model: Subject, attributes: ['id', 'subjectCode', 'subjectName'] },
       ],
       limit: l,
@@ -483,7 +485,7 @@ exports.getDateRangeReport = async (req, res, next) => {
         summary: { total, present, absent, late, attendancePercentage: total > 0 ? parseFloat(((present + late) / total * 100).toFixed(2)) : 0 },
         records: records.map(r => ({
           id: r.id, date: r.date, status: r.status,
-          student: { id: r.Student.id, name: r.Student.name, email: r.Student.email, regNum: r.Student.regNum, faculty: r.Student.faculty },
+          student: { id: r.Student.id, name: r.Student.name, email: r.Student.email, regNum: r.Student.regNum, faculty: r.Student.Faculty?.name || null },
           subject: { id: r.Subject.id, code: r.Subject.subjectCode, name: r.Subject.subjectName },
         })),
       },
@@ -505,8 +507,8 @@ exports.getLowAttendanceReport = async (req, res, next) => {
     const { page: p, limit: l, offset } = buildPagination(page, limit);
     const { count, rows: students } = await Student.findAndCountAll({
       where: studentWhere,
-      attributes: ['id', 'name', 'email', 'regNum', 'faculty'],
-      include: [{ model: Section, attributes: ['id', 'name'] }],
+      attributes: ['id', 'name', 'email', 'regNum'],
+      include: [{ model: Section, attributes: ['id', 'name'] }, { model: Faculty, attributes: ['name'] }],
       limit: l,
       offset,
       order: [['name', 'ASC']],
@@ -524,7 +526,7 @@ exports.getLowAttendanceReport = async (req, res, next) => {
       const late = recs.filter(r => r.status === 'Late').length;
       const percentage = total > 0 ? parseFloat(((present + late) / total * 100).toFixed(2)) : 0;
       return {
-        student: { id: student.id, name: student.name, email: student.email, regNum: student.regNum, faculty: student.faculty, section: student.Section?.name },
+        student: { id: student.id, name: student.name, email: student.email, regNum: student.regNum, faculty: student.Faculty?.name || null, section: student.Section?.name },
         overall: { total, present, absent, late, attendancePercentage: percentage, lowAttendance: percentage < minPercentage },
       };
     });
@@ -547,7 +549,7 @@ exports.getTopPerformersReport = async (req, res, next) => {
       const sections = await Section.findAll({ where: { batchId }, attributes: ['id'] });
       studentWhere.sectionId = { [Op.in]: sections.map(s => s.id) };
     }
-    const students = await Student.findAll({ where: studentWhere, attributes: ['id', 'name', 'email', 'regNum', 'faculty'], include: [{ model: Section, attributes: ['id', 'name'] }] });
+    const students = await Student.findAll({ where: studentWhere, attributes: ['id', 'name', 'email', 'regNum'], include: [{ model: Section, attributes: ['id', 'name'] }, { model: Faculty, attributes: ['name'] }] });
     const studentIds = students.map(s => s.id);
     const attendanceRecords = await Attendance.findAll({ where: { studentId: { [Op.in]: studentIds } } });
     const results = students.map(student => {
@@ -557,7 +559,7 @@ exports.getTopPerformersReport = async (req, res, next) => {
       const present = recs.filter(r => r.status === 'Present').length;
       const late = recs.filter(r => r.status === 'Late').length;
       const percentage = parseFloat(((present + late) / total * 100).toFixed(2));
-      return { student: { id: student.id, name: student.name, email: student.email, regNum: student.regNum, faculty: student.faculty, section: student.Section?.name }, total, present, absent: recs.filter(r => r.status === 'Absent').length, late, attendancePercentage: percentage, rank: 0 };
+      return { student: { id: student.id, name: student.name, email: student.email, regNum: student.regNum, faculty: student.Faculty?.name || null, section: student.Section?.name }, total, present, absent: recs.filter(r => r.status === 'Absent').length, late, attendancePercentage: percentage, rank: 0 };
     }).filter(Boolean).sort((a, b) => b.attendancePercentage - a.attendancePercentage).slice(0, maxStudents);
     results.forEach((r, i) => { r.rank = i + 1; });
     res.json({ success: true, data: { topPerformers: results, totalStudents: students.length } });
@@ -580,7 +582,7 @@ exports.getAbsentStudentsReport = async (req, res, next) => {
     const { count, rows: records } = await Attendance.findAndCountAll({
       where,
       include: [
-        { model: Student, attributes: ['id', 'name', 'email', 'regNum', 'faculty'], include: [{ model: Section, attributes: ['id', 'name'] }] },
+        { model: Student, attributes: ['id', 'name', 'email', 'regNum'], include: [{ model: Section, attributes: ['id', 'name'] }, { model: Faculty, attributes: ['name'] }] },
         { model: Subject, attributes: ['id', 'subjectCode', 'subjectName'] },
       ],
       limit: l,
@@ -604,7 +606,7 @@ exports.getAttendanceLeaderboard = async (req, res, next) => {
       const sections = await Section.findAll({ where: { batchId }, attributes: ['id'] });
       studentWhere.sectionId = { [Op.in]: sections.map(s => s.id) };
     }
-    const students = await Student.findAll({ where: studentWhere, attributes: ['id', 'name', 'email', 'regNum', 'faculty'], include: [{ model: Section, attributes: ['id', 'name'] }] });
+    const students = await Student.findAll({ where: studentWhere, attributes: ['id', 'name', 'email', 'regNum'], include: [{ model: Section, attributes: ['id', 'name'] }, { model: Faculty, attributes: ['name'] }] });
     const studentIds = students.map(s => s.id);
     const attendanceRecords = await Attendance.findAll({
       where: { studentId: { [Op.in]: studentIds } },
@@ -628,7 +630,7 @@ exports.getAttendanceLeaderboard = async (req, res, next) => {
         if (r.status !== 'Absent') subjectTotals[r.subjectId].present++;
       });
       return {
-        student: { id: student.id, name: student.name, email: student.email, regNum: student.regNum, faculty: student.faculty, section: student.Section?.name },
+        student: { id: student.id, name: student.name, email: student.email, regNum: student.regNum, faculty: student.Faculty?.name || null, section: student.Section?.name },
         overall: { total, present, absent, late, attendancePercentage: percentage, lowAttendance: percentage < 80},
         subjectPerformance: Object.entries(subjectTotals).map(([subjId, data]) => ({
           subject: subjectMap[subjId] || { code: subjId, name: subjId },
@@ -770,7 +772,7 @@ exports.runWeeklyReportNow = async (req, res, next) => {
     const result = await weeklyReportService.generateAllWeeklyReports();
     res.json({
       success: true,
-      message: `Weekly reports generated for ${result.generated} students`,
+      message: `Weekly reports generated for ${result.generated} students — ${result.emailsSent} emails sent${result.emailsFailed ? `, ${result.emailsFailed} failed` : ''}`,
       data: result,
     });
   } catch (err) {
