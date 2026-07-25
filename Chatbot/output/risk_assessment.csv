@@ -1,34 +1,34 @@
 sno,student_name,batch,attendance_percentage,risk_level,risk_score,intervention_needed,risk_factors
-96,Aayush Sharma,Summer 2025,94.34,Low,15.0,False,None
-97,Binita Rijal,Summer 2025,85.85,Low,15.0,False,None
-98,Aaditya Dhakal,Summer 2025,77.36,Medium,40.0,False,None
-99,Dinesh Kunwar,Summer 2025,78.3,Medium,40.0,False,None
-100,Elina Bista,Summer 2025,83.02,Medium,40.0,False,None
-101,Firoj Ansari,Summer 2025,77.36,Medium,40.0,False,None
-102,Gaurav Kafle,Summer 2025,83.96,Medium,40.0,False,None
-104,Ishan Koirala,Summer 2025,66.04,High,70.0,True,"Low overall attendance, High absence count"
-105,Juna Khadgi,Summer 2025,91.51,Low,15.0,False,None
-106,Kamal Rokaya,Summer 2025,79.25,Medium,40.0,False,None
-107,Lalita Budhathoki,Summer 2025,83.02,Medium,40.0,False,None
-108,Manoj Dong,Summer 2025,94.34,Low,15.0,False,None
-109,Nirmala Karki,Summer 2025,86.79,Low,15.0,False,None
-110,Omkar Pokharel,Summer 2025,85.85,Low,15.0,False,None
-111,Pabitra Dhakal,Summer 2025,90.57,Low,15.0,False,None
-112,Qasim Miya,Summer 2025,91.51,Low,15.0,False,None
-113,Ramesh Suwal,Summer 2025,87.74,Low,15.0,False,None
-114,Sanjay Khadka,Summer 2025,94.34,Low,15.0,False,None
-115,Tara Ghale,Summer 2025,75.47,Medium,40.0,False,None
-116,Ujjwal Basnet,Summer 2025,63.21,High,70.0,True,"Low overall attendance, High absence count"
-117,Bipin Sigdel,Summer 2025,91.51,Low,15.0,False,None
-118,Chetana Thagunna,Summer 2025,91.51,Low,15.0,False,None
-119,Dev Rai,Summer 2025,87.74,Low,15.0,False,None
-120,Esha Karki,Summer 2025,91.51,Low,15.0,False,None
-121,Ganesh Baral,Summer 2025,79.25,Medium,40.0,False,None
-122,Hari Bogati,Summer 2025,89.62,Low,15.0,False,None
-123,Indira Sapkota,Summer 2025,68.87,High,70.0,True,Low overall attendance
-124,Jeevan Giri,Summer 2025,80.19,Medium,40.0,False,None
-125,Kabita Chhetri,Summer 2025,71.7,High,70.0,True,Low overall attendance
-126,Lokesh Karki,Summer 2025,61.32,High,70.0,True,"Low overall attendance, High absence count"
-127,Mamata Shahi,Summer 2025,60.38,High,70.0,True,"Low overall attendance, High absence count"
-128,Nawaraj Bista,Summer 2025,94.34,Low,15.0,False,None
-103,Raunak Regmi,Summer 2025,53.77,Critical,90.0,True,"Low overall attendance, High absence count"
+96,Aayush Sharma,Autumn 2026,94.34,Low,15.0,False,None
+97,Binita Rijal,Autumn 2026,85.85,Low,15.0,False,None
+98,Aaditya Dhakal,Autumn 2026,77.36,Medium,40.0,False,None
+99,Dinesh Kunwar,Autumn 2026,78.3,Medium,40.0,False,None
+100,Elina Bista,Autumn 2026,83.02,Medium,40.0,False,None
+101,Firoj Ansari,Autumn 2026,77.36,Medium,40.0,False,None
+102,Gaurav Kafle,Autumn 2026,83.96,Medium,40.0,False,None
+104,Ishan Koirala,Autumn 2026,66.04,High,70.0,True,"Low overall attendance, High absence count"
+105,Juna Khadgi,Autumn 2026,91.51,Low,15.0,False,None
+106,Kamal Rokaya,Autumn 2026,79.25,Medium,40.0,False,None
+107,Lalita Budhathoki,Autumn 2026,83.02,Medium,40.0,False,None
+108,Manoj Dong,Autumn 2026,94.34,Low,15.0,False,None
+109,Nirmala Karki,Autumn 2026,86.79,Low,15.0,False,None
+110,Omkar Pokharel,Autumn 2026,85.85,Low,15.0,False,None
+111,Pabitra Dhakal,Autumn 2026,90.57,Low,15.0,False,None
+112,Qasim Miya,Autumn 2026,91.51,Low,15.0,False,None
+113,Ramesh Suwal,Autumn 2026,87.74,Low,15.0,False,None
+114,Sanjay Khadka,Autumn 2026,94.34,Low,15.0,False,None
+115,Tara Ghale,Autumn 2026,75.47,Medium,40.0,False,None
+116,Ujjwal Basnet,Autumn 2026,63.21,High,70.0,True,"Low overall attendance, High absence count"
+117,Bipin Sigdel,Autumn 2026,91.51,Low,15.0,False,None
+118,Chetana Thagunna,Autumn 2026,91.51,Low,15.0,False,None
+119,Dev Rai,Autumn 2026,87.74,Low,15.0,False,None
+120,Esha Karki,Autumn 2026,91.51,Low,15.0,False,None
+121,Ganesh Baral,Autumn 2026,79.25,Medium,40.0,False,None
+122,Hari Bogati,Autumn 2026,89.62,Low,15.0,False,None
+123,Indira Sapkota,Autumn 2026,68.87,High,70.0,True,Low overall attendance
+124,Jeevan Giri,Autumn 2026,80.19,Medium,40.0,False,None
+125,Kabita Chhetri,Autumn 2026,71.7,High,70.0,True,Low overall attendance
+126,Lokesh Karki,Autumn 2026,61.32,High,70.0,True,"Low overall attendance, High absence count"
+127,Mamata Shahi,Autumn 2026,60.38,High,70.0,True,"Low overall attendance, High absence count"
+128,Nawaraj Bista,Autumn 2026,94.34,Low,15.0,False,None
+103,Raunak Regmi,Autumn 2026,53.77,Critical,90.0,True,"Low overall attendance, High absence count"
