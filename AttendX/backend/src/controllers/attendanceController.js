@@ -168,6 +168,11 @@ exports.getAttendanceStats = async (req, res, next) => {
 exports.searchByEmail = async (req, res, next) => {
   try {
     const { email, date, page = 1, limit = 10 } = req.query;
+    // Omitting ?email= reached Sequelize as `where: { email: undefined }`, which throws and
+    // surfaced as a 500 rather than a 400.
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Query parameter "email" is required' });
+    }
     const student = await Student.findOne({ where: { email } });
     if (!student) {
       return res.status(404).json({ success: false, message: 'Student not found' });

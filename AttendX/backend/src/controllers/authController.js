@@ -15,6 +15,14 @@ exports.login = async (req, res, next) => {
 
     const { email, password, rememberMe } = req.body;
 
+    // No validator middleware is attached to this route, so the validationResult() call above
+    // never has anything to report and an empty body used to reach Sequelize as
+    // `where: { email: undefined }` — which throws, and the error handler turned that into a
+    // 500 on a public, unauthenticated endpoint. Reject it as the bad request it is.
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Email and password are required' });
+    }
+
     // Find user by email
     const user = await User.findOne({ where: { email } });
     if (!user) {

@@ -1,0 +1,6417 @@
+{
+  "generatedBy": "tests/int/authz-matrix.test.js",
+  "total": 169,
+  "census": {
+    "/": 1,
+    "/api-docs/swagger.json": 1,
+    "/api/admin": 18,
+    "/api/agent-tools": 4,
+    "/api/attendance": 9,
+    "/api/audit": 1,
+    "/api/auth": 10,
+    "/api/batches": 5,
+    "/api/chatbot": 9,
+    "/api/faculties": 6,
+    "/api/health": 1,
+    "/api/lecturers": 6,
+    "/api/messages": 7,
+    "/api/notifications": 3,
+    "/api/qr-sessions": 9,
+    "/api/reports": 19,
+    "/api/routine": 5,
+    "/api/samples": 2,
+    "/api/schedule": 3,
+    "/api/sections": 5,
+    "/api/sheets": 5,
+    "/api/student": 12,
+    "/api/students": 6,
+    "/api/subjects": 4,
+    "/api/sync": 8,
+    "/api/teacher": 10
+  },
+  "knownUntaggedGuards": {
+    "POST /api/notifications": [
+      "ADMIN"
+    ]
+  },
+  "unprobedMutatingRoutes": [
+    "POST /api/agent-tools/student-attendance",
+    "POST /api/auth/logout",
+    "PUT /api/auth/password",
+    "PUT /api/auth/profile",
+    "PUT /api/notifications/:id/read",
+    "POST /api/auth/login",
+    "POST /api/auth/reset-password"
+  ],
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/",
+      "mountPrefix": "/",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 200
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api-docs/swagger.json",
+      "mountPrefix": "/",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": true,
+      "observed": {
+        "anonymous": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 200
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/batches/:id/restore",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "guard",
+        "restoreBatch"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/lecturers/:id/restore",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "guard",
+        "restoreLecturer"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/notifications",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/notifications",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/notifications/:id/read-status",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/oversight/threads",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/oversight/threads/:id",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/sections/:id/restore",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "guard",
+        "restoreSection"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/students/:id/restore",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "guard",
+        "restoreStudent"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/subjects/:id/restore",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "guard",
+        "restoreSubject"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/teachers",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/teachers",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/teachers/:id",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/teachers/:id",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/teachers/:id/assignments",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/teachers/:id/assignments",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/admin/teachers/:id/assignments/:assignmentId",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/teachers/:id/resend-credentials",
+      "mountPrefix": "/api/admin",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/agent-tools/at-risk",
+      "mountPrefix": "/api/agent-tools",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/agent-tools/batch-summary",
+      "mountPrefix": "/api/agent-tools",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/agent-tools/course-performance",
+      "mountPrefix": "/api/agent-tools",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/agent-tools/student-attendance",
+      "mountPrefix": "/api/agent-tools",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "STUDENT": {
+          "expectation": "unprobed",
+          "status": null
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/attendance/add-sheet",
+      "mountPrefix": "/api/attendance",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/attendance/dashboard",
+      "mountPrefix": "/api/attendance",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/attendance/export",
+      "mountPrefix": "/api/attendance",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/attendance/filter",
+      "mountPrefix": "/api/attendance",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/attendance/search",
+      "mountPrefix": "/api/attendance",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 400
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/attendance/stats",
+      "mountPrefix": "/api/attendance",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/attendance/student-percentage/:email",
+      "mountPrefix": "/api/attendance",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/attendance/subject/:subjectCode",
+      "mountPrefix": "/api/attendance",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/attendance/upload",
+      "mountPrefix": "/api/attendance",
+      "handlerNames": [
+        "multerMiddleware",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/audit/logs",
+      "mountPrefix": "/api/audit",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "mountPrefix": "/api/auth",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": true,
+      "observed": {
+        "anonymous": {
+          "expectation": "reachable",
+          "status": 400
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "STUDENT": {
+          "expectation": "unprobed",
+          "status": null
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/logout",
+      "mountPrefix": "/api/auth",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "STUDENT": {
+          "expectation": "unprobed",
+          "status": null
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me",
+      "mountPrefix": "/api/auth",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 200
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/auth/password",
+      "mountPrefix": "/api/auth",
+      "handlerNames": [
+        "<anonymous>",
+        "<anonymous>"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "STUDENT": {
+          "expectation": "unprobed",
+          "status": null
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/auth/profile",
+      "mountPrefix": "/api/auth",
+      "handlerNames": [
+        "<anonymous>",
+        "<anonymous>"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "STUDENT": {
+          "expectation": "unprobed",
+          "status": null
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/reset-password",
+      "mountPrefix": "/api/auth",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": true,
+      "observed": {
+        "anonymous": {
+          "expectation": "reachable",
+          "status": 400
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "STUDENT": {
+          "expectation": "unprobed",
+          "status": null
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/users",
+      "mountPrefix": "/api/auth",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/users",
+      "mountPrefix": "/api/auth",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/auth/users/:id",
+      "mountPrefix": "/api/auth",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/auth/users/:id",
+      "mountPrefix": "/api/auth",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/batches",
+      "mountPrefix": "/api/batches",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/batches",
+      "mountPrefix": "/api/batches",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/batches/:id",
+      "mountPrefix": "/api/batches",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/batches/:id",
+      "mountPrefix": "/api/batches",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/batches/:id",
+      "mountPrefix": "/api/batches",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/chatbot/analytics",
+      "mountPrefix": "/api/chatbot",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/chatbot/chat",
+      "mountPrefix": "/api/chatbot",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/chatbot/chat/stream",
+      "mountPrefix": "/api/chatbot",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/chatbot/conversation",
+      "mountPrefix": "/api/chatbot",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/chatbot/conversation",
+      "mountPrefix": "/api/chatbot",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/chatbot/conversation/context",
+      "mountPrefix": "/api/chatbot",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/chatbot/health",
+      "mountPrefix": "/api/chatbot",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 503
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/chatbot/preview",
+      "mountPrefix": "/api/chatbot",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/chatbot/refresh",
+      "mountPrefix": "/api/chatbot",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/faculties",
+      "mountPrefix": "/api/faculties",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/faculties",
+      "mountPrefix": "/api/faculties",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/faculties/:id",
+      "mountPrefix": "/api/faculties",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/faculties/:id",
+      "mountPrefix": "/api/faculties",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/faculties/:id",
+      "mountPrefix": "/api/faculties",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/faculties/all",
+      "mountPrefix": "/api/faculties",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN",
+            "STUDENT"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN",
+        "STUDENT"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 200
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "mountPrefix": "/",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": true,
+      "observed": {
+        "anonymous": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 200
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/lecturers",
+      "mountPrefix": "/api/lecturers",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/lecturers",
+      "mountPrefix": "/api/lecturers",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/lecturers/:id",
+      "mountPrefix": "/api/lecturers",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/lecturers/:id",
+      "mountPrefix": "/api/lecturers",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/lecturers/:id/resend-credentials",
+      "mountPrefix": "/api/lecturers",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/lecturers/subjects/all",
+      "mountPrefix": "/api/lecturers",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/messages/contacts",
+      "mountPrefix": "/api/messages",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN",
+            "STUDENT",
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN",
+        "STUDENT",
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 200
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/messages/threads",
+      "mountPrefix": "/api/messages",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN",
+            "STUDENT",
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN",
+        "STUDENT",
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 200
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/messages/threads",
+      "mountPrefix": "/api/messages",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN",
+            "STUDENT",
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN",
+        "STUDENT",
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "STUDENT": {
+          "expectation": "unprobed",
+          "status": null
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/messages/threads/:id",
+      "mountPrefix": "/api/messages",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN",
+            "STUDENT",
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN",
+        "STUDENT",
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/messages/threads/:id",
+      "mountPrefix": "/api/messages",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN",
+            "STUDENT",
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN",
+        "STUDENT",
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "STUDENT": {
+          "expectation": "unprobed",
+          "status": null
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/messages/threads/:id/read",
+      "mountPrefix": "/api/messages",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN",
+            "STUDENT",
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN",
+        "STUDENT",
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "STUDENT": {
+          "expectation": "unprobed",
+          "status": null
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/messages/unread-count",
+      "mountPrefix": "/api/messages",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN",
+            "STUDENT",
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN",
+        "STUDENT",
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 200
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/notifications",
+      "mountPrefix": "/api",
+      "handlerNames": [
+        "getNotifications"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 200
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/notifications",
+      "mountPrefix": "/api",
+      "handlerNames": [
+        "ensureAdmin",
+        "createNotification"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/notifications/:id/read",
+      "mountPrefix": "/api",
+      "handlerNames": [
+        "markAsRead"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "STUDENT": {
+          "expectation": "unprobed",
+          "status": null
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/qr-sessions",
+      "mountPrefix": "/api/qr-sessions",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "TEACHER",
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "TEACHER",
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/qr-sessions",
+      "mountPrefix": "/api/qr-sessions",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/qr-sessions/:sessionId",
+      "mountPrefix": "/api/qr-sessions",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "TEACHER",
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "TEACHER",
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/qr-sessions/:sessionId/close",
+      "mountPrefix": "/api/qr-sessions",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/qr-sessions/:sessionId/late-request",
+      "mountPrefix": "/api/qr-sessions",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "STUDENT"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "STUDENT"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "unprobed",
+          "status": null
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/qr-sessions/:sessionId/refresh",
+      "mountPrefix": "/api/qr-sessions",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/qr-sessions/requests/:requestId",
+      "mountPrefix": "/api/qr-sessions",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/qr-sessions/requests/pending",
+      "mountPrefix": "/api/qr-sessions",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/qr-sessions/scan",
+      "mountPrefix": "/api/qr-sessions",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "route",
+          "roles": [
+            "STUDENT"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "STUDENT"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "unprobed",
+          "status": null
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/absent-students",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/batch",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 400
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/batch-comparison",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/daily-summary",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/date-range",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 400
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/faculty",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 400
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/leaderboard",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/low-attendance",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/monthly",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/section",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 400
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/section-comparison",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 400
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/student/aggregate",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 400
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/student/daily",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 400
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/student/subject-time",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 400
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/student/subject-wise",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 400
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/subject",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 400
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/top-performers",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/reports/trends",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/reports/weekly/run-now",
+      "mountPrefix": "/api/reports",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/routine",
+      "mountPrefix": "/api/routine",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/routine/:id",
+      "mountPrefix": "/api/routine",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/routine/:sectionId",
+      "mountPrefix": "/api/routine",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/routine/list",
+      "mountPrefix": "/api/routine",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/routine/upload",
+      "mountPrefix": "/api/routine",
+      "handlerNames": [
+        "multerMiddleware",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/attendance",
+      "mountPrefix": "/api/samples",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": true,
+      "observed": {
+        "anonymous": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 200
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/routine",
+      "mountPrefix": "/api/samples",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": true,
+      "observed": {
+        "anonymous": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 200
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/schedule/full",
+      "mountPrefix": "/api/schedule",
+      "handlerNames": [
+        "getFullSchedule"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 404
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/schedule/today",
+      "mountPrefix": "/api/schedule",
+      "handlerNames": [
+        "getTodaySchedule"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 404
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/schedule/week",
+      "mountPrefix": "/api/schedule",
+      "handlerNames": [
+        "getWeeklySchedule"
+      ],
+      "guards": [],
+      "declaredRoles": null,
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 404
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/sections",
+      "mountPrefix": "/api/sections",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/sections",
+      "mountPrefix": "/api/sections",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/sections/:id",
+      "mountPrefix": "/api/sections",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/sections/:id",
+      "mountPrefix": "/api/sections",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/sections/:id",
+      "mountPrefix": "/api/sections",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/sheets",
+      "mountPrefix": "/api/sheets",
+      "handlerNames": [
+        "getSheets"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/sheets",
+      "mountPrefix": "/api/sheets",
+      "handlerNames": [
+        "linkSheet"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/sheets/:id",
+      "mountPrefix": "/api/sheets",
+      "handlerNames": [
+        "deleteSheet"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/sheets/:id/toggle",
+      "mountPrefix": "/api/sheets",
+      "handlerNames": [
+        "toggleSheetStatus"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/sheets/sync",
+      "mountPrefix": "/api/sheets",
+      "handlerNames": [
+        "syncSheet"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/student/attendance/logs",
+      "mountPrefix": "/api/student",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "STUDENT"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "STUDENT"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 404
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/student/attendance/summary",
+      "mountPrefix": "/api/student",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "STUDENT"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "STUDENT"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 404
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/student/attendance/weekly-summary",
+      "mountPrefix": "/api/student",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "STUDENT"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "STUDENT"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 404
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/student/chat",
+      "mountPrefix": "/api/student",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "STUDENT"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "STUDENT"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "unprobed",
+          "status": null
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/student/chat/stream",
+      "mountPrefix": "/api/student",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "STUDENT"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "STUDENT"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "unprobed",
+          "status": null
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/student/conversation",
+      "mountPrefix": "/api/student",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "STUDENT"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "STUDENT"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "unprobed",
+          "status": null
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/student/conversation",
+      "mountPrefix": "/api/student",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "STUDENT"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "STUDENT"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 200
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/student/conversation/context",
+      "mountPrefix": "/api/student",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "STUDENT"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "STUDENT"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 200
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/student/dashboard",
+      "mountPrefix": "/api/student",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "STUDENT"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "STUDENT"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 404
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/student/profile",
+      "mountPrefix": "/api/student",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "STUDENT"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "STUDENT"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "reachable",
+          "status": 404
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/student/profile",
+      "mountPrefix": "/api/student",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "STUDENT"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "STUDENT"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "unprobed",
+          "status": null
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/student/profile/photo",
+      "mountPrefix": "/api/student",
+      "handlerNames": [
+        "multerMiddleware",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "STUDENT"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "STUDENT"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "unprobed",
+          "status": null
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/students",
+      "mountPrefix": "/api/students",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        },
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/students",
+      "mountPrefix": "/api/students",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        },
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/students/:id",
+      "mountPrefix": "/api/students",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        },
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/students/:id",
+      "mountPrefix": "/api/students",
+      "handlerNames": [
+        "guard",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        },
+        {
+          "scope": "route",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/students/profile",
+      "mountPrefix": "/api/students",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 400
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/students/profile",
+      "mountPrefix": "/api/students",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/subjects",
+      "mountPrefix": "/api/subjects",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/subjects",
+      "mountPrefix": "/api/subjects",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/subjects/:id",
+      "mountPrefix": "/api/subjects",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/subjects/:id",
+      "mountPrefix": "/api/subjects",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/sync/manual",
+      "mountPrefix": "/api/sync",
+      "handlerNames": [
+        "manualSync"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/sync/modify",
+      "mountPrefix": "/api/sync",
+      "handlerNames": [
+        "authenticateJWT",
+        "modifyScheduler"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/sync/queue-status",
+      "mountPrefix": "/api/sync",
+      "handlerNames": [
+        "authenticateJWT",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/sync/scheduler-status",
+      "mountPrefix": "/api/sync",
+      "handlerNames": [
+        "authenticateJWT",
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/sync/start",
+      "mountPrefix": "/api/sync",
+      "handlerNames": [
+        "authenticateJWT",
+        "startScheduler"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/sync/status",
+      "mountPrefix": "/api/sync",
+      "handlerNames": [
+        "getStatus"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/sync/status/:id",
+      "mountPrefix": "/api/sync",
+      "handlerNames": [
+        "getJob"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "reachable",
+          "status": 404
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/sync/stop",
+      "mountPrefix": "/api/sync",
+      "handlerNames": [
+        "authenticateJWT",
+        "stopScheduler"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "ADMIN"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "ADMIN"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "TEACHER": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/teacher/at-risk",
+      "mountPrefix": "/api/teacher",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/teacher/attendance",
+      "mountPrefix": "/api/teacher",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 400
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/teacher/attendance",
+      "mountPrefix": "/api/teacher",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/teacher/classes",
+      "mountPrefix": "/api/teacher",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/teacher/classes/:sectionId/:subjectId/students",
+      "mountPrefix": "/api/teacher",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 403
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/teacher/dashboard",
+      "mountPrefix": "/api/teacher",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/teacher/notifications",
+      "mountPrefix": "/api/teacher",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/teacher/profile",
+      "mountPrefix": "/api/teacher",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 200
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/api/teacher/profile",
+      "mountPrefix": "/api/teacher",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "unprobed",
+          "status": null
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/teacher/reports",
+      "mountPrefix": "/api/teacher",
+      "handlerNames": [
+        "<anonymous>"
+      ],
+      "guards": [
+        {
+          "scope": "router",
+          "roles": [
+            "TEACHER"
+          ]
+        }
+      ],
+      "declaredRoles": [
+        "TEACHER"
+      ],
+      "isPublic": false,
+      "observed": {
+        "anonymous": {
+          "expectation": "unauthenticated",
+          "status": 401
+        },
+        "ADMIN": {
+          "expectation": "forbidden",
+          "status": 403
+        },
+        "TEACHER": {
+          "expectation": "reachable",
+          "status": 400
+        },
+        "STUDENT": {
+          "expectation": "forbidden",
+          "status": 403
+        }
+      }
+    }
+  ]
+}
