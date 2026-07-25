@@ -85,7 +85,7 @@ export class ReportService {
 
   /** Manually trigger the auto-weekly report job for every student. */
   runWeeklyReportsNow() {
-    return this.api.post<{ generated: number; weekStart: string; weekEnd: string }>('/reports/weekly/run-now', {});
+    return this.api.post<{ generated: number; emailsSent: number; emailsFailed: number; weekStart: string; weekEnd: string }>('/reports/weekly/run-now', {});
   }
 }
 

@@ -161,7 +161,11 @@ export class DashboardComponent implements OnInit {
     this.sendingWeekly.set(true);
     this.reports.runWeeklyReportsNow().subscribe({
       next: (res) => {
-        this.toast.success(`Weekly reports sent to ${res.data.generated} students`);
+        const { emailsSent, emailsFailed } = res.data;
+        const emailNote = emailsFailed
+          ? `${emailsSent} emails sent, ${emailsFailed} failed`
+          : `${emailsSent} emails sent`;
+        this.toast.success(`Weekly reports generated for ${res.data.generated} students — ${emailNote}`);
         this.sendingWeekly.set(false);
       },
       error: () => {

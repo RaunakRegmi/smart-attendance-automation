@@ -11,6 +11,7 @@ const Subject = require('../models/Subject');
 const Batch = require('../models/Batch');
 const Section = require('../models/Section');
 const Notification = require('../models/Notification');
+const emailService = require('./emailService');
 
 const TIMEZONE = 'Asia/Kathmandu';
 
@@ -42,6 +43,26 @@ function buildReportBody({ pct, attended, total, absent, late, weeklyTrend, wors
     lines.push(`Watch out for ${worst.code}: ${worst.pct.toFixed(0)}% this week`);
   }
   return lines.join('\n');
+}
+
+function buildReportHtml({ studentName, weekStart, weekEnd, pct, attended, total, absent, late, weeklyTrend, worst, status }) {
+  const trendLine = weeklyTrend !== null
+    ? `<p>${weeklyTrend > 0 ? '▲' : weeklyTrend < 0 ? '▼' : '—'} ${Math.abs(weeklyTrend).toFixed(1)}% vs last week</p>`
+    : '';
+  const worstLine = worst && worst.pct < 75
+    ? `<p>Watch out for <strong>${worst.code}</strong>: ${worst.pct.toFixed(0)}% this week</p>`
+    : '';
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 480px;">
+      <h2>Weekly Attendance Report</h2>
+      <p>Hi ${studentName || 'there'},</p>
+      <p><strong>${weekStart.format('MMM D')} – ${weekEnd.format('MMM D')}</strong> — status: <strong>${status}</strong></p>
+      <p>Attended ${attended}/${total} classes (${pct.toFixed(1)}%)${absent > 0 ? ` • Absent: ${absent} • Late: ${late}` : ''}</p>
+      ${trendLine}
+      ${worstLine}
+      <p style="color:#888;font-size:12px;">Sent by AttendX</p>
+    </div>
+  `;
 }
 
 async function generateForStudent(student, { weekStart, weekEnd, prevStart, prevEnd }) {
@@ -97,7 +118,8 @@ async function generateForStudent(student, { weekStart, weekEnd, prevStart, prev
   });
   const worst = subjArr.length > 0 ? subjArr.sort((a, b) => a.pct - b.pct)[0] : null;
 
-  const title = `Weekly Report (${weekStart.format('MMM D')} – ${weekEnd.format('MMM D')}) • ${statusForPercent(pct)}`;
+  const status = statusForPercent(pct);
+  const title = `Weekly Report (${weekStart.format('MMM D')} – ${weekEnd.format('MMM D')}) • ${status}`;
   const description = buildReportBody({ pct, attended, total, absent, late, weeklyTrend, worst });
 
   // Idempotent: if a weekly report for this same week already exists for
@@ -120,7 +142,21 @@ async function generateForStudent(student, { weekStart, weekEnd, prevStart, prev
       isRead: false,
     });
   }
-  return { studentId: student.id, attended, total, pct };
+
+  let emailResult = null;
+  const studentEmail = student.User?.email;
+  if (studentEmail) {
+    const html = buildReportHtml({
+      studentName: student.name,
+      weekStart, weekEnd, pct, attended, total, absent, late, weeklyTrend, worst, status,
+    });
+    emailResult = await emailService.send(studentEmail, title, html);
+    if (!emailResult.ok) {
+      console.error(`Weekly report email failed for student ${student.id} (${studentEmail}): ${emailResult.error}`);
+    }
+  }
+
+  return { studentId: student.id, attended, total, pct, email: emailResult };
 }
 
 /**
@@ -162,10 +198,18 @@ async function generateAllWeeklyReports(options = {}) {
   });
 
   let generated = 0;
+  let emailsSent = 0;
+  let emailsFailed = 0;
   for (const s of students) {
     try {
       const res = await generateForStudent(s, { weekStart, weekEnd, prevStart, prevEnd });
-      if (res) generated++;
+      if (res) {
+        generated++;
+        if (res.email) {
+          if (res.email.ok) emailsSent++;
+          else emailsFailed++;
+        }
+      }
     } catch (err) {
       console.error(`Weekly report failed for student ${s.id}: ${err.message}`);
     }
@@ -173,6 +217,8 @@ async function generateAllWeeklyReports(options = {}) {
 
   return {
     generated,
+    emailsSent,
+    emailsFailed,
     weekStart: weekStart.format('YYYY-MM-DD'),
     weekEnd: weekEnd.format('YYYY-MM-DD'),
   };
