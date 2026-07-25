@@ -14,7 +14,9 @@ const studentRoutes = require('./routes/studentRoutes');
 const batchRoutes = require('./routes/batchRoutes');
 const sectionRoutes = require('./routes/sectionRoutes');
 const routineRoutes = require('./routes/routineRoutes');
+const sheetsRoutes = require('./routes/sheetsRoutes');
 const auditRoutes = require('./routes/auditRoutes');
+const syncRoutes = require('./routes/syncRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
 const lecturerRoutes = require('./routes/lecturerRoutes');
 const facultyRoutes = require('./routes/facultyRoutes');
@@ -30,6 +32,7 @@ const teacherRoutes = require('./routes/teacherRoutes');
 const messagesRoutes = require('./routes/messagesRoutes');
 const adminTeacherRoutes = require('./routes/adminTeacherRoutes');
 const qrSessionRoutes = require('./routes/qrSessionRoutes');
+const schedulerService = require('./services/schedulerService');
 const errorHandler = require('./middleware/errorHandler');
 const User = require('./models/User');
 const Student = require('./models/Student');
@@ -40,6 +43,7 @@ const Routine = require('./models/Routine');
 const Subject = require('./models/Subject');
 const Lecturer = require('./models/Lecturer');
 const Faculty = require('./models/Faculty');
+const Sheets = require('./models/Sheets');
 
 const Attendance = require('./models/Attendance');
 const AuditLog = require('./models/AuditLog');
@@ -146,6 +150,12 @@ Student.belongsTo(Faculty, { foreignKey: 'facultyId' });
 Lecturer.hasMany(Subject, { foreignKey: 'lecturerId' });
 Subject.belongsTo(Lecturer, { foreignKey: 'lecturerId' });
 
+// Sheets associations
+Batch.hasMany(Sheets, { foreignKey: 'batchId' });
+Sheets.belongsTo(Batch, { foreignKey: 'batchId' });
+Section.hasMany(Sheets, { foreignKey: 'sectionId' });
+Sheets.belongsTo(Section, { foreignKey: 'sectionId' });
+
 // Chat memory associations
 User.hasMany(Conversation, { foreignKey: 'userId' });
 Conversation.belongsTo(User, { foreignKey: 'userId' });
@@ -187,8 +197,10 @@ app.use('/api/students', studentRoutes);
 app.use('/api/batches', batchRoutes);
 app.use('/api/sections', sectionRoutes);
 app.use('/api/routine', routineRoutes);
+app.use('/api/sheets', sheetsRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/schedule', scheduleRoutes);
+app.use('/api/sync', syncRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/lecturers', lecturerRoutes);
@@ -231,8 +243,15 @@ const startServer = async () => {
       console.log('Database schema synced (alter mode)');
     }
     if (process.env.DISABLE_BACKGROUND_JOBS === 'true') {
-      // Test/CI mode: no background jobs
+      // Test/CI mode: no scheduler and no BullMQ workers (no Redis required).
       console.log('Background jobs disabled (DISABLE_BACKGROUND_JOBS=true)');
+    } else {
+      // Start the attendance sync scheduler (auto sync)
+      schedulerService.start();
+      // Start BullMQ worker to process sheet sync jobs
+      require('./workers/sheetSyncWorker');
+      // Start BullMQ worker to process sheet append jobs
+      require('./workers/sheetAppendWorker');
     }
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
@@ -244,3 +263,10 @@ const startServer = async () => {
 };
 
 startServer();
+
+// Graceful shutdown for scheduler
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received: stopping scheduler service');
+  await schedulerService.stop();
+  process.exit(0);
+});

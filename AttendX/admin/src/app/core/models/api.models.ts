@@ -127,6 +127,42 @@ export interface ProfileResponse {
   student?: StudentProfile;
 }
 
+export interface SheetRecord {
+  id: string;
+  sheetName: string;
+  sheetId: string;
+  batchId: string;
+  sectionId: string;
+  status: 'active' | 'inactive';
+  lastSuccessfulSyncTime?: string;
+  lastAttemptedSyncTime?: string;
+  Batch?: Batch;
+  Section?: Section;
+  metadata?: { url?: string };
+}
+
+/** Sync job row from GET /api/sync/status */
+export interface SyncJob {
+  id?: number;
+  sheetId?: string;
+  status?: string;
+  syncType?: string;
+  scheduledTime?: string;
+  startTime?: string;
+  endTime?: string;
+  failureDetails?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface QueueStatus {
+  totalJobs?: number;
+  waiting?: number;
+  active?: number;
+  completed?: number;
+  failed?: number;
+}
+
 export interface ReportStudent {
   id: number;
   name: string;

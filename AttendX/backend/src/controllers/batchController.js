@@ -1,5 +1,6 @@
 const Batch = require('../models/Batch');
 const Section = require('../models/Section');
+const Sheets = require('../models/Sheets');
 const { Op } = require('sequelize');
 
 exports.createBatch = async (req, res, next) => {
@@ -120,12 +121,20 @@ exports.deleteBatch = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Batch not found' });
     }
 
-    // Check blocking conditions: sections exist
+    // Check blocking conditions: sections OR sheets exist
     const sectionCount = await Section.count({ where: { batchId: id } });
     if (sectionCount > 0) {
       return res.status(409).json({
         success: false,
         message: `Delete sections under "${batch.name}" first`,
+      });
+    }
+
+    const sheetCount = await Sheets.count({ where: { batchId: id } });
+    if (sheetCount > 0) {
+      return res.status(409).json({
+        success: false,
+        message: `Unlink sheets from "${batch.name}" first`,
       });
     }
 

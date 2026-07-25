@@ -28,7 +28,7 @@
           <a
             [routerLink]="item.route"
             routerLinkActive="active"
-            [routerLinkActiveOptions]="item.route === '/routines' ? { paths: 'subset', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' } : { exact: true }"
+            [routerLinkActiveOptions]="item.route === '/sheets' || item.route === '/routines' ? { paths: 'subset', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' } : { exact: true }"
             class="sidebar__link"
             [attr.title]="item.label"
           >

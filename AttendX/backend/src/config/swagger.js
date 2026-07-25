@@ -204,6 +204,42 @@ const options = {
             updatedAt: { type: 'string', format: 'date-time' },
           },
         },
+        SyncJob: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 1 },
+            sheetId: { type: 'string', format: 'uuid', example: '123e4567-e89b-12d3-a456-426614174003' },
+            syncType: { type: 'string', enum: ['AUTO', 'MANUAL'], example: 'AUTO' },
+            scheduledTime: { type: 'string', format: 'date-time', example: '2026-05-13T06:00:00.000Z' },
+            startTime: { type: 'string', format: 'date-time', nullable: true },
+            endTime: { type: 'string', format: 'date-time', nullable: true },
+            status: { type: 'string', enum: ['PENDING', 'RUNNING', 'SUCCESS', 'FAILED', 'SKIPPED'], example: 'PENDING' },
+            retryCount: { type: 'integer', example: 0 },
+            failureDetails: { type: 'string', nullable: true },
+            lastAttemptTime: { type: 'string', format: 'date-time', nullable: true },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        QueueStatus: {
+          type: 'object',
+          properties: {
+            totalJobs: { type: 'integer', example: 5 },
+            waiting: { type: 'integer', example: 2 },
+            active: { type: 'integer', example: 1 },
+            completed: { type: 'integer', example: 1 },
+            failed: { type: 'integer', example: 1 },
+          },
+        },
+        SchedulerStatus: {
+          type: 'object',
+          properties: {
+            running: { type: 'boolean', example: true },
+            timezone: { type: 'string', example: 'Asia/Kathmandu' },
+            syncTime: { type: 'string', example: '06:00' },
+            nextRun: { type: 'string', format: 'date-time', nullable: true },
+          },
+        },
         Lecturer: {
           type: 'object',
           properties: {

@@ -93,7 +93,7 @@
 @if (deleteTarget()) {
   <app-confirm-dialog
     title="Delete Batch"
-    [message]="'Delete ' + deleteTarget()!.name + '? Remove all sections first.'"
+    [message]="'Delete ' + deleteTarget()!.name + '? Remove all sections and sheets first.'"
     confirmLabel="Delete"
     [loading]="deleting()"
     loadingLabel="Deleting..."

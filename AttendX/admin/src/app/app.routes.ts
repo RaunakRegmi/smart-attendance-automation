@@ -105,6 +105,31 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/routines/routines-list/routines-list.component').then((m) => m.RoutinesListComponent),
       },
+      {
+        path: 'sheets/add',
+        loadComponent: () =>
+          import('./features/sheets/sheets-add/sheets-add.component').then((m) => m.SheetsAddComponent),
+      },
+      {
+        path: 'sheets/:id',
+        loadComponent: () =>
+          import('./features/sheets/sheet-detail/sheet-detail.component').then((m) => m.SheetDetailComponent),
+      },
+      {
+        path: 'sheets',
+        loadComponent: () =>
+          import('./features/sheets/sheets-list/sheets-list.component').then((m) => m.SheetsListComponent),
+      },
+      {
+        path: 'jobs/sync',
+        loadComponent: () =>
+          import('./features/jobs/sync-jobs/sync-jobs.component').then((m) => m.SyncJobsComponent),
+      },
+      {
+        path: 'jobs/scheduler',
+        loadComponent: () =>
+          import('./features/jobs/scheduler-page/scheduler-page.component').then((m) => m.SchedulerPageComponent),
+      },
     ],
   },
   {
