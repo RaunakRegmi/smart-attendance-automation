@@ -176,7 +176,9 @@ ollama pull llama3.2 > /tmp/attendx-ollama-llm.log 2>&1 && \
 # ── [5/7] Chatbot + Admin ──
 echo -e "${YELLOW}[5/7]${NC} Chatbot + Admin"
 kill_port "$CHATBOT_PORT"
-(cd "$CHATBOT_DIR" && "$PYTHON" chatbot_app.py) > /tmp/attendx-chatbot.log 2>&1 &
+# Chatbot runs natively while the backend runs in Docker (published on $BACKEND_PORT),
+# so agent tools must reach the backend over localhost, not the compose hostname.
+(cd "$CHATBOT_DIR" && BACKEND_INTERNAL_URL="http://localhost:${BACKEND_PORT}" "$PYTHON" chatbot_app.py) > /tmp/attendx-chatbot.log 2>&1 &
 CHATBOT_PID=$!
 wait_for "http://localhost:${CHATBOT_PORT}/health" "RAG Chatbot" 30
 

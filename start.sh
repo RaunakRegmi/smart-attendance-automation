@@ -134,8 +134,11 @@ echo -e "${YELLOW}[5/5]${NC} Chatbot + Admin"
 
 # Chatbot (FastAPI on 8000)
 lsof -ti :8000 2>/dev/null | xargs kill -9 2>/dev/null || true
+# The backend runs in Docker (published on host 5001), the chatbot runs natively here,
+# so its agent tools must call the backend via localhost — the compose-network
+# hostname `backend` does not resolve from the host.
 (
-  cd "$CHATBOT_DIR" && "$PYTHON" chatbot_app.py
+  cd "$CHATBOT_DIR" && BACKEND_INTERNAL_URL="http://localhost:5001" "$PYTHON" chatbot_app.py
 ) > /tmp/attendx-chatbot.log 2>&1 &
 CHATBOT_PID=$!
 echo -e "  ${GREEN}${ok}${NC} Chatbot starting (PID $CHATBOT_PID, log: /tmp/attendx-chatbot.log)"

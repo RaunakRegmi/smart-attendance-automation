@@ -13,6 +13,7 @@ Then open http://localhost:8000
 import asyncio
 import json
 import os
+import re
 import urllib.error
 import urllib.request
 import uuid
@@ -33,6 +34,10 @@ COLLECTION_NAME = os.getenv("COLLECTION_NAME", "student_data")
 EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
 LLM_MODEL = os.getenv("LLM_MODEL", "llama3.2")
 N_RESULTS = int(os.getenv("N_RESULTS", "5"))
+# Max embedding distance for a retrieved doc to count as relevant. Tuned for
+# nomic-embed-text on this corpus (on-topic ~250-350, off-topic ~450+); raise it if
+# real questions start coming back unanswered, lower it if answers drift off-topic.
+RAG_MAX_DISTANCE = float(os.getenv("RAG_MAX_DISTANCE", "400"))
 # Context window fed to the model. Default ~2048 silently truncates long history,
 # which is the root cause of "forgetting"; raise it (env-tunable; lower to 4096 if
 # CPU latency hurts).
@@ -41,7 +46,12 @@ NUM_CTX = int(os.getenv("NUM_CTX", os.getenv("OLLAMA_NUM_CTX", "8192")))
 # Agent tool-use: the model can call read-only tools that fetch live data from the
 # Node backend (which owns Postgres + auth). The caller's JWT is forwarded so the
 # backend's RBAC is the single authority (a student literally can't read other data).
-BACKEND_INTERNAL_URL = os.getenv("BACKEND_INTERNAL_URL", "http://backend:5000")
+#
+# The default targets the *host* (start.sh runs this app natively while the backend
+# runs in Docker, published on 5001). docker-compose overrides it with
+# http://backend:5000 for the on-network case — a hostname that does NOT resolve
+# outside the compose network, so it must never be the fallback.
+BACKEND_INTERNAL_URL = os.getenv("BACKEND_INTERNAL_URL", "http://localhost:5001")
 TOOLS_ENABLED = os.getenv("TOOLS_ENABLED", "true").lower() == "true"
 MAX_TOOL_ITERS = int(os.getenv("MAX_TOOL_ITERS", "4"))
 TOOL_RESULT_CAP = int(os.getenv("TOOL_RESULT_CAP", "4000"))
@@ -91,7 +101,12 @@ ADMIN_SYSTEM_PROMPT = (
     "For greetings or casual messages (e.g. \"hey\", \"hello\", \"how are you\"), respond warmly and briefly, "
     "and let the admin know what you can help with.\n"
     "For data questions, use the tools or provided context to answer. Be concise and specific.\n"
-    "If a data question cannot be answered, say \"I don't have that information.\""
+    "If an ATTENDANCE DATA question cannot be answered, say \"I don't have that information.\" "
+    "Never say that about ordinary conversation — see MEMORY below.\n\n"
+    "MEMORY: the messages in this conversation are your reliable memory. Anything the admin told you "
+    "earlier in this conversation is a fact you know — recall it directly and confidently. Never claim you "
+    "have no memory, no access to earlier turns, or no knowledge of the admin's stated preferences. "
+    "Only attendance figures require a tool; remembering what was said does not."
 )
 
 app = FastAPI(title="Smart Campus RAG Chatbot")
@@ -130,8 +145,21 @@ def retrieve_context(query: str) -> str:
         return ""
     resp = ollama.embeddings(model=EMBED_MODEL, prompt=query)
     query_embedding = resp["embedding"]
-    results = coll.query(query_embeddings=[query_embedding], n_results=N_RESULTS)
-    return "\n\n---\n\n".join(results["documents"][0])
+    results = coll.query(
+        query_embeddings=[query_embedding],
+        n_results=N_RESULTS,
+        include=["documents", "distances"],
+    )
+    docs = results["documents"][0]
+    dists = (results.get("distances") or [None])[0]
+    if not dists:
+        return "\n\n---\n\n".join(docs)  # fail open if the backend omits distances
+    # Chroma returns the N nearest docs regardless of how unrelated they are, so an
+    # off-topic query ("favourite colour") still gets handed real student records and
+    # the model mines them for an answer. Drop anything past the relevance cutoff:
+    # measured on this corpus, on-topic queries score ~250-350 and off-topic ~450+.
+    kept = [d for d, dist in zip(docs, dists) if dist <= RAG_MAX_DISTANCE]
+    return "\n\n---\n\n".join(kept)
 
 
 def build_user_content(context: str, question: str) -> str:
@@ -506,10 +534,19 @@ def build_agent_messages(history: list, scope: str, student_email: str | None, r
     system = _system_prompt_for(scope, student_email, user_email)
     if not inject_rag:
         system += (
-            "\n\nYou have tools to look up live attendance data. For any question about "
-            "specific numbers, students, batches, or courses, CALL the appropriate tool to "
-            "get exact values instead of guessing. Use search_knowledge_base for broad or "
-            "qualitative questions. After using tools, answer concisely from the results."
+            "\n\nTOOLS: you have tools that look up live attendance data. They are OPTIONAL — most "
+            "turns need no tool at all.\n"
+            "CALL a tool only when the admin is asking for attendance facts you do not already have: "
+            "specific numbers, named students, batches, courses, or at-risk lists. Then answer concisely "
+            "from the results.\n"
+            "Do NOT call any tool for: greetings and small talk (\"hey\", \"hello\", \"how are you\", "
+            "\"thanks\", \"sup\"); questions about yourself or what you can do; questions about the "
+            "conversation itself or anything the admin already told you; or follow-ups you can answer "
+            "from the results of a tool you already called this turn. In those cases just reply in words.\n"
+            "Never call search_knowledge_base with an empty or vague query — if you have no specific "
+            "thing to look up, you do not need the tool.\n"
+            "Emit tool calls only through the tool-calling interface. NEVER write tool calls, function "
+            "names, or JSON like {\"name\": ...} into your reply text — the admin sees that text."
         )
     if running_summary:
         system += f"\n\nConversation so far (summary of earlier turns):\n{running_summary}"
@@ -556,8 +593,13 @@ async def agent_respond(request: Request):
 
     # Tools are admin-only: admins do cross-student analytics; students only ever need
     # their own data (own-doc RAG is more reliable than the small model's tool-calling).
-    use_tools = TOOLS_ENABLED and bool(jwt) and scope == "admin" and tools_supported()
-    messages = build_agent_messages(history, scope, student_email, running_summary, inject_rag=not use_tools, user_email=user_email)
+    # Small talk gets neither tools nor retrieved context (see _agent_stream_gen).
+    small_talk = _is_small_talk(history)
+    use_tools = TOOLS_ENABLED and bool(jwt) and scope == "admin" and not small_talk and tools_supported()
+    messages = build_agent_messages(
+        history, scope, student_email, running_summary,
+        inject_rag=not use_tools and not small_talk, user_email=user_email,
+    )
     try:
         if use_tools:
             reply, usage = await asyncio.to_thread(run_tool_loop, messages, scope, student_email, jwt, num_ctx)
@@ -607,8 +649,16 @@ def build_tool_specs(scope: str) -> list:
             "parameters": {"type": "object", "properties": {"email": {"type": "string"}, "sno": {"type": "integer"}}, "required": []}}},
         {"type": "function", "function": {
             "name": "list_at_risk_students",
-            "description": "Students below an attendance threshold (default 80), optionally filtered by batch.",
-            "parameters": {"type": "object", "properties": {"threshold": {"type": "number"}, "batch": {"type": "string"}, "limit": {"type": "integer"}}, "required": []}}},
+            "description": (
+                "Students whose overall attendance is BELOW a percentage threshold, optionally filtered by batch. "
+                "threshold is a percentage from 1-100 and acts as an upper bound. "
+                "Use 60 for 'critical' risk, 80 for 'at risk' / 'below threshold' (80 is the institutional pass mark). "
+                "Never pass 0 — it means 'below 0%' and always returns nobody. Omit threshold to default to 80."
+            ),
+            "parameters": {"type": "object", "properties": {
+                "threshold": {"type": "number", "description": "Upper-bound percentage, 1-100. 60=critical, 80=at risk. Defaults to 80."},
+                "batch": {"type": "string"},
+                "limit": {"type": "integer"}}, "required": []}}},
         {"type": "function", "function": {
             "name": "get_batch_summary",
             "description": "Per-batch average attendance and at-risk counts.",
@@ -641,17 +691,32 @@ def _post_node(path: str, args: dict, jwt: str) -> dict:
             return json.loads(r.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         try:
-            return {"error": json.loads(e.read().decode("utf-8")).get("message", f"HTTP {e.code}")}
+            msg = json.loads(e.read().decode("utf-8")).get("message", f"HTTP {e.code}")
         except Exception:
-            return {"error": f"HTTP {e.code}"}
+            msg = f"HTTP {e.code}"
+        # Log it: the model turns a tool error into a vague "I can't access that"
+        # apology, which is indistinguishable from the tool never being called.
+        print(f"[agent-tool] {path} failed: {msg}", flush=True)
+        return {"error": msg}
     except Exception as e:
-        return {"error": str(e)}
+        print(f"[agent-tool] {path} unreachable at {url}: {e}", flush=True)
+        return {"error": f"{e} (url={url})"}
 
 
 def exec_tool(name: str, args: dict, scope: str, student_email, jwt) -> dict:
     if name == "search_knowledge_base":
         ctx = _rag_context_for(scope, student_email, (args or {}).get("query", ""))
-        return {"results": ctx or "No matching information found."}
+        if ctx:
+            return {"results": ctx}
+        # The knowledge base holds attendance records only, so a miss usually means the
+        # question wasn't an attendance question. Say so, or the model reports the failed
+        # lookup to the admin ("I couldn't confirm that in the system's data") even when
+        # the answer was sitting in the conversation all along.
+        return {"results": None, "note": (
+            "No attendance records matched — this question is outside the knowledge base, "
+            "which contains only attendance data. Do NOT mention this lookup or say data is "
+            "missing. Just answer from the conversation above using your own knowledge."
+        )}
     path = _TOOL_ENDPOINTS.get(name)
     if not path:
         return {"error": f"unknown tool: {name}"}
@@ -689,6 +754,59 @@ def _coerce_args(raw):
     return {}
 
 
+# Small models sometimes "call" a tool by typing the JSON into their reply instead of
+# using the tool-calling interface. That text is user-visible, so strip it out.
+_TEXT_TOOL_CALL_RE = re.compile(
+    r'\{\s*"(?:name|function)"\s*:\s*"[^"]+"\s*(?:,\s*"(?:parameters|arguments)"\s*:\s*\{.*?\}\s*)?\}',
+    re.DOTALL,
+)
+
+
+def _strip_tool_json(text: str) -> str:
+    """Remove leaked text-form tool calls and tidy the whitespace they leave behind."""
+    if not text or "{" not in text:
+        return text
+    cleaned = _TEXT_TOOL_CALL_RE.sub("", text)
+    # Drop wrapper fences left empty by the substitution.
+    cleaned = re.sub(r"```(?:json)?\s*```", "", cleaned)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    return cleaned.strip()
+
+
+# Pure small talk — no attendance lookup could possibly help. Deliberately narrow
+# (whole-message match on short phrases) so real questions are never caught by it.
+_SMALL_TALK_RE = re.compile(
+    r"^(?:"
+    r"hey+|hi+|hello+|yo+|sup|wass?up|what'?s up|"
+    r"how are you( doing)?|how'?s it going|how do you do|"
+    r"good (morning|afternoon|evening|day)|greetings|"
+    r"thanks?( a lot| you( very much)?)?|thx|ty|cheers|"
+    r"ok|okay|kk|cool|nice|great|awesome|perfect|got it|"
+    r"bye+|goodbye|see ya|see you|later|good ?night|"
+    r"lol|lmao|haha+|hehe+|nvm|never mind"
+    r")[\s!.?,]*$",
+    re.IGNORECASE,
+)
+
+
+def _is_small_talk(history: list) -> bool:
+    """True when the newest user turn is bare small talk, so tools stay detached."""
+    for m in reversed(history or []):
+        if m.get("role") == "user":
+            text = (m.get("content") or "").strip()
+            return bool(text) and len(text) <= 40 and bool(_SMALL_TALK_RE.match(text))
+    return False
+
+
+def _is_pointless_search(name: str, args: dict) -> bool:
+    """True for search_knowledge_base with no real query — a compulsive call that
+    embeds an empty string, returns noise, and shows the admin a spurious chip."""
+    if name != "search_knowledge_base":
+        return False
+    q = (args or {}).get("query")
+    return not isinstance(q, str) or len(q.strip()) < 3
+
+
 def _chunk_text(text: str):
     """Yield ~12-char chunks (on word boundaries) so a non-streamed final answer
     still types out in the UI."""
@@ -714,15 +832,21 @@ def run_tool_loop(messages, scope, student_email, jwt, num_ctx):
         usage["completion_tokens"] = getattr(resp, "eval_count", None)
         tcs = getattr(msg, "tool_calls", None)
         if not tcs:
-            return (msg.content or ""), usage
+            return _strip_tool_json(msg.content or ""), usage
         convo.append({"role": "assistant", "content": msg.content or "", "tool_calls": tcs})
         for tc in tcs:
             name = tc.function.name
             args = _coerce_args(tc.function.arguments)
+            if _is_pointless_search(name, args):
+                convo.append({"role": "tool", "name": name, "content": json.dumps({
+                    "skipped": "No query supplied, so no lookup was needed. "
+                               "Answer the admin directly in words, using the conversation above."
+                })})
+                continue
             obs = exec_tool(name, args, scope, student_email, jwt)
             convo.append({"role": "tool", "content": json.dumps(obs)[:TOOL_RESULT_CAP], "name": name})
     resp = ollama.chat(model=LLM_MODEL, messages=convo, options={"num_ctx": num_ctx})
-    return (resp.message.content or ""), usage
+    return _strip_tool_json(resp.message.content or ""), usage
 
 
 def _sse(event: str, data: dict) -> str:
@@ -741,8 +865,14 @@ def _agent_stream_gen(history, scope, student_email, running_summary, num_ctx, j
             return
         # Tools are admin-only: admins do cross-student analytics; students only ever need
         # their own data (own-doc RAG is more reliable than the small model's tool-calling).
-        use_tools = TOOLS_ENABLED and bool(jwt) and scope == "admin" and tools_supported()
-        messages = build_agent_messages(history, scope, student_email, running_summary, inject_rag=not use_tools, user_email=user_email)
+        # Small talk gets neither tools nor retrieved context. Injecting either is what
+        # made "hey" come back with at-risk batch statistics.
+        small_talk = _is_small_talk(history)
+        use_tools = TOOLS_ENABLED and bool(jwt) and scope == "admin" and not small_talk and tools_supported()
+        messages = build_agent_messages(
+            history, scope, student_email, running_summary,
+            inject_rag=not use_tools and not small_talk, user_email=user_email,
+        )
 
         if use_tools:
             tools = build_tool_specs(scope)
@@ -761,23 +891,44 @@ def _agent_stream_gen(history, scope, student_email, running_summary, num_ctx, j
                 for tc in tcs:
                     name = tc.function.name
                     args = _coerce_args(tc.function.arguments)
+                    if _is_pointless_search(name, args):
+                        # Don't run it and don't show a chip — just steer the model back
+                        # to answering conversationally.
+                        convo.append({"role": "tool", "name": name, "content": json.dumps({
+                            "skipped": "No query supplied, so no lookup was needed. "
+                                       "Answer the admin directly in words, using the conversation above."
+                        })})
+                        continue
                     yield _sse("tool_call", {"name": name, "args": args})
                     obs = exec_tool(name, args, scope, student_email, jwt)
                     yield _sse("tool_result", {"name": name, "result": obs})
                     convo.append({"role": "tool", "content": json.dumps(obs)[:TOOL_RESULT_CAP], "name": name})
+            if final_text is not None:
+                final_text = _strip_tool_json(final_text)
+                if not final_text:
+                    # The model produced nothing usable (or only a leaked tool call).
+                    # Ask once more without tools so the admin always gets real prose.
+                    retry = ollama.chat(
+                        model=LLM_MODEL,
+                        messages=convo + [{"role": "user", "content":
+                                           "Reply to my last message now, in plain words. Do not call any tool."}],
+                        options={"num_ctx": num_ctx},
+                    )
+                    final_text = _strip_tool_json(retry.message.content or "").strip()
+                    usage["prompt_tokens"] = getattr(retry, "prompt_eval_count", None) or usage["prompt_tokens"]
+                    usage["completion_tokens"] = getattr(retry, "eval_count", None) or usage["completion_tokens"]
             if final_text is None:
-                # Hit the iteration cap — force a final answer without tools, streamed.
-                stream = ollama.chat(model=LLM_MODEL, messages=convo, stream=True, options={"num_ctx": num_ctx})
-                for chunk in stream:
-                    c = chunk.message.content
-                    if c:
-                        yield _sse("token", {"delta": c})
-                    if getattr(chunk, "done", False):
-                        usage["prompt_tokens"] = getattr(chunk, "prompt_eval_count", None)
-                        usage["completion_tokens"] = getattr(chunk, "eval_count", None)
-            else:
-                for piece in _chunk_text(final_text):
-                    yield _sse("token", {"delta": piece})
+                # Hit the iteration cap — force a final answer without tools. Buffered
+                # rather than streamed so a leaked tool call can be stripped before the
+                # admin sees it; re-chunked below so it still types out.
+                capped = ollama.chat(model=LLM_MODEL, messages=convo, options={"num_ctx": num_ctx})
+                usage["prompt_tokens"] = getattr(capped, "prompt_eval_count", None) or usage["prompt_tokens"]
+                usage["completion_tokens"] = getattr(capped, "eval_count", None) or usage["completion_tokens"]
+                final_text = _strip_tool_json(capped.message.content or "").strip()
+                if not final_text:
+                    final_text = "I wasn't able to put that together. Could you rephrase?"
+            for piece in _chunk_text(final_text):
+                yield _sse("token", {"delta": piece})
             yield _sse("usage", usage)
             yield _sse("done", {})
             return

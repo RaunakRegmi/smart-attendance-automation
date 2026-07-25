@@ -53,7 +53,17 @@ exports.studentAttendance = async (req, res) => {
 // listAtRiskStudents (ADMIN) — students below a threshold, optionally by batch.
 exports.atRiskStudents = async (req, res) => {
   try {
-    const threshold = Number(req.body?.threshold ?? 80);
+    // Small local models routinely emit threshold:0 here, which means "below 0%",
+    // returns nobody, and reads to the model as a truthful "no one is at risk" —
+    // a confidently wrong answer. Treat out-of-range values as unset (80) and tell
+    // the caller which threshold was actually applied.
+    const rawThreshold = req.body?.threshold;
+    const asNum = Number(rawThreshold);
+    const valid = rawThreshold !== undefined && rawThreshold !== null
+      && Number.isFinite(asNum) && asNum > 0 && asNum <= 100;
+    const threshold = valid ? asNum : 80;
+    const coerced = rawThreshold !== undefined && rawThreshold !== null && !valid;
+
     const limit = Number(req.body?.limit ?? 20);
     const batch = req.body?.batch ? String(req.body.batch).toLowerCase() : null;
     const students = await buildPayload();
@@ -64,7 +74,11 @@ exports.atRiskStudents = async (req, res) => {
       if (pct < threshold) rows.push({ name: s.name, email: s.email, batch: s.batch, percentage: pct });
     }
     rows.sort((a, b) => a.percentage - b.percentage);
-    res.json({ threshold, count: rows.length, students: rows.slice(0, limit) });
+    const out = { threshold, count: rows.length, students: rows.slice(0, limit) };
+    if (coerced) {
+      out.note = `Requested threshold ${rawThreshold} is out of range; used ${threshold}% instead. Report ${threshold}% as the threshold.`;
+    }
+    res.json(out);
   } catch (err) {
     res.json({ error: err.message });
   }
