@@ -1,44 +1,11 @@
-const { execSync, spawn } = require('child_process');
+const { execSync } = require('child_process');
 const path = require('path');
 const { Client } = require('pg');
-
-const TEST_PORT = process.env.TEST_PORT || '5998';
-const DB = {
-  host: process.env.DB_HOST || 'localhost',
-  port: Number(process.env.DB_PORT || 5432),
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'admin',
-  name: process.env.TEST_DB_NAME || 'attendance_db_test',
-};
-
-const testEnv = {
-  ...process.env,
-  NODE_ENV: 'test',
-  PORT: TEST_PORT,
-  DB_HOST: DB.host,
-  DB_PORT: String(DB.port),
-  DB_USER: DB.user,
-  DB_PASSWORD: DB.password,
-  DB_NAME: DB.name,
-  JWT_SECRET: process.env.JWT_SECRET || 'test_jwt_secret',
-  DB_SYNC_ALTER: 'false',
-  DISABLE_BACKGROUND_JOBS: 'true',
-};
-
-const waitForHealth = async (retries = 40) => {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const res = await fetch(`http://127.0.0.1:${TEST_PORT}/api/health`);
-      if (res.ok) return;
-    } catch (_) {
-      // not up yet
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-  throw new Error('Test server did not become healthy in time');
-};
+const { DB, apply } = require('./testEnv');
 
 module.exports = async () => {
+  apply();
+
   // Fresh test database every run.
   const client = new Client({
     host: DB.host,
@@ -53,14 +20,13 @@ module.exports = async () => {
   await client.end();
 
   const backendRoot = path.join(__dirname, '..');
-  execSync('npx sequelize-cli db:migrate', { cwd: backendRoot, env: testEnv, stdio: 'pipe' });
+  execSync('npx sequelize-cli db:migrate', { cwd: backendRoot, env: process.env, stdio: 'pipe' });
 
-  // Boot the real server (it seeds the admin user itself on startup).
-  const server = spawn('node', ['src/index.js'], { cwd: backendRoot, env: testEnv, stdio: 'pipe' });
-  server.stderr.on('data', (d) => process.stderr.write(`[test-server] ${d}`));
-  global.__TEST_SERVER__ = server;
-  // The spawned pid is also stashed for the teardown process (separate context).
-  process.env.__TEST_SERVER_PID__ = String(server.pid);
-
-  await waitForHealth();
+  // The server used to be spawned as a child process, which seeded the admin user as a side
+  // effect of booting — and put every request across a process boundary where coverage could
+  // not be collected. Tests now drive the app in-process via Supertest, so seed explicitly.
+  const sequelize = require('../src/config/database');
+  const ensureAdminUser = require('../src/bootstrap/ensureAdminUser');
+  await ensureAdminUser();
+  await sequelize.close();
 };

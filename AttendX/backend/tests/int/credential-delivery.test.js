@@ -1,15 +1,17 @@
 /**
  * Teacher credential delivery (email/SMS demo providers) + password reset.
- * Runs against the same server booted by tests/globalSetup.js — MAIL_PROVIDER
- * and SMS_PROVIDER default to "demo", so sends are console-logged and the SMS
- * body (with the reset link) is returned in the API response for assertions.
+ *
+ * Drives the real Express app in-process via Supertest. MAIL_PROVIDER and SMS_PROVIDER are
+ * pinned to "demo" by tests/testEnv.js and asserted in tests/setupAfterEnv.js, so sends are
+ * console-logged and the SMS body (with the reset link) is returned in the API response for
+ * assertions — never delivered.
  */
 const request = require('supertest');
 const crypto = require('crypto');
-const { Client } = require('pg');
+const app = require('../../src/app');
+const { query } = require('../helpers/db');
 
-const BASE = `http://127.0.0.1:${process.env.TEST_PORT || 5998}`;
-const api = () => request(BASE);
+const api = () => request(app);
 const auth = (token) => ({ Authorization: `Bearer ${token}` });
 
 const ADMIN = { email: 'admin@example.com', password: 'admin@123' };
@@ -145,20 +147,11 @@ describe('password reset via delivered token', () => {
     // Plant a token with a past expiry directly in the DB.
     const raw = crypto.randomBytes(32).toString('hex');
     const hash = crypto.createHash('sha256').update(raw).digest('hex');
-    const client = new Client({
-      host: process.env.DB_HOST || 'localhost',
-      port: Number(process.env.DB_PORT || 5432),
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || 'admin',
-      database: process.env.TEST_DB_NAME || 'attendance_db_test',
-    });
-    await client.connect();
-    await client.query(
+    await query(
       `INSERT INTO password_reset_tokens ("userId", "tokenHash", "expiresAt", "createdAt", "updatedAt")
        VALUES ($1, $2, NOW() - INTERVAL '1 hour', NOW(), NOW())`,
       [teacherId, hash]
     );
-    await client.end();
 
     const res = await api()
       .post('/api/auth/reset-password')

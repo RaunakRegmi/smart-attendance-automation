@@ -1,0 +1,430 @@
+{
+  "Attendance": {
+    "Student": {
+      "as": "Student",
+      "foreignKey": "studentId",
+      "associationType": "BelongsTo",
+      "target": "Student"
+    },
+    "Subject": {
+      "as": "Subject",
+      "foreignKey": "subjectId",
+      "associationType": "BelongsTo",
+      "target": "Subject"
+    }
+  },
+  "AttendanceRequest": {
+    "QRSession": {
+      "as": "QRSession",
+      "foreignKey": "qrSessionId",
+      "associationType": "BelongsTo",
+      "target": "QRSession"
+    },
+    "Student": {
+      "as": "Student",
+      "foreignKey": "studentId",
+      "associationType": "BelongsTo",
+      "target": "Student"
+    },
+    "decider": {
+      "as": "decider",
+      "foreignKey": "decidedBy",
+      "associationType": "BelongsTo",
+      "target": "User"
+    }
+  },
+  "AttendanceSession": {
+    "QRSession": {
+      "as": "QRSession",
+      "foreignKey": "qrSessionId",
+      "associationType": "BelongsTo",
+      "target": "QRSession"
+    },
+    "Student": {
+      "as": "Student",
+      "foreignKey": "studentId",
+      "associationType": "BelongsTo",
+      "target": "Student"
+    }
+  },
+  "AuditLog": {},
+  "Batch": {
+    "Sections": {
+      "as": "Sections",
+      "foreignKey": "batchId",
+      "associationType": "HasMany",
+      "target": "Section"
+    },
+    "Sheets": {
+      "as": "Sheets",
+      "foreignKey": "batchId",
+      "associationType": "HasMany",
+      "target": "Sheets"
+    },
+    "Students": {
+      "as": "Students",
+      "foreignKey": "batchId",
+      "associationType": "HasMany",
+      "target": "Student"
+    }
+  },
+  "ChatMessage": {
+    "Conversation": {
+      "as": "Conversation",
+      "foreignKey": "conversationId",
+      "associationType": "BelongsTo",
+      "target": "Conversation"
+    }
+  },
+  "Conversation": {
+    "ChatMessages": {
+      "as": "ChatMessages",
+      "foreignKey": "conversationId",
+      "associationType": "HasMany",
+      "target": "ChatMessage"
+    },
+    "User": {
+      "as": "User",
+      "foreignKey": "userId",
+      "associationType": "BelongsTo",
+      "target": "User"
+    }
+  },
+  "Faculty": {
+    "Students": {
+      "as": "Students",
+      "foreignKey": "facultyId",
+      "associationType": "HasMany",
+      "target": "Student"
+    }
+  },
+  "Lecturer": {
+    "Subjects": {
+      "as": "Subjects",
+      "foreignKey": "lecturerId",
+      "associationType": "HasMany",
+      "target": "Subject"
+    },
+    "User": {
+      "as": "User",
+      "foreignKey": "userId",
+      "associationType": "BelongsTo",
+      "target": "User"
+    }
+  },
+  "MessageThread": {
+    "contextSubject": {
+      "as": "contextSubject",
+      "foreignKey": "contextId",
+      "associationType": "BelongsTo",
+      "target": "Subject"
+    },
+    "creator": {
+      "as": "creator",
+      "foreignKey": "createdBy",
+      "associationType": "BelongsTo",
+      "target": "User"
+    },
+    "messages": {
+      "as": "messages",
+      "foreignKey": "threadId",
+      "associationType": "HasMany",
+      "target": "ThreadMessage"
+    },
+    "participants": {
+      "as": "participants",
+      "foreignKey": "threadId",
+      "associationType": "HasMany",
+      "target": "MessageThreadParticipant"
+    }
+  },
+  "MessageThreadParticipant": {
+    "MessageThread": {
+      "as": "MessageThread",
+      "foreignKey": "threadId",
+      "associationType": "BelongsTo",
+      "target": "MessageThread"
+    },
+    "User": {
+      "as": "User",
+      "foreignKey": "userId",
+      "associationType": "BelongsTo",
+      "target": "User"
+    }
+  },
+  "Notification": {},
+  "PasswordResetToken": {
+    "User": {
+      "as": "User",
+      "foreignKey": "userId",
+      "associationType": "BelongsTo",
+      "target": "User"
+    }
+  },
+  "QRSession": {
+    "AttendanceRequests": {
+      "as": "AttendanceRequests",
+      "foreignKey": "qrSessionId",
+      "associationType": "HasMany",
+      "target": "AttendanceRequest"
+    },
+    "AttendanceSessions": {
+      "as": "AttendanceSessions",
+      "foreignKey": "qrSessionId",
+      "associationType": "HasMany",
+      "target": "AttendanceSession"
+    },
+    "Section": {
+      "as": "Section",
+      "foreignKey": "sectionId",
+      "associationType": "BelongsTo",
+      "target": "Section"
+    },
+    "Subject": {
+      "as": "Subject",
+      "foreignKey": "subjectId",
+      "associationType": "BelongsTo",
+      "target": "Subject"
+    },
+    "creator": {
+      "as": "creator",
+      "foreignKey": "createdBy",
+      "associationType": "BelongsTo",
+      "target": "User"
+    }
+  },
+  "Routine": {
+    "Section": {
+      "as": "Section",
+      "foreignKey": "sectionId",
+      "associationType": "BelongsTo",
+      "target": "Section"
+    }
+  },
+  "Section": {
+    "Batch": {
+      "as": "Batch",
+      "foreignKey": "batchId",
+      "associationType": "BelongsTo",
+      "target": "Batch"
+    },
+    "QRSessions": {
+      "as": "QRSessions",
+      "foreignKey": "sectionId",
+      "associationType": "HasMany",
+      "target": "QRSession"
+    },
+    "Routines": {
+      "as": "Routines",
+      "foreignKey": "sectionId",
+      "associationType": "HasMany",
+      "target": "Routine"
+    },
+    "Sheets": {
+      "as": "Sheets",
+      "foreignKey": "sectionId",
+      "associationType": "HasMany",
+      "target": "Sheets"
+    },
+    "Students": {
+      "as": "Students",
+      "foreignKey": "sectionId",
+      "associationType": "HasMany",
+      "target": "Student"
+    },
+    "TeacherAssignments": {
+      "as": "TeacherAssignments",
+      "foreignKey": "sectionId",
+      "associationType": "HasMany",
+      "target": "TeacherAssignment"
+    }
+  },
+  "Setting": {},
+  "Sheets": {
+    "Batch": {
+      "as": "Batch",
+      "foreignKey": "batchId",
+      "associationType": "BelongsTo",
+      "target": "Batch"
+    },
+    "Section": {
+      "as": "Section",
+      "foreignKey": "sectionId",
+      "associationType": "BelongsTo",
+      "target": "Section"
+    }
+  },
+  "Student": {
+    "AttendanceRequests": {
+      "as": "AttendanceRequests",
+      "foreignKey": "studentId",
+      "associationType": "HasMany",
+      "target": "AttendanceRequest"
+    },
+    "AttendanceSessions": {
+      "as": "AttendanceSessions",
+      "foreignKey": "studentId",
+      "associationType": "HasMany",
+      "target": "AttendanceSession"
+    },
+    "Attendances": {
+      "as": "Attendances",
+      "foreignKey": "studentId",
+      "associationType": "HasMany",
+      "target": "Attendance"
+    },
+    "Batch": {
+      "as": "Batch",
+      "foreignKey": "batchId",
+      "associationType": "BelongsTo",
+      "target": "Batch"
+    },
+    "Faculty": {
+      "as": "Faculty",
+      "foreignKey": "facultyId",
+      "associationType": "BelongsTo",
+      "target": "Faculty"
+    },
+    "Section": {
+      "as": "Section",
+      "foreignKey": "sectionId",
+      "associationType": "BelongsTo",
+      "target": "Section"
+    },
+    "User": {
+      "as": "User",
+      "foreignKey": "userId",
+      "associationType": "BelongsTo",
+      "target": "User"
+    }
+  },
+  "Subject": {
+    "Attendances": {
+      "as": "Attendances",
+      "foreignKey": "subjectId",
+      "associationType": "HasMany",
+      "target": "Attendance"
+    },
+    "Lecturer": {
+      "as": "Lecturer",
+      "foreignKey": "lecturerId",
+      "associationType": "BelongsTo",
+      "target": "Lecturer"
+    },
+    "QRSessions": {
+      "as": "QRSessions",
+      "foreignKey": "subjectId",
+      "associationType": "HasMany",
+      "target": "QRSession"
+    },
+    "TeacherAssignments": {
+      "as": "TeacherAssignments",
+      "foreignKey": "subjectId",
+      "associationType": "HasMany",
+      "target": "TeacherAssignment"
+    },
+    "batch": {
+      "as": "batch",
+      "foreignKey": "batchId",
+      "associationType": "BelongsTo",
+      "target": "Batch"
+    },
+    "section": {
+      "as": "section",
+      "foreignKey": "sectionId",
+      "associationType": "BelongsTo",
+      "target": "Section"
+    }
+  },
+  "SyncJob": {},
+  "TeacherAssignment": {
+    "Section": {
+      "as": "Section",
+      "foreignKey": "sectionId",
+      "associationType": "BelongsTo",
+      "target": "Section"
+    },
+    "Subject": {
+      "as": "Subject",
+      "foreignKey": "subjectId",
+      "associationType": "BelongsTo",
+      "target": "Subject"
+    },
+    "teacher": {
+      "as": "teacher",
+      "foreignKey": "teacherUserId",
+      "associationType": "BelongsTo",
+      "target": "User"
+    }
+  },
+  "ThreadMessage": {
+    "MessageThread": {
+      "as": "MessageThread",
+      "foreignKey": "threadId",
+      "associationType": "BelongsTo",
+      "target": "MessageThread"
+    },
+    "sender": {
+      "as": "sender",
+      "foreignKey": "senderId",
+      "associationType": "BelongsTo",
+      "target": "User"
+    }
+  },
+  "User": {
+    "Conversations": {
+      "as": "Conversations",
+      "foreignKey": "userId",
+      "associationType": "HasMany",
+      "target": "Conversation"
+    },
+    "Lecturer": {
+      "as": "Lecturer",
+      "foreignKey": "userId",
+      "associationType": "HasOne",
+      "target": "Lecturer"
+    },
+    "MessageThreadParticipants": {
+      "as": "MessageThreadParticipants",
+      "foreignKey": "userId",
+      "associationType": "HasMany",
+      "target": "MessageThreadParticipant"
+    },
+    "PasswordResetTokens": {
+      "as": "PasswordResetTokens",
+      "foreignKey": "userId",
+      "associationType": "HasMany",
+      "target": "PasswordResetToken"
+    },
+    "Student": {
+      "as": "Student",
+      "foreignKey": "userId",
+      "associationType": "HasOne",
+      "target": "Student"
+    },
+    "decisions": {
+      "as": "decisions",
+      "foreignKey": "decidedBy",
+      "associationType": "HasMany",
+      "target": "AttendanceRequest"
+    },
+    "sentThreadMessages": {
+      "as": "sentThreadMessages",
+      "foreignKey": "senderId",
+      "associationType": "HasMany",
+      "target": "ThreadMessage"
+    },
+    "sessions": {
+      "as": "sessions",
+      "foreignKey": "createdBy",
+      "associationType": "HasMany",
+      "target": "QRSession"
+    },
+    "teacherAssignments": {
+      "as": "teacherAssignments",
+      "foreignKey": "teacherUserId",
+      "associationType": "HasMany",
+      "target": "TeacherAssignment"
+    }
+  }
+}

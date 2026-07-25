@@ -18,16 +18,49 @@ const sheetSyncQueue = require('../queues/sheetSyncQueue');
 
 // No dedicated Log model; logging will be done via console and SyncJob entries
 
-// Load service account credentials
+// Service account credentials, loaded lazily.
+//
+// keys.json is gitignored, so reading it at module load meant a fresh clone could not boot at
+// all — requiring this file threw before any code ran. The read is now deferred to the first
+// call that actually talks to Google and memoized after that, so the process starts fine
+// without credentials and only the sheets endpoints fail (with a clear message).
 const keysPath = path.join(__dirname, '../utils/keys.json');
-const keys = JSON.parse(fs.readFileSync(keysPath, 'utf8'));
+let googleClient = null;
 
-const auth = new google.auth.GoogleAuth({
-  credentials: keys,
-  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-});
-const sheetsAPI = google.sheets({ version: 'v4', auth });
-const serviceAccountEmail = keys.client_email || 'service account';
+const loadGoogleClient = () => {
+  if (googleClient) return googleClient;
+
+  let keys;
+  try {
+    keys = JSON.parse(fs.readFileSync(keysPath, 'utf8'));
+  } catch (error) {
+    throw new Error(
+      `Google service account credentials unavailable at ${keysPath}: ${error.message}. ` +
+      'Google Sheets features are disabled until the key file is provided.'
+    );
+  }
+
+  const auth = new google.auth.GoogleAuth({
+    credentials: keys,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
+  googleClient = {
+    sheetsAPI: google.sheets({ version: 'v4', auth }),
+    serviceAccountEmail: keys.client_email || 'service account',
+  };
+  return googleClient;
+};
+
+const getSheetsAPI = () => loadGoogleClient().sheetsAPI;
+
+const getServiceAccountEmail = () => {
+  try {
+    return loadGoogleClient().serviceAccountEmail;
+  } catch (_) {
+    // Only ever used to build an error message; never mask the original failure.
+    return 'service account';
+  }
+};
 
 // Global reference for sync service (to be initialized)
 let syncService = null;
@@ -102,11 +135,11 @@ async function syncSheet(sheetId, syncType = 'AUTO', syncJobId = null, lastSynce
     }
 
     // Fetch sheet metadata and values
-    const sheetInfo = await sheetsAPI.spreadsheets.get({ spreadsheetId: sheet.sheetId });
+    const sheetInfo = await getSheetsAPI().spreadsheets.get({ spreadsheetId: sheet.sheetId });
     const firstSheetTitle = sheetInfo.data.sheets[0].properties.title;
     const quotedSheetTitle = `'${firstSheetTitle.replace(/'/g, "''")}'`;
     console.log('SYNC STARTED: Fetching Google Sheets data for sheetId:', sheetId);
-    const res = await sheetsAPI.spreadsheets.values.get({
+    const res = await getSheetsAPI().spreadsheets.values.get({
       spreadsheetId: sheet.sheetId,
       range: `${quotedSheetTitle}!A:AL`,
     });
@@ -266,7 +299,7 @@ function handleSheetsApiError(error, action) {
   const message = error?.response?.data?.error?.message || error.message;
   if (error?.response?.status === 403 || /permission/i.test(message)) {
     throw new Error(
-      `Google Sheets permission denied while ${action}. Share the spreadsheet with the service account: ${serviceAccountEmail}`
+      `Google Sheets permission denied while ${action}. Share the spreadsheet with the service account: ${getServiceAccountEmail()}`
     );
   }
   throw error;
@@ -297,7 +330,7 @@ async function linkSheet(url, batchId, sectionId) {
     // Verify we can access the sheet and fetch its title
     let sheetTitle = url;
     try {
-      const sheetInfo = await sheetsAPI.spreadsheets.get({ spreadsheetId: googleSheetId });
+      const sheetInfo = await getSheetsAPI().spreadsheets.get({ spreadsheetId: googleSheetId });
       sheetTitle = sheetInfo.data.properties?.title || url;
     } catch (error) {
       handleSheetsApiError(error, 'accessing the spreadsheet');
@@ -431,12 +464,12 @@ async function appendStudentToSheets(student) {
 
   for (const sheet of sheets) {
     try {
-      const sheetInfo = await sheetsAPI.spreadsheets.get({ spreadsheetId: sheet.sheetId });
+      const sheetInfo = await getSheetsAPI().spreadsheets.get({ spreadsheetId: sheet.sheetId });
       const firstSheetTitle = sheetInfo.data.sheets[0].properties.title;
       const sheetInternalId = sheetInfo.data.sheets[0].properties.sheetId;
       const quotedSheetTitle = `'${firstSheetTitle.replace(/'/g, "''")}'`;
 
-      const res = await sheetsAPI.spreadsheets.values.get({
+      const res = await getSheetsAPI().spreadsheets.values.get({
         spreadsheetId: sheet.sheetId,
         range: `${quotedSheetTitle}!A:AL`,
       });
@@ -475,7 +508,7 @@ async function appendStudentToSheets(student) {
 
         // Insert row before any summary/counter rows (position lastDataIdx + 1, 0-indexed)
         const insertAt = lastDataIdx + 1;
-        await sheetsAPI.spreadsheets.batchUpdate({
+        await getSheetsAPI().spreadsheets.batchUpdate({
           spreadsheetId: sheet.sheetId,
           requestBody: {
             requests: [{
@@ -486,7 +519,7 @@ async function appendStudentToSheets(student) {
             }]
           }
         });
-        await sheetsAPI.spreadsheets.values.update({
+        await getSheetsAPI().spreadsheets.values.update({
           spreadsheetId: sheet.sheetId,
           range: `${quotedSheetTitle}!A${insertAt + 1}`,
           valueInputOption: 'USER_ENTERED',
@@ -536,7 +569,7 @@ async function appendStudentToSheets(student) {
 
         // Insert row before any summary/counter rows (position lastDataIdx + 1, 0-indexed)
         const insertAt = lastDataIdx + 1;
-        await sheetsAPI.spreadsheets.batchUpdate({
+        await getSheetsAPI().spreadsheets.batchUpdate({
           spreadsheetId: sheet.sheetId,
           requestBody: {
             requests: [{
@@ -547,7 +580,7 @@ async function appendStudentToSheets(student) {
             }]
           }
         });
-        await sheetsAPI.spreadsheets.values.update({
+        await getSheetsAPI().spreadsheets.values.update({
           spreadsheetId: sheet.sheetId,
           range: `${quotedSheetTitle}!A${insertAt + 1}`,
           valueInputOption: 'USER_ENTERED',

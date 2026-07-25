@@ -1,16 +1,16 @@
 /**
  * Teacher portal + messaging integration tests.
  *
- * Runs against the real server (booted by tests/globalSetup.js on TEST_PORT
- * with a freshly migrated attendance_db_test). Fixtures are created through
- * the public API with the seeded admin account, exactly as production
- * clients would.
+ * Drives the real Express app in-process (Supertest binds it to an ephemeral port per
+ * request) against the freshly migrated attendance_db_test from tests/globalSetup.js.
+ * Fixtures are created through the public API with the seeded admin account, exactly as
+ * production clients would.
  */
 const request = require('supertest');
-const { Client } = require('pg');
+const app = require('../../src/app');
+const { query } = require('../helpers/db');
 
-const BASE = `http://127.0.0.1:${process.env.TEST_PORT || 5998}`;
-const api = () => request(BASE);
+const api = () => request(app);
 
 const ADMIN = { email: 'admin@example.com', password: 'admin@123' };
 const TEACHER_A = { email: 'teacher.a@example.com', password: 'teacherA@123', name: 'Teacher Aabha' };
@@ -61,19 +61,28 @@ beforeAll(async () => {
     .post('/api/sections')
     .set(auth(adminToken))
     .send({ name: 'T-B', batchId });
+  expect(otherSectionRes.status).toBe(201);
   otherSectionId = otherSectionRes.body.data.id;
 
+  // batchId/sectionId are mandatory since 20260722000000-add-section-to-subjects; a subject
+  // now belongs to exactly one section.
   const subjectRes = await api()
     .post('/api/subjects')
     .set(auth(adminToken))
-    .send({ subjectCode: 'TST101', subjectName: 'Testing Fundamentals' });
+    .send({ subjectCode: 'TST101', subjectName: 'Testing Fundamentals', batchId, sectionId });
   expect(subjectRes.status).toBe(201);
   subjectId = (subjectRes.body.data.subject || subjectRes.body.data).id;
 
   const otherSubjectRes = await api()
     .post('/api/subjects')
     .set(auth(adminToken))
-    .send({ subjectCode: 'TST202', subjectName: 'Untaught Subject' });
+    .send({
+      subjectCode: 'TST202',
+      subjectName: 'Untaught Subject',
+      batchId,
+      sectionId: otherSectionId,
+    });
+  expect(otherSubjectRes.status).toBe(201);
   otherSubjectId = (otherSubjectRes.body.data.subject || otherSubjectRes.body.data).id;
 
   // Teacher accounts (admin-created, temp password).
@@ -113,16 +122,7 @@ beforeAll(async () => {
     .send({ email: STUDENT.email, password: STUDENT.password, role: 'STUDENT' });
   studentUserId = studentUserRes.body.data.id;
 
-  const client = new Client({
-    host: process.env.DB_HOST || 'localhost',
-    port: Number(process.env.DB_PORT || 5432),
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'admin',
-    database: process.env.TEST_DB_NAME || 'attendance_db_test',
-  });
-  await client.connect();
-  await client.query('UPDATE students SET "userId" = $1 WHERE id = $2', [studentUserId, studentId]);
-  await client.end();
+  await query('UPDATE students SET "userId" = $1 WHERE id = $2', [studentUserId, studentId]);
 
   ({ token: teacherAToken } = await login(TEACHER_A.email, TEACHER_A.password));
   ({ token: teacherBToken } = await login(TEACHER_B.email, TEACHER_B.password));

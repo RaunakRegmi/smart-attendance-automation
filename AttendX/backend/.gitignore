@@ -15,3 +15,5 @@ exports/
 .claude-uploads/
 .claude-exports/
 src/utils/keys.json
+# Jest coverage output
+coverage/
