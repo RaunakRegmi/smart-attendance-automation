@@ -8,6 +8,7 @@
     "start": "node src/index.js",
     "dev": "node node_modules/nodemon/bin/nodemon.js src/index.js",
     "seed": "node src/utils/seedData.js",
+    "backfill:qr": "node src/utils/backfillQrAttendance.js",
     "migrate": "npx sequelize-cli db:migrate",
     "test": "jest --runInBand --coverage",
     "test:unit": "jest --runInBand --selectProjects unit",

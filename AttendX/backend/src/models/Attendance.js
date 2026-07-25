@@ -51,6 +51,10 @@ const Attendance = sequelize.define('Attendance', {
     afterCreate: () => refresh.trigger(),
     afterBulkCreate: () => refresh.trigger(),
     afterUpdate: () => refresh.trigger(),
+    // upsert fires neither afterCreate nor afterUpdate in Sequelize 6 — without
+    // this, the Excel upload, the Sheets sync and the QR roll-up (all of which
+    // write via upsert) would never rebuild the chatbot's knowledge base.
+    afterUpsert: () => refresh.trigger(),
     afterDestroy: () => refresh.trigger(),
     afterBulkDestroy: () => refresh.trigger(),
   },

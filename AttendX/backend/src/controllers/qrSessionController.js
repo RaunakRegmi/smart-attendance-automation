@@ -10,6 +10,7 @@ const Section = require('../models/Section');
 const Batch = require('../models/Batch');
 const Notification = require('../models/Notification');
 const scopeService = require('../services/teacherScopeService');
+const attendanceRollup = require('../services/attendanceRollupService');
 
 const QR_TOKEN_EXPIRY = '5s';
 const LATE_THRESHOLD_MINUTES = 5;
@@ -250,6 +251,26 @@ exports.closeSession = async (req, res, next) => {
       }
     }
 
+    // Publish the session into `attendance` so it reaches the reports, the
+    // dashboards and the chatbot. Must run after the Absent back-fill above so
+    // non-scanners are carried over too.
+    //
+    // A failure here must not fail the request — the session is already closed
+    // and the scans are safely in `attendance_sessions`. Instead we surface it,
+    // and `npm run backfill:qr` re-runs the (idempotent) roll-up.
+    let rollup;
+    try {
+      const { written } = await attendanceRollup.rollupSession(session.id);
+      rollup = { ok: true, recordsPublished: written };
+    } catch (rollupErr) {
+      console.error(
+        `[qr] Roll-up into attendance FAILED for session ${session.id} — ` +
+        `reports will not show it until backfilled:`,
+        rollupErr.message
+      );
+      rollup = { ok: false, recordsPublished: 0, error: rollupErr.message };
+    }
+
     res.json({
       success: true,
       message: 'Session closed',
@@ -258,6 +279,7 @@ exports.closeSession = async (req, res, next) => {
         isActive: false,
         startTime: session.startTime,
         endTime: now,
+        rollup,
       },
     });
   } catch (error) {
