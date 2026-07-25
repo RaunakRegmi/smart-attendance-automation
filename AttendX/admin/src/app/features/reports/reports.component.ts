@@ -272,61 +272,176 @@ export class ReportsComponent implements OnInit {
     this.generate();
   }
 
+  /**
+   * One CSV field, RFC 4180: always quoted, embedded quotes doubled. Values were
+   * previously interpolated bare, so a student named "Regmi, Raunak" shifted every
+   * column after it.
+   */
+  private csvCell(value: unknown): string {
+    return `"${(value ?? '').toString().replace(/"/g, '""')}"`;
+  }
+
+  private csvSerialize(header: string[], rows: unknown[][]): string {
+    return [header, ...rows].map((row) => row.map((c) => this.csvCell(c)).join(',')).join('\r\n');
+  }
+
+  /**
+   * Column layout for a sub-report, mirroring its on-screen table.
+   *
+   * Every one of the 16 sub-reports is covered. Six of them (subject-report,
+   * daily-summary, date-range, absent-students, section-comparison,
+   * batch-comparison) previously had no case at all and fell through to a
+   * JSON.stringify dump written into a file named .csv.
+   */
+  private csvTable(sub: string, data: any): { header: string[]; rows: unknown[][] } | null {
+    switch (sub) {
+      case 'student-daily':
+        return {
+          header: ['Subject', 'Status', 'Date'],
+          rows: (data.attendance ?? []).map((r: any) => [r.subject?.code, r.status, r.date]),
+        };
+
+      case 'student-subject-wise':
+      case 'student-aggregate':
+        return {
+          header: ['Subject', 'Total', 'Present', 'Absent', 'Late', 'Percentage'],
+          rows: (data.subjectStats ?? data.subjects ?? []).map((s: any) => [
+            s.subject?.code ?? s.subject?.name, s.total, s.present, s.absent, s.late, s.attendancePercentage,
+          ]),
+        };
+
+      case 'section-wise':
+      case 'batch-wise':
+        return {
+          header: ['Student Name', 'Email', 'Reg No', 'Total', 'Present', 'Absent', 'Late', 'Percentage'],
+          rows: (data.studentData ?? []).map((sd: any) => {
+            const s = sd.student ?? sd;
+            const o = sd.overall ?? sd;
+            return [s.name, s.email, s.regNum, o.total ?? 0, o.present ?? 0, o.absent ?? 0, o.late ?? 0, o.attendancePercentage ?? 0];
+          }),
+        };
+
+      case 'subject-report':
+        return {
+          header: ['#', 'Student', 'Email', 'Reg No', 'Date', 'Status'],
+          rows: (data.records ?? []).map((r: any, i: number) => [
+            i + 1, r.student?.name, r.student?.email, r.student?.regNum, r.date, r.status,
+          ]),
+        };
+
+      case 'daily-summary':
+        return {
+          header: ['Subject', 'Total', 'Present', 'Absent', 'Late'],
+          rows: (data.subjectBreakdown ?? []).map((sb: any) => [
+            sb.subjectName ?? sb.subjectCode, sb.total, sb.present, sb.absent, sb.late,
+          ]),
+        };
+
+      case 'monthly':
+        return {
+          header: ['Date', 'Total', 'Present', 'Absent', 'Late'],
+          rows: (data.dailyTrend ?? []).map((d: any) => [d.date, d.total, d.present, d.absent, d.late]),
+        };
+
+      case 'date-range':
+        return {
+          header: ['#', 'Student', 'Email', 'Subject', 'Date', 'Status'],
+          rows: (data.records ?? []).map((r: any, i: number) => [
+            i + 1, r.student?.name, r.student?.email, r.subject?.name ?? r.subject?.code, r.date, r.status,
+          ]),
+        };
+
+      case 'low-attendance':
+        return {
+          header: ['#', 'Name', 'Email', 'Reg No', 'Section', 'Total', 'Present', 'Absent', 'Late', 'Percentage'],
+          rows: (data.students ?? []).map((s: any, i: number) => [
+            i + 1, s.student?.name, s.student?.email, s.student?.regNum, s.student?.section,
+            s.overall?.total, s.overall?.present, s.overall?.absent, s.overall?.late, s.overall?.attendancePercentage,
+          ]),
+        };
+
+      case 'absent-students':
+        return {
+          header: ['#', 'Student', 'Email', 'Reg No', 'Subject'],
+          rows: (data.records ?? []).map((r: any, i: number) => [
+            i + 1, r.student?.name, r.student?.email, r.student?.regNum, r.subject?.name ?? r.subject?.code,
+          ]),
+        };
+
+      case 'top-performers':
+        return {
+          header: ['Rank', 'Name', 'Email', 'Total', 'Present', 'Absent', 'Late', 'Percentage'],
+          rows: (data.topPerformers ?? []).map((p: TopPerformer) => [
+            p.rank, p.student.name, p.student.email, p.total, p.present, p.absent, p.late, p.attendancePercentage,
+          ]),
+        };
+
+      case 'leaderboard':
+        return {
+          header: ['Rank', 'Name', 'Email', 'Section', 'Total', 'Present', 'Absent', 'Late', 'Percentage'],
+          rows: (data.leaderboard ?? []).map((e: LeaderboardEntry) => [
+            e.rank, e.student.name, e.student.email, (e.student as any).section,
+            e.overall.total, e.overall.present, e.overall.absent, e.overall.late, e.overall.attendancePercentage,
+          ]),
+        };
+
+      case 'section-comparison':
+        return {
+          header: ['Section', 'Students', 'Total', 'Present', 'Absent', 'Late', 'Percentage'],
+          rows: (data.sections ?? []).map((s: any) => [
+            s.section?.name ?? s.name, s.studentCount, s.total, s.present, s.absent, s.late, s.attendancePercentage,
+          ]),
+        };
+
+      case 'batch-comparison':
+        return {
+          header: ['Batch', 'Students', 'Sessions', 'Total', 'Present', 'Absent', 'Late', 'Percentage'],
+          rows: (data.batches ?? []).map((b: any) => [
+            b.batch?.name ?? b.name, b.studentCount, b.totalSessions, b.total, b.present, b.absent, b.late, b.attendancePercentage,
+          ]),
+        };
+
+      case 'trend-analytics':
+        return {
+          header: ['Month', 'Total', 'Present', 'Absent', 'Late', 'Percentage'],
+          rows: (data.monthlyTrend ?? []).map((m: any) => [
+            m.month, m.total, m.present, m.absent, m.late, m.attendancePercentage,
+          ]),
+        };
+
+      default:
+        return null;
+    }
+  }
+
   exportCSV(): void {
     const data = this.reportData();
     if (!data) { this.toast.warning('No data to export'); return; }
     if (this.exporting()) return;
-    this.exporting.set(true);
-    let csv = '';
+
     const sub = this.activeSubReport();
+    const table = this.csvTable(sub, data);
+    if (!table) { this.toast.warning('This report cannot be exported as CSV'); return; }
+    if (table.rows.length === 0) { this.toast.warning('This report has no rows to export'); return; }
 
-    if (sub === 'student-daily' && data.attendance) {
-      csv = 'Subject,Status,Date\n';
-      data.attendance.forEach((r: any) => { csv += `${r.subject.code},${r.status},${r.date}\n`; });
-    } else if ((sub === 'student-subject-wise' || sub === 'student-aggregate') && data.subjects) {
-      csv = 'Subject,Total,Present,Absent,Late,Percentage\n';
-      data.subjects.forEach((s: any) => { csv += `${s.subject.code},${s.total},${s.present},${s.absent},${s.late},${s.attendancePercentage}\n`; });
-    } else if ((sub === 'section-wise' || sub === 'batch-wise') && data.studentData) {
-      csv = 'Student Name,Email,Reg No,Total,Present,Absent,Late,Percentage\n';
-      data.studentData.forEach((sd: any) => {
-        const s = sd.student || sd;
-        const o = sd.overall || sd;
-        csv += `${s.name},${s.email},${s.regNum || ''},${o.total || 0},${o.present || 0},${o.absent || 0},${o.late || 0},${o.attendancePercentage || 0}\n`;
+    this.exporting.set(true);
+    try {
+      // The BOM makes Excel read the file as UTF-8; without it, non-ASCII names
+      // (Nepali, accented) open as mojibake.
+      const BOM = '\uFEFF';
+      const blob = new Blob([BOM + this.csvSerialize(table.header, table.rows)], {
+        type: 'text/csv;charset=utf-8;',
       });
-    } else if (sub === 'leaderboard' && data.leaderboard) {
-      csv = 'Rank,Name,Email,Total,Present,Absent,Late,Percentage\n';
-      data.leaderboard.forEach((e: LeaderboardEntry) => {
-        csv += `${e.rank},${e.student.name},${e.student.email},${e.overall.total},${e.overall.present},${e.overall.absent},${e.overall.late},${e.overall.attendancePercentage}\n`;
-      });
-    } else if (sub === 'top-performers' && data.topPerformers) {
-      csv = 'Rank,Name,Email,Total,Present,Absent,Late,Percentage\n';
-      data.topPerformers.forEach((p: TopPerformer) => {
-        csv += `${p.rank},${p.student.name},${p.student.email},${p.total},${p.present},${p.absent},${p.late},${p.attendancePercentage}\n`;
-      });
-    } else if (sub === 'low-attendance' && data.students) {
-      csv = 'Name,Email,Reg No,Total,Present,Absent,Late,Percentage\n';
-      data.students.forEach((s: any) => {
-        csv += `${s.student.name},${s.student.email},${s.student.regNum || ''},${s.overall.total},${s.overall.present},${s.overall.absent},${s.overall.late},${s.overall.attendancePercentage}\n`;
-      });
-    } else if (sub === 'monthly' && data.dailyTrend) {
-      csv = 'Date,Total,Present,Absent,Late\n';
-      data.dailyTrend.forEach((d: any) => { csv += `${d.date},${d.total},${d.present},${d.absent},${d.late}\n`; });
-    } else if (sub === 'trend-analytics' && data.monthlyTrend) {
-      csv = 'Month,Total,Present,Absent,Late,Percentage\n';
-      data.monthlyTrend.forEach((m: any) => { csv += `${m.month},${m.total},${m.present},${m.absent},${m.late},${m.attendancePercentage}\n`; });
-    } else {
-      csv = JSON.stringify(data, null, 2);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${sub}-report.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      this.toast.success('CSV exported');
+    } finally {
+      this.exporting.set(false);
     }
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${sub}-report.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    this.exporting.set(false);
-    this.toast.success('CSV exported');
   }
 
   pct(value: number | undefined | null): number {
