@@ -1,34 +1,67 @@
 sno,student_name,engagement_score,engagement_tier,reliability_score
-124,Jeevan Giri,72.69,Engaged,65.19
-105,Juna Khadgi,87.01,Highly Engaged,82.51
-115,Tara Ghale,67.97,Moderately Engaged,60.47
-96,Aayush Sharma,91.34,Highly Engaged,88.34
-125,Kabita Chhetri,64.2,Moderately Engaged,56.7
-106,Kamal Rokaya,71.75,Engaged,64.25
-116,Ujjwal Basnet,55.71,Moderately Engaged,48.21
-126,Lokesh Karki,53.82,Moderately Engaged,46.32
-97,Binita Rijal,78.35,Engaged,70.85
-107,Lalita Budhathoki,75.52,Engaged,68.02
-117,Bipin Sigdel,87.01,Highly Engaged,82.51
-127,Mamata Shahi,52.88,Moderately Engaged,45.38
-98,Aaditya Dhakal,69.86,Moderately Engaged,62.36
-108,Manoj Dong,91.34,Highly Engaged,88.34
-99,Dinesh Kunwar,70.8,Engaged,63.3
-128,Nawaraj Bista,91.34,Highly Engaged,88.34
-109,Nirmala Karki,79.79,Engaged,72.79
-118,Chetana Thagunna,87.01,Highly Engaged,82.51
-100,Elina Bista,75.52,Engaged,68.02
-110,Omkar Pokharel,78.35,Engaged,70.85
-119,Dev Rai,81.24,Engaged,74.74
-101,Firoj Ansari,69.86,Moderately Engaged,62.36
-111,Pabitra Dhakal,85.57,Highly Engaged,80.57
-120,Esha Karki,87.01,Highly Engaged,82.51
-112,Qasim Miya,87.01,Highly Engaged,82.51
-102,Gaurav Kafle,76.46,Engaged,68.96
-121,Ganesh Baral,71.75,Engaged,64.25
-113,Ramesh Suwal,81.24,Engaged,74.74
-103,Raunak Regmi,46.27,Disengaged,38.77
-122,Hari Bogati,84.12,Engaged,78.62
-114,Sanjay Khadka,91.34,Highly Engaged,88.34
-104,Ishan Koirala,58.54,Moderately Engaged,51.04
-123,Indira Sapkota,61.37,Moderately Engaged,53.87
+124,Jeevan Giri,71.94,Engaged,64.44
+105,Juna Khadgi,85.65,Highly Engaged,80.65
+134,Bibek Shrestha,83.21,Engaged,80.71
+115,Tara Ghale,67.27,Moderately Engaged,59.77
+96,Aayush Sharma,89.96,Highly Engaged,86.46
+125,Kabita Chhetri,63.53,Moderately Engaged,56.03
+106,Kamal Rokaya,71.0,Engaged,63.5
+116,Ujjwal Basnet,55.12,Moderately Engaged,47.62
+126,Lokesh Karki,53.25,Moderately Engaged,45.75
+97,Binita Rijal,77.55,Engaged,70.05
+107,Lalita Budhathoki,74.74,Engaged,67.24
+135,Rupendra Dhungana,73.14,Engaged,69.14
+117,Bipin Sigdel,85.65,Highly Engaged,80.65
+127,Mamata Shahi,52.31,Moderately Engaged,44.81
+98,Aaditya Dhakal,69.14,Moderately Engaged,61.64
+108,Manoj Dong,89.96,Highly Engaged,86.46
+99,Dinesh Kunwar,70.07,Engaged,62.57
+128,Nawaraj Bista,89.96,Highly Engaged,86.46
+109,Nirmala Karki,78.48,Engaged,70.98
+118,Chetana Thagunna,85.65,Highly Engaged,80.65
+100,Elina Bista,74.74,Engaged,67.24
+110,Omkar Pokharel,77.55,Engaged,70.05
+119,Dev Rai,79.92,Engaged,72.92
+130,Prakash Adhikari,96.64,Highly Engaged,96.14
+101,Firoj Ansari,69.14,Moderately Engaged,61.64
+111,Pabitra Dhakal,84.22,Engaged,78.72
+136,Nabin Gurung,83.21,Engaged,80.71
+120,Esha Karki,85.65,Highly Engaged,80.65
+131,Sushmita Neupane,86.57,Highly Engaged,84.57
+112,Qasim Miya,85.65,Highly Engaged,80.65
+102,Gaurav Kafle,75.68,Engaged,68.18
+121,Ganesh Baral,71.0,Engaged,63.5
+132,Rohit Poudel,79.86,Engaged,76.86
+113,Ramesh Suwal,79.92,Engaged,72.92
+103,Raunak Regmi,46.71,Disengaged,39.21
+122,Hari Bogati,82.79,Engaged,76.79
+137,Asmita KC,46.79,Disengaged,39.29
+133,Anjali Thapa,76.5,Engaged,73.0
+114,Sanjay Khadka,89.96,Highly Engaged,86.46
+104,Ishan Koirala,57.92,Moderately Engaged,50.42
+123,Indira Sapkota,60.72,Moderately Engaged,53.22
+138,Rijan Acharya,63.07,Moderately Engaged,57.57
+139,Sneha Maharjan,93.29,Highly Engaged,92.29
+140,Dipesh Bhandari,79.86,Engaged,76.86
+141,Karuna Basyal,83.21,Engaged,80.71
+142,Niraj Ghimire,96.64,Highly Engaged,96.14
+143,Samiksha Adhikari,79.86,Engaged,76.86
+144,Tek Bahadur Ale,79.86,Engaged,76.86
+145,Apeksha Regmi,93.29,Highly Engaged,92.29
+146,Bijay Tamang,93.29,Highly Engaged,92.29
+147,Nikita Panta,89.93,Highly Engaged,88.43
+148,Sujan Kharel,96.64,Highly Engaged,96.14
+149,Puja Bhandari,76.5,Engaged,73.0
+150,Rabin Chaudhary,59.71,Moderately Engaged,53.71
+151,Melina Joshi,93.29,Highly Engaged,92.29
+152,Sagar Bhattarai,93.29,Highly Engaged,92.29
+153,Alisha Raut,83.21,Engaged,80.71
+154,Kritesh Pandey,89.93,Highly Engaged,88.43
+155,Monika Kandel,73.14,Engaged,69.14
+156,Nischal Aryal,89.93,Highly Engaged,88.43
+157,Prerana Shah,63.07,Moderately Engaged,57.57
+158,Ritik Lama,73.14,Engaged,69.14
+159,Sunita Bhandari,83.21,Engaged,80.71
+160,Yubraj Thapa,79.86,Engaged,76.86
+161,Aarati Sharma,76.5,Engaged,73.0
+162,Bishal Karki,96.64,Highly Engaged,96.14

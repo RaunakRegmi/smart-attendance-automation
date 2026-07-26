@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 
@@ -15,7 +15,20 @@ export class LoginComponent {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly toast = inject(ToastService);
+
+  /**
+   * Where the guard wanted to send us before it bounced to login. Only same-app
+   * paths are honoured — anything not starting with a single '/' is discarded so
+   * a crafted ?returnUrl= can't turn login into an open redirect.
+   * This is what carries the QR deep link's ?token=&sessionId= across login.
+   */
+  private safeReturnUrl(): string | null {
+    const target = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (!target || !target.startsWith('/') || target.startsWith('//')) return null;
+    return target;
+  }
 
   readonly loading = signal(false);
   readonly showPassword = signal(false);
@@ -39,7 +52,12 @@ export class LoginComponent {
         this.loading.set(false);
         if (res?.success) {
           const role = res.data.user.role;
-          if (role === 'ADMIN') {
+          const returnUrl = this.safeReturnUrl();
+          if (returnUrl && (role === 'ADMIN' || role === 'TEACHER' || role === 'STUDENT')) {
+            // navigateByUrl keeps the query string intact; the role guards still
+            // apply, so a wrong-role returnUrl just bounces to their own portal.
+            this.router.navigateByUrl(returnUrl);
+          } else if (role === 'ADMIN') {
             this.router.navigate(['/dashboard']);
           } else if (role === 'TEACHER') {
             this.router.navigate(['/teacher']);

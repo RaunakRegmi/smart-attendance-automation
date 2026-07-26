@@ -1,4 +1,4 @@
 course_code,course_name,avg_attendance_pct,performance_tier,total_students,students_perfect,students_below_75
-WEB002,WEB002,86.36,Strong,33,4,6
-AI003,AI003,86.72,Strong,33,4,6
+WEB002,WEB002,82.12,Healthy,66,0,39
+AI003,AI003,86.94,Strong,66,8,10
 Maths004,Maths004,71.03,Concerning,33,0,18

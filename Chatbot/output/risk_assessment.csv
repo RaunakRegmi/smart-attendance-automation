@@ -1,34 +1,67 @@
 sno,student_name,batch,attendance_percentage,risk_level,risk_score,intervention_needed,risk_factors
-124,Jeevan Giri,Autumn 2026,80.19,Medium,40.0,False,None
-105,Juna Khadgi,Autumn 2026,91.51,Low,15.0,False,None
-115,Tara Ghale,Autumn 2026,75.47,Medium,40.0,False,None
-96,Aayush Sharma,Autumn 2026,94.34,Low,15.0,False,None
-125,Kabita Chhetri,Autumn 2026,71.7,High,70.0,True,Low overall attendance
-106,Kamal Rokaya,Autumn 2026,79.25,Medium,40.0,False,None
-116,Ujjwal Basnet,Autumn 2026,63.21,High,70.0,True,"Low overall attendance, High absence count"
-126,Lokesh Karki,Autumn 2026,61.32,High,70.0,True,"Low overall attendance, High absence count"
-97,Binita Rijal,Autumn 2026,85.85,Low,15.0,False,None
-107,Lalita Budhathoki,Autumn 2026,83.02,Medium,40.0,False,None
-117,Bipin Sigdel,Autumn 2026,91.51,Low,15.0,False,None
-127,Mamata Shahi,Autumn 2026,60.38,High,70.0,True,"Low overall attendance, High absence count"
-98,Aaditya Dhakal,Autumn 2026,77.36,Medium,40.0,False,None
-108,Manoj Dong,Autumn 2026,94.34,Low,15.0,False,None
-99,Dinesh Kunwar,Autumn 2026,78.3,Medium,40.0,False,None
-128,Nawaraj Bista,Autumn 2026,94.34,Low,15.0,False,None
-109,Nirmala Karki,Autumn 2026,86.79,Low,15.0,False,None
-118,Chetana Thagunna,Autumn 2026,91.51,Low,15.0,False,None
-100,Elina Bista,Autumn 2026,83.02,Medium,40.0,False,None
-110,Omkar Pokharel,Autumn 2026,85.85,Low,15.0,False,None
-119,Dev Rai,Autumn 2026,87.74,Low,15.0,False,None
-101,Firoj Ansari,Autumn 2026,77.36,Medium,40.0,False,None
-111,Pabitra Dhakal,Autumn 2026,90.57,Low,15.0,False,None
-120,Esha Karki,Autumn 2026,91.51,Low,15.0,False,None
-112,Qasim Miya,Autumn 2026,91.51,Low,15.0,False,None
-102,Gaurav Kafle,Autumn 2026,83.96,Medium,40.0,False,None
-121,Ganesh Baral,Autumn 2026,79.25,Medium,40.0,False,None
-113,Ramesh Suwal,Autumn 2026,87.74,Low,15.0,False,None
-103,Raunak Regmi,Autumn 2026,53.77,Critical,90.0,True,"Low overall attendance, High absence count"
-122,Hari Bogati,Autumn 2026,89.62,Low,15.0,False,None
-114,Sanjay Khadka,Autumn 2026,94.34,Low,15.0,False,None
-104,Ishan Koirala,Autumn 2026,66.04,High,70.0,True,"Low overall attendance, High absence count"
-123,Indira Sapkota,Autumn 2026,68.87,High,70.0,True,Low overall attendance
+124,Jeevan Giri,Autumn 2026,79.44,Medium,40.0,False,None
+105,Juna Khadgi,Autumn 2026,90.65,Low,15.0,False,None
+134,Bibek Shrestha,Autumn 2026,85.71,Low,15.0,False,None
+115,Tara Ghale,Autumn 2026,74.77,High,70.0,True,Low overall attendance
+96,Aayush Sharma,Autumn 2026,93.46,Low,15.0,False,None
+125,Kabita Chhetri,Autumn 2026,71.03,High,70.0,True,Low overall attendance
+106,Kamal Rokaya,Autumn 2026,78.5,Medium,40.0,False,None
+116,Ujjwal Basnet,Autumn 2026,62.62,High,70.0,True,"Low overall attendance, High absence count"
+126,Lokesh Karki,Autumn 2026,60.75,High,70.0,True,"Low overall attendance, High absence count"
+97,Binita Rijal,Autumn 2026,85.05,Low,15.0,False,None
+107,Lalita Budhathoki,Autumn 2026,82.24,Medium,40.0,False,None
+135,Rupendra Dhungana,Autumn 2026,77.14,Medium,40.0,False,None
+117,Bipin Sigdel,Autumn 2026,90.65,Low,15.0,False,None
+127,Mamata Shahi,Autumn 2026,59.81,Critical,90.0,True,"Low overall attendance, High absence count"
+98,Aaditya Dhakal,Autumn 2026,76.64,Medium,40.0,False,None
+108,Manoj Dong,Autumn 2026,93.46,Low,15.0,False,None
+99,Dinesh Kunwar,Autumn 2026,77.57,Medium,40.0,False,None
+128,Nawaraj Bista,Autumn 2026,93.46,Low,15.0,False,None
+109,Nirmala Karki,Autumn 2026,85.98,Low,15.0,False,None
+118,Chetana Thagunna,Autumn 2026,90.65,Low,15.0,False,None
+100,Elina Bista,Autumn 2026,82.24,Medium,40.0,False,None
+110,Omkar Pokharel,Autumn 2026,85.05,Low,15.0,False,None
+119,Dev Rai,Autumn 2026,86.92,Low,15.0,False,None
+130,Prakash Adhikari,Autumn 2026,97.14,Low,15.0,False,None
+101,Firoj Ansari,Autumn 2026,76.64,Medium,40.0,False,None
+111,Pabitra Dhakal,Autumn 2026,89.72,Low,15.0,False,None
+136,Nabin Gurung,Autumn 2026,85.71,Low,15.0,False,None
+120,Esha Karki,Autumn 2026,90.65,Low,15.0,False,None
+131,Sushmita Neupane,Autumn 2026,88.57,Low,15.0,False,None
+112,Qasim Miya,Autumn 2026,90.65,Low,15.0,False,None
+102,Gaurav Kafle,Autumn 2026,83.18,Medium,40.0,False,None
+121,Ganesh Baral,Autumn 2026,78.5,Medium,40.0,False,None
+132,Rohit Poudel,Autumn 2026,82.86,Medium,40.0,False,None
+113,Ramesh Suwal,Autumn 2026,86.92,Low,15.0,False,None
+103,Raunak Regmi,Autumn 2026,54.21,Critical,90.0,True,"Low overall attendance, High absence count"
+122,Hari Bogati,Autumn 2026,88.79,Low,15.0,False,None
+137,Asmita KC,Autumn 2026,54.29,Critical,90.0,True,"Low overall attendance, High absence count"
+133,Anjali Thapa,Autumn 2026,80.0,Medium,40.0,False,None
+114,Sanjay Khadka,Autumn 2026,93.46,Low,15.0,False,None
+104,Ishan Koirala,Autumn 2026,65.42,High,70.0,True,"Low overall attendance, High absence count"
+123,Indira Sapkota,Autumn 2026,68.22,High,70.0,True,Low overall attendance
+138,Rijan Acharya,Autumn 2026,68.57,High,70.0,True,Low overall attendance
+139,Sneha Maharjan,Autumn 2026,94.29,Low,15.0,False,None
+140,Dipesh Bhandari,Autumn 2026,82.86,Medium,40.0,False,None
+141,Karuna Basyal,Autumn 2026,85.71,Low,15.0,False,None
+142,Niraj Ghimire,Autumn 2026,97.14,Low,15.0,False,None
+143,Samiksha Adhikari,Autumn 2026,82.86,Medium,40.0,False,None
+144,Tek Bahadur Ale,Autumn 2026,82.86,Medium,40.0,False,None
+145,Apeksha Regmi,Autumn 2026,94.29,Low,15.0,False,None
+146,Bijay Tamang,Autumn 2026,94.29,Low,15.0,False,None
+147,Nikita Panta,Autumn 2026,91.43,Low,15.0,False,None
+148,Sujan Kharel,Autumn 2026,97.14,Low,15.0,False,None
+149,Puja Bhandari,Autumn 2026,80.0,Medium,40.0,False,None
+150,Rabin Chaudhary,Autumn 2026,65.71,High,70.0,True,"Low overall attendance, High absence count"
+151,Melina Joshi,Autumn 2026,94.29,Low,15.0,False,None
+152,Sagar Bhattarai,Autumn 2026,94.29,Low,15.0,False,None
+153,Alisha Raut,Autumn 2026,85.71,Low,15.0,False,None
+154,Kritesh Pandey,Autumn 2026,91.43,Low,15.0,False,None
+155,Monika Kandel,Autumn 2026,77.14,Medium,40.0,False,None
+156,Nischal Aryal,Autumn 2026,91.43,Low,15.0,False,None
+157,Prerana Shah,Autumn 2026,68.57,High,70.0,True,Low overall attendance
+158,Ritik Lama,Autumn 2026,77.14,Medium,40.0,False,None
+159,Sunita Bhandari,Autumn 2026,85.71,Low,15.0,False,None
+160,Yubraj Thapa,Autumn 2026,82.86,Medium,40.0,False,None
+161,Aarati Sharma,Autumn 2026,80.0,Medium,40.0,False,None
+162,Bishal Karki,Autumn 2026,97.14,Low,15.0,False,None

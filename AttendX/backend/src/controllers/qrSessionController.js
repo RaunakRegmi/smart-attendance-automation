@@ -12,7 +12,16 @@ const Notification = require('../models/Notification');
 const scopeService = require('../services/teacherScopeService');
 const attendanceRollup = require('../services/attendanceRollupService');
 
-const QR_TOKEN_EXPIRY = '5s';
+// The QR image on screen still rotates every 5s (the teacher UI re-requests a
+// fresh token on that interval), but an already-scanned token stays valid for a
+// minute. 5s was unusable on real hardware: camera app -> browser -> app boot ->
+// API call routinely exceeds it, and it left no room at all for a student who
+// still has to log in. Validation is by JWT signature + exp + sessionId match,
+// not against the stored sessionToken, so widening this needs no other change.
+// Anti-proxy still holds: a forwarded photo dies within a minute, and whoever
+// scans it must be logged in as that student AND enrolled in that section.
+const QR_TOKEN_EXPIRY_SECONDS = 60;
+const QR_TOKEN_EXPIRY = `${QR_TOKEN_EXPIRY_SECONDS}s`;
 const LATE_THRESHOLD_MINUTES = 5;
 
 const generateQRToken = (sessionId) => {
@@ -103,7 +112,7 @@ exports.createSession = async (req, res, next) => {
     const now = new Date();
     const sessionId = require('crypto').randomUUID();
     const token = generateQRToken(sessionId);
-    const tokenExpiresAt = new Date(now.getTime() + 5000);
+    const tokenExpiresAt = new Date(now.getTime() + QR_TOKEN_EXPIRY_SECONDS * 1000);
 
     const session = await QRSession.create({
       id: sessionId,
@@ -167,7 +176,7 @@ exports.refreshQR = async (req, res, next) => {
 
     const now = new Date();
     const token = generateQRToken(session.id);
-    const tokenExpiresAt = new Date(now.getTime() + 5000);
+    const tokenExpiresAt = new Date(now.getTime() + QR_TOKEN_EXPIRY_SECONDS * 1000);
 
     await session.update({
       sessionToken: token,
